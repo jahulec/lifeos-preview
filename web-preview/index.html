@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LifeOS Preview</title>
+  <meta name="theme-color" content="#3f8a75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="LifeOS">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-180.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <main class="layout">
+    <aside class="project-panel glass">
+      <p class="eyebrow">LifeOS Preview</p>
+      <h1>Osobisty panel sterowania życiem, uruchamialny na Windowsie.</h1>
+      <p class="lead">
+        To jest działający preview produktu: możesz przełączać zakładki, odhaczać habity i taski,
+        dodawać szybkie wpisy i zobaczyć kierunek wizualny bez Maca i bez Xcode.
+      </p>
+
+      <div class="meta-grid">
+        <div class="meta-card">
+          <span>Tryb</span>
+          <strong>Local preview</strong>
+        </div>
+        <div class="meta-card">
+          <span>Zakres</span>
+          <strong>Fitness + Habits + Tasks</strong>
+        </div>
+        <div class="meta-card">
+          <span>Styl</span>
+          <strong>Calm premium</strong>
+        </div>
+        <div class="meta-card">
+          <span>Dane</span>
+          <strong>localStorage</strong>
+        </div>
+      </div>
+
+      <div class="notes glass-inner">
+        <p class="notes-title">Jak używać</p>
+        <ul>
+          <li>Przełączaj zakładki na dole ekranu telefonu.</li>
+          <li>Klikaj habity i taski, żeby zobaczyć zmianę progresu.</li>
+          <li>W zakładce Capture dodaj wagę, task i krótką notatkę.</li>
+        </ul>
+      </div>
+    </aside>
+
+    <section class="phone-shell">
+      <div class="device-frame">
+        <div class="device-notch"></div>
+        <div class="app-screen">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">LifeOS</p>
+              <h2 id="screen-title">Today</h2>
+            </div>
+            <div class="date-pill" id="today-date"></div>
+          </header>
+
+          <section class="tab-page active" data-tab="today">
+            <div class="hero glass">
+              <div class="hero-copy">
+                <p class="eyebrow">Daily Focus</p>
+                <h3 id="hero-title">Dzień pod kontrolą</h3>
+                <p id="hero-subtitle">Dzisiaj liczy się rytm, nie chaos.</p>
+              </div>
+              <div class="hero-value">
+                <span id="main-progress-value">72%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="main-progress-bar"></div>
+              </div>
+              <div class="hero-meta">
+                <span id="hero-meta-left">4 z 6 kluczowych akcji</span>
+                <span id="hero-meta-right">Reset o północy</span>
+              </div>
+            </div>
+
+            <div class="quick-actions">
+              <button class="action-button" data-switch-tab="capture">Zaloguj wagę</button>
+              <button class="action-button secondary" data-switch-tab="capture">Dodaj task</button>
+            </div>
+
+            <div class="card-grid">
+              <article class="glass card">
+                <div class="card-head">
+                  <h3>Habity</h3>
+                  <span id="habit-summary">2/3</span>
+                </div>
+                <div id="habit-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
+                  <h3>Top taski</h3>
+                  <span id="task-summary">2 otwarte</span>
+                </div>
+                <div id="task-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
+                  <h3>Fitness</h3>
+                  <span>Upper A</span>
+                </div>
+                <div class="metric-row">
+                  <div class="metric">
+                    <span>Waga</span>
+                    <strong id="latest-weight">80.4 kg</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Przerwy</span>
+                    <strong>90 s</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Kalorie</span>
+                    <strong>2 140</strong>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="tab-page" data-tab="zones">
+            <div class="stack-list" id="zones-list"></div>
+          </section>
+
+          <section class="tab-page" data-tab="capture">
+            <div class="glass card capture-card">
+              <div class="card-head">
+                <h3>Szybki input</h3>
+                <span>Low friction</span>
+              </div>
+              <form id="weight-form" class="form-block">
+                <label for="weight-input">Nowa waga</label>
+                <div class="inline-form">
+                  <input id="weight-input" type="number" step="0.1" placeholder="80.4">
+                  <button type="submit">Zapisz</button>
+                </div>
+              </form>
+
+              <form id="task-form" class="form-block">
+                <label for="task-input">Nowy task</label>
+                <div class="inline-form">
+                  <input id="task-input" type="text" placeholder="Dodaj zadanie do inboxu">
+                  <button type="submit">Dodaj</button>
+                </div>
+              </form>
+
+              <form id="note-form" class="form-block">
+                <label for="note-input">Szybka notatka dnia</label>
+                <textarea id="note-input" rows="4" placeholder="Jak się dziś czujesz, co jest ważne?"></textarea>
+                <button type="submit" class="full-button">Zapisz notatkę</button>
+              </form>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Ostatni wpis</h3>
+                <span>Live</span>
+              </div>
+              <p id="capture-feedback" class="feedback">Jeszcze nic nie zapisano w tej sesji.</p>
+            </div>
+          </section>
+
+          <section class="tab-page" data-tab="insights">
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Trend wagi</h3>
+                <span>7 dni</span>
+              </div>
+              <div id="weight-chart" class="chart chart-line"></div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Output tygodnia</h3>
+                <span>Sesje</span>
+              </div>
+              <div id="training-chart" class="chart chart-bars"></div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Review</h3>
+                <span>Weekly</span>
+              </div>
+              <p id="review-copy" class="review-copy"></p>
+            </div>
+          </section>
+
+          <section class="tab-page" data-tab="me">
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Profil</h3>
+                <span>Single user</span>
+              </div>
+              <div class="metric-row">
+                <div class="metric">
+                  <span>Tryb</span>
+                  <strong>Local-first</strong>
+                </div>
+                <div class="metric">
+                  <span>Urządzenie</span>
+                  <strong>iPhone</strong>
+                </div>
+                <div class="metric">
+                  <span>Język</span>
+                  <strong>PL-first</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Suplementy</h3>
+                <span>Daily</span>
+              </div>
+              <div class="stack-list" id="supplement-list"></div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Prywatność</h3>
+                <span>Planned</span>
+              </div>
+              <div class="toggle-list">
+                <label><input type="checkbox" checked disabled> Face ID dla wrażliwych stref</label>
+                <label><input type="checkbox" checked disabled> Ukrywanie podglądu po wyjściu z appki</label>
+                <label><input type="checkbox" checked disabled> Jawny eksport danych</label>
+              </div>
+            </div>
+          </section>
+
+          <nav class="tabbar">
+            <button class="tabbar-item active" data-tab-button="today">Today</button>
+            <button class="tabbar-item" data-tab-button="zones">Strefy</button>
+            <button class="tabbar-item accent" data-tab-button="capture">Capture</button>
+            <button class="tabbar-item" data-tab-button="insights">Insights</button>
+            <button class="tabbar-item" data-tab-button="me">Ja</button>
+          </nav>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
