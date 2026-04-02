@@ -47,8 +47,8 @@ The preview includes:
 
 The project already includes a GitHub Actions workflow for Pages deployment:
 
-- [deploy-pages.yml](C:/Users/janek/Documents/life.app/.github/workflows/deploy-pages.yml)
-- [DEPLOY-GITHUB-PAGES.md](C:/Users/janek/Documents/life.app/DEPLOY-GITHUB-PAGES.md)
+- `./.github/workflows/deploy-pages.yml`
+- `./DEPLOY-GITHUB-PAGES.md`
 
 ### Native iOS app
 
