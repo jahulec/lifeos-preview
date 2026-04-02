@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LifeOS Preview</title>
+  <title>LifeOS</title>
   <meta name="theme-color" content="#3f8a75">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,38 +18,35 @@
 
   <main class="layout">
     <aside class="project-panel glass">
-      <p class="eyebrow">LifeOS Preview</p>
-      <h1>Osobisty panel sterowania życiem, uruchamialny na Windowsie.</h1>
-      <p class="lead">
-        To jest działający preview produktu: możesz przełączać zakładki, odhaczać habity i taski,
-        dodawać szybkie wpisy i zobaczyć kierunek wizualny bez Maca i bez Xcode.
-      </p>
+      <p class="eyebrow">LifeOS</p>
+      <h1>Jeden czytelny panel do dnia, treningu i planu.</h1>
 
       <div class="meta-grid">
         <div class="meta-card">
-          <span>Tryb</span>
-          <strong>Local preview</strong>
+          <span>Format</span>
+          <strong>PWA</strong>
+        </div>
+        <div class="meta-card">
+          <span>Dane</span>
+          <strong>localStorage</strong>
         </div>
         <div class="meta-card">
           <span>Zakres</span>
           <strong>Fitness + Habits + Tasks</strong>
         </div>
         <div class="meta-card">
-          <span>Styl</span>
-          <strong>Calm premium</strong>
-        </div>
-        <div class="meta-card">
-          <span>Dane</span>
-          <strong>localStorage</strong>
+          <span>Cel</span>
+          <strong>Daily utility</strong>
         </div>
       </div>
 
       <div class="notes glass-inner">
-        <p class="notes-title">Jak używać</p>
+        <p class="notes-title">Co tu juz dziala</p>
         <ul>
-          <li>Przełączaj zakładki na dole ekranu telefonu.</li>
-          <li>Klikaj habity i taski, żeby zobaczyć zmianę progresu.</li>
-          <li>W zakładce Capture dodaj wagę, task i krótką notatkę.</li>
+          <li>Today z prawdziwym stanem dnia</li>
+          <li>Dodawanie, odhaczanie, edycja i usuwanie</li>
+          <li>Waga, treningi, taski, habity i notatka</li>
+          <li>Instalacja na iPhonie z Safari</li>
         </ul>
       </div>
     </aside>
@@ -63,69 +60,91 @@
               <p class="eyebrow">LifeOS</p>
               <h2 id="screen-title">Today</h2>
             </div>
-            <div class="date-pill" id="today-date"></div>
+            <div class="topbar-meta">
+              <div class="date-pill" id="today-date"></div>
+              <div class="compact-pill" id="top-progress-chip">0%</div>
+            </div>
           </header>
 
           <section class="tab-page active" data-tab="today">
             <div class="hero glass">
-              <div class="hero-copy">
-                <p class="eyebrow">Daily Focus</p>
-                <h3 id="hero-title">Dzień pod kontrolą</h3>
-                <p id="hero-subtitle">Dzisiaj liczy się rytm, nie chaos.</p>
+              <div class="hero-top">
+                <div class="hero-copy">
+                  <p class="eyebrow">Dzien</p>
+                  <h3 id="hero-title">Spokojny momentum</h3>
+                  <p id="hero-subtitle">Najpierw kilka kluczowych rzeczy.</p>
+                </div>
+                <div class="hero-value">
+                  <span id="main-progress-value">0%</span>
+                </div>
               </div>
-              <div class="hero-value">
-                <span id="main-progress-value">72%</span>
-              </div>
+
               <div class="progress-track">
                 <div class="progress-fill" id="main-progress-bar"></div>
               </div>
+
               <div class="hero-meta">
-                <span id="hero-meta-left">4 z 6 kluczowych akcji</span>
-                <span id="hero-meta-right">Reset o północy</span>
+                <span id="hero-meta-left">0 z 0</span>
+                <span id="hero-meta-right">Reset daily</span>
+              </div>
+
+              <div class="metric-row metric-row-four">
+                <div class="metric">
+                  <span>Waga</span>
+                  <strong id="latest-weight">-</strong>
+                </div>
+                <div class="metric">
+                  <span>Taski</span>
+                  <strong id="open-task-count">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Habity</span>
+                  <strong id="habit-done-count">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Treningi</span>
+                  <strong id="week-workout-count">0</strong>
+                </div>
               </div>
             </div>
 
-            <div class="quick-actions">
-              <button class="action-button" data-switch-tab="capture">Zaloguj wagę</button>
-              <button class="action-button secondary" data-switch-tab="capture">Dodaj task</button>
+            <div class="quick-actions quick-actions-three">
+              <button class="action-button" data-switch-tab="capture" data-focus="weight-input">Waga</button>
+              <button class="action-button secondary" data-switch-tab="capture" data-focus="task-input">Task</button>
+              <button class="action-button subtle" data-switch-tab="capture" data-focus="workout-title-input">Trening</button>
             </div>
 
             <div class="card-grid">
               <article class="glass card">
                 <div class="card-head">
                   <h3>Habity</h3>
-                  <span id="habit-summary">2/3</span>
+                  <span id="habit-summary">0/0</span>
                 </div>
                 <div id="habit-list" class="stack-list"></div>
               </article>
 
               <article class="glass card">
                 <div class="card-head">
-                  <h3>Top taski</h3>
-                  <span id="task-summary">2 otwarte</span>
+                  <h3>Zadania</h3>
+                  <span id="task-summary">0 open</span>
                 </div>
                 <div id="task-list" class="stack-list"></div>
               </article>
 
               <article class="glass card">
                 <div class="card-head">
-                  <h3>Fitness</h3>
-                  <span>Upper A</span>
+                  <h3>Trening</h3>
+                  <span id="workout-summary">0 min</span>
                 </div>
-                <div class="metric-row">
-                  <div class="metric">
-                    <span>Waga</span>
-                    <strong id="latest-weight">80.4 kg</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Przerwy</span>
-                    <strong>90 s</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Kalorie</span>
-                    <strong>2 140</strong>
-                  </div>
+                <div id="workout-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card note-card">
+                <div class="card-head">
+                  <h3>Notatka</h3>
+                  <span>Today</span>
                 </div>
+                <p id="today-note" class="review-copy"></p>
               </article>
             </div>
           </section>
@@ -135,40 +154,84 @@
           </section>
 
           <section class="tab-page" data-tab="capture">
-            <div class="glass card capture-card">
-              <div class="card-head">
-                <h3>Szybki input</h3>
-                <span>Low friction</span>
-              </div>
-              <form id="weight-form" class="form-block">
-                <label for="weight-input">Nowa waga</label>
-                <div class="inline-form">
-                  <input id="weight-input" type="number" step="0.1" placeholder="80.4">
-                  <button type="submit">Zapisz</button>
+            <div class="capture-grid">
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Waga</h3>
+                  <span>kg</span>
                 </div>
-              </form>
-
-              <form id="task-form" class="form-block">
-                <label for="task-input">Nowy task</label>
-                <div class="inline-form">
-                  <input id="task-input" type="text" placeholder="Dodaj zadanie do inboxu">
-                  <button type="submit">Dodaj</button>
-                </div>
-              </form>
-
-              <form id="note-form" class="form-block">
-                <label for="note-input">Szybka notatka dnia</label>
-                <textarea id="note-input" rows="4" placeholder="Jak się dziś czujesz, co jest ważne?"></textarea>
-                <button type="submit" class="full-button">Zapisz notatkę</button>
-              </form>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Ostatni wpis</h3>
-                <span>Live</span>
+                <form id="weight-form" class="form-block">
+                  <div class="inline-form">
+                    <input id="weight-input" type="number" step="0.1" placeholder="80.4">
+                    <button type="submit">Zapisz</button>
+                  </div>
+                </form>
               </div>
-              <p id="capture-feedback" class="feedback">Jeszcze nic nie zapisano w tej sesji.</p>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Task</h3>
+                  <span>Inbox</span>
+                </div>
+                <form id="task-form" class="form-block">
+                  <input id="task-input" type="text" placeholder="Nowe zadanie">
+                  <div class="inline-form inline-form-two">
+                    <input id="task-detail-input" type="text" placeholder="Krotki opis">
+                    <select id="task-priority-input">
+                      <option value="high">High</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="full-button">Dodaj task</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Habit</h3>
+                  <span>Daily</span>
+                </div>
+                <form id="habit-form" class="form-block">
+                  <input id="habit-input" type="text" placeholder="Nowy habit">
+                  <input id="habit-detail-input" type="text" placeholder="Minimum version lub opis">
+                  <button type="submit" class="full-button">Dodaj habit</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Trening</h3>
+                  <span>Log</span>
+                </div>
+                <form id="workout-form" class="form-block">
+                  <input id="workout-title-input" type="text" placeholder="Np. Upper A">
+                  <div class="inline-form inline-form-two">
+                    <input id="workout-duration-input" type="number" step="1" placeholder="Min">
+                    <input id="workout-focus-input" type="text" placeholder="Focus">
+                  </div>
+                  <button type="submit" class="full-button">Dodaj trening</button>
+                </form>
+              </div>
+
+              <div class="glass card capture-wide">
+                <div class="card-head">
+                  <h3>Notatka dnia</h3>
+                  <span>Quick</span>
+                </div>
+                <form id="note-form" class="form-block">
+                  <textarea id="note-input" rows="4" placeholder="Jedno zdanie o dniu"></textarea>
+                  <button type="submit" class="full-button">Zapisz</button>
+                </form>
+              </div>
+
+              <div class="glass card capture-wide">
+                <div class="card-head">
+                  <h3>Ostatnia akcja</h3>
+                  <span>Live</span>
+                </div>
+                <p id="capture-feedback" class="feedback">Gotowe do pracy.</p>
+              </div>
             </div>
           </section>
 
@@ -176,7 +239,7 @@
             <div class="glass card">
               <div class="card-head">
                 <h3>Trend wagi</h3>
-                <span>7 dni</span>
+                <span>7 wpisow</span>
               </div>
               <div id="weight-chart" class="chart chart-line"></div>
             </div>
@@ -184,15 +247,36 @@
             <div class="glass card">
               <div class="card-head">
                 <h3>Output tygodnia</h3>
-                <span>Sesje</span>
+                <span>Minuty</span>
               </div>
               <div id="training-chart" class="chart chart-bars"></div>
             </div>
 
             <div class="glass card">
               <div class="card-head">
+                <h3>Snapshot</h3>
+                <span>This week</span>
+              </div>
+              <div class="metric-row">
+                <div class="metric">
+                  <span>Srednia waga</span>
+                  <strong id="average-weight">-</strong>
+                </div>
+                <div class="metric">
+                  <span>Lacznie min</span>
+                  <strong id="total-training-minutes">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Skutecznosc</span>
+                  <strong id="insight-progress">0%</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
                 <h3>Review</h3>
-                <span>Weekly</span>
+                <span>Short</span>
               </div>
               <p id="review-copy" class="review-copy"></p>
             </div>
@@ -210,12 +294,12 @@
                   <strong>Local-first</strong>
                 </div>
                 <div class="metric">
-                  <span>Urządzenie</span>
+                  <span>Device</span>
                   <strong>iPhone</strong>
                 </div>
                 <div class="metric">
-                  <span>Język</span>
-                  <strong>PL-first</strong>
+                  <span>Backup</span>
+                  <strong>JSON</strong>
                 </div>
               </div>
             </div>
@@ -230,13 +314,12 @@
 
             <div class="glass card">
               <div class="card-head">
-                <h3>Prywatność</h3>
-                <span>Planned</span>
+                <h3>Narzedzia</h3>
+                <span>Data</span>
               </div>
-              <div class="toggle-list">
-                <label><input type="checkbox" checked disabled> Face ID dla wrażliwych stref</label>
-                <label><input type="checkbox" checked disabled> Ukrywanie podglądu po wyjściu z appki</label>
-                <label><input type="checkbox" checked disabled> Jawny eksport danych</label>
+              <div class="tool-actions">
+                <button id="export-button" class="secondary-tool-button">Export JSON</button>
+                <button id="reset-button" class="danger-tool-button">Reset demo</button>
               </div>
             </div>
           </section>
