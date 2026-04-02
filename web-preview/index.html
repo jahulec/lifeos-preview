@@ -115,6 +115,29 @@
             </div>
 
             <div class="card-grid">
+              <article class="glass card" id="onboarding-card">
+                <div class="card-head">
+                  <h3>Start</h3>
+                  <span id="onboarding-summary">0/3</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="onboarding-progress-bar"></div>
+                </div>
+                <div id="onboarding-list" class="stack-list compact-stack"></div>
+                <div class="tool-actions">
+                  <button id="onboarding-open-capture" class="secondary-tool-button">Dodaj dane</button>
+                  <button id="onboarding-dismiss-button" class="danger-tool-button">Ukryj</button>
+                </div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
+                  <h3>Priorytety</h3>
+                  <span id="priority-summary">0 aktywne</span>
+                </div>
+                <div id="priority-list" class="stack-list"></div>
+              </article>
+
               <article class="glass card">
                 <div class="card-head">
                   <h3>Habity</h3>
@@ -631,13 +654,27 @@
 
             <div class="glass card">
               <div class="card-head">
+                <h3>Start</h3>
+                <span id="me-onboarding-status">In progress</span>
+              </div>
+              <p id="me-onboarding-copy" class="review-copy"></p>
+              <div class="tool-actions">
+                <button id="show-onboarding-button" class="secondary-tool-button">Pokaz start</button>
+                <button id="complete-onboarding-button" class="action-button">Zakoncz start</button>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
                 <h3>Narzedzia</h3>
                 <span>Data</span>
               </div>
               <div class="tool-actions">
+                <button id="import-button" class="secondary-tool-button">Import JSON</button>
                 <button id="export-button" class="secondary-tool-button">Export JSON</button>
                 <button id="reset-button" class="danger-tool-button">Reset demo</button>
               </div>
+              <input id="import-input" type="file" accept="application/json" hidden>
             </div>
           </section>
 

@@ -25,6 +25,10 @@ const defaultState = {
     lastDailyReset: todayKey(),
     lastWeeklyReset: weekKey()
   },
+  onboarding: {
+    dismissed: false,
+    completed: false
+  },
   note: "Zamknij najpierw rzeczy o wysokim zwrocie: trening, 2-3 taski i prosty rytm dnia.",
   habits: [
     { id: "habit-1", title: "Morning mobility", detail: "2 min minimum", done: true },
@@ -104,6 +108,7 @@ function cloneState(value) {
 function normalizeState(rawState) {
   const state = { ...cloneState(defaultState), ...rawState };
   state.meta = state.meta && typeof state.meta === "object" ? state.meta : cloneState(defaultState.meta);
+  state.onboarding = state.onboarding && typeof state.onboarding === "object" ? { ...cloneState(defaultState.onboarding), ...state.onboarding } : cloneState(defaultState.onboarding);
   state.habits = Array.isArray(state.habits) ? state.habits : cloneState(defaultState.habits);
   state.tasks = Array.isArray(state.tasks) ? state.tasks : cloneState(defaultState.tasks);
   state.workouts = Array.isArray(state.workouts) ? state.workouts : cloneState(defaultState.workouts);
@@ -231,6 +236,11 @@ function workoutsThisWeek() {
   return state.workouts.filter((workout) => weekKey(new Date(workout.createdAt)) === currentWeek);
 }
 
+function workoutsToday() {
+  const today = todayKey();
+  return state.workouts.filter((workout) => todayKey(new Date(workout.createdAt)) === today);
+}
+
 function mealsToday() {
   const today = todayKey();
   return state.meals.filter((meal) => todayKey(new Date(meal.createdAt)) === today);
@@ -323,8 +333,105 @@ function guitarSummary(entries = state.guitarLogs) {
   };
 }
 
+function weightLoggedToday() {
+  const latest = state.weightHistory.at(-1);
+  return latest ? todayKey(new Date(latest.createdAt)) === todayKey() : false;
+}
+
+function guitarToday() {
+  const today = todayKey();
+  return state.guitarLogs.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
+}
+
+function onboardingSteps() {
+  return [
+    {
+      id: "weight",
+      title: "Pierwsza waga",
+      detail: "Miej punkt startowy na dzisiaj.",
+      done: weightLoggedToday()
+    },
+    {
+      id: "task",
+      title: "Jedna wazna rzecz",
+      detail: "Dodaj task, ktory realnie przesuwa dzien.",
+      done: state.tasks.length > 0
+    },
+    {
+      id: "practice",
+      title: "Pierwszy output",
+      detail: "Trening albo gitara, by odpalic rytm.",
+      done: state.workouts.length > 0 || state.guitarLogs.length > 0
+    }
+  ];
+}
+
+function syncOnboardingState() {
+  const steps = onboardingSteps();
+  state.onboarding.completed = steps.every((step) => step.done);
+}
+
+function priorityItems() {
+  const priorities = [];
+  const openTasks = state.tasks
+    .filter((task) => !task.done)
+    .sort((a, b) => {
+      const weight = { high: 0, medium: 1, low: 2 };
+      return (weight[a.priority] ?? 1) - (weight[b.priority] ?? 1);
+    });
+  const undoneHabits = state.habits.filter((habit) => !habit.done);
+
+  openTasks.slice(0, 2).forEach((task) => {
+    priorities.push({
+      type: "task",
+      id: task.id,
+      title: task.title,
+      detail: `${priorityLabel(task.priority)} priorytet`
+    });
+  });
+
+  if (undoneHabits.length && priorities.length < 3) {
+    const habit = undoneHabits[0];
+    priorities.push({
+      type: "habit",
+      id: habit.id,
+      title: habit.title,
+      detail: habit.detail || "Minimum"
+    });
+  }
+
+  if (!weightLoggedToday() && priorities.length < 3) {
+    priorities.push({
+      type: "capture",
+      focus: "weight-input",
+      title: "Zaloguj wage",
+      detail: "15 sekund i masz punkt odniesienia."
+    });
+  }
+
+  if (!workoutsToday().length && priorities.length < 3) {
+    priorities.push({
+      type: "capture",
+      focus: "workout-title-input",
+      title: "Zaplanuj trening",
+      detail: "Nawet krotki wpis ustawia dzien."
+    });
+  }
+
+  if (!guitarToday().length && priorities.length < 3) {
+    priorities.push({
+      type: "capture",
+      focus: "guitar-title-input",
+      title: "10 min gitary",
+      detail: "Jeden wpis BPM podtrzymuje regularnosc."
+    });
+  }
+
+  return priorities.slice(0, 3);
+}
+
 function priorityLabel(priority) {
-  return { high: "High", medium: "Medium", low: "Low" }[priority] || "Medium";
+  return { high: "Wysoki", medium: "Sredni", low: "Niski" }[priority] || "Sredni";
 }
 
 function escapeHtml(value) {
@@ -341,6 +448,7 @@ function setFeedback(message) {
 }
 
 function renderToday() {
+  syncOnboardingState();
   const progress = computeProgress();
   const nutrition = nutritionToday();
   const todayFinance = financeSummary(financeToday());
@@ -389,6 +497,89 @@ function renderToday() {
   renderFinanceList();
   renderGuitarList();
   renderSetList();
+  renderPriorityList();
+  renderOnboardingCard();
+}
+
+function renderPriorityList() {
+  const node = document.getElementById("priority-list");
+  const summaryNode = document.getElementById("priority-summary");
+  node.innerHTML = "";
+  const items = priorityItems();
+  summaryNode.textContent = `${items.length} aktywne`;
+
+  if (!items.length) {
+    node.appendChild(emptyNode("Dzien jest czysty. Zostaw tylko podtrzymanie rytmu."));
+    return;
+  }
+
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${escapeHtml(item.detail)}</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+
+    if (item.type === "task") {
+      tools.appendChild(makeToolButton("Done", () => {
+        state.tasks = state.tasks.map((task) => task.id === item.id ? { ...task, done: true } : task);
+        setFeedback(`Domknieto task: ${item.title}.`);
+        saveState();
+        renderAll();
+      }));
+    } else if (item.type === "habit") {
+      tools.appendChild(makeToolButton("Done", () => {
+        state.habits = state.habits.map((habit) => habit.id === item.id ? { ...habit, done: true } : habit);
+        setFeedback(`Odhaczono habit: ${item.title}.`);
+        saveState();
+        renderAll();
+      }));
+    } else {
+      tools.appendChild(makeToolButton("Open", () => {
+        setTab("capture");
+        focusField(item.focus);
+      }));
+    }
+
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+}
+
+function renderOnboardingCard() {
+  const card = document.getElementById("onboarding-card");
+  const listNode = document.getElementById("onboarding-list");
+  const summaryNode = document.getElementById("onboarding-summary");
+  const progressNode = document.getElementById("onboarding-progress-bar");
+  if (!card || !listNode || !summaryNode || !progressNode) return;
+
+  const steps = onboardingSteps();
+  const done = steps.filter((step) => step.done).length;
+  const percent = Math.round((done / steps.length) * 100);
+
+  card.hidden = state.onboarding.dismissed || state.onboarding.completed;
+  summaryNode.textContent = `${done}/${steps.length}`;
+  progressNode.style.width = `${percent}%`;
+  listNode.innerHTML = "";
+
+  steps.forEach((step) => {
+    const item = document.createElement("div");
+    item.className = `list-item${step.done ? " done" : ""}`;
+    item.innerHTML = `
+      <div class="list-toggle" aria-hidden="true"></div>
+      <div class="list-copy">
+        <strong>${escapeHtml(step.title)}</strong>
+        <span>${escapeHtml(step.detail)}</span>
+      </div>
+    `;
+    listNode.appendChild(item);
+  });
 }
 
 function emptyNode(label) {
@@ -874,6 +1065,7 @@ function renderExerciseSummary() {
 }
 
 function renderMe() {
+  syncOnboardingState();
   const node = document.getElementById("supplement-list");
   node.innerHTML = "";
   state.supplements.forEach((supplement) => {
@@ -891,6 +1083,10 @@ function renderMe() {
   document.getElementById("evaluator-score").textContent = state.evaluator.score ?? "-";
   document.getElementById("evaluator-label").textContent = state.evaluator.label ?? "-";
   document.getElementById("evaluator-cpu").textContent = state.evaluator.costPerUse != null ? `${state.evaluator.costPerUse.toFixed(0)} zl` : "-";
+  document.getElementById("me-onboarding-status").textContent = state.onboarding.completed ? "Done" : "In progress";
+  document.getElementById("me-onboarding-copy").textContent = state.onboarding.completed
+    ? "Start jest domkniety. Teraz najwazniejsze jest tylko utrzymanie prostego rytmu i backupu."
+    : `${onboardingSteps().filter((step) => step.done).length}/3 krokow gotowe. Uzupelnij podstawy, a panel zacznie byc naprawde osobisty.`;
 }
 
 function renderDate() {
@@ -1320,6 +1516,30 @@ function exportState() {
   setFeedback("Wyeksportowano JSON.");
 }
 
+function importState(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      if (!confirm("Nadpisac obecne dane importem?")) return;
+
+      state = normalizeState(parsed);
+      syncOnboardingState();
+      resetRestTimer();
+      stopMetronome();
+      metronomeBpm = 80;
+      saveState();
+      renderAll();
+      setFeedback("Zaimportowano JSON.");
+    } catch {
+      setFeedback("Nie udalo sie wczytac JSON.");
+    }
+  };
+  reader.readAsText(file);
+}
+
 function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
@@ -1610,8 +1830,38 @@ function bindTabs() {
 }
 
 function bindTools() {
+  const importInput = document.getElementById("import-input");
+  document.getElementById("import-button").addEventListener("click", () => importInput.click());
   document.getElementById("export-button").addEventListener("click", exportState);
   document.getElementById("reset-button").addEventListener("click", resetState);
+  document.getElementById("show-onboarding-button").addEventListener("click", () => {
+    state.onboarding.dismissed = false;
+    state.onboarding.completed = false;
+    saveState();
+    renderAll();
+    setTab("today");
+  });
+  document.getElementById("complete-onboarding-button").addEventListener("click", () => {
+    state.onboarding.completed = true;
+    state.onboarding.dismissed = false;
+    saveState();
+    renderAll();
+    setFeedback("Ukryto onboarding.");
+  });
+  document.getElementById("onboarding-open-capture").addEventListener("click", () => {
+    setTab("capture");
+    focusField("weight-input");
+  });
+  document.getElementById("onboarding-dismiss-button").addEventListener("click", () => {
+    state.onboarding.dismissed = true;
+    saveState();
+    renderAll();
+  });
+  importInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    importState(file);
+    event.target.value = "";
+  });
   document.querySelectorAll("[data-rest-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       restTimerValue = Number(button.dataset.restPreset);

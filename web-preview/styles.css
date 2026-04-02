@@ -398,6 +398,10 @@ button:active {
   gap: 10px;
 }
 
+.compact-stack .list-item {
+  padding: 10px 12px;
+}
+
 .template-list {
   display: grid;
   gap: 10px;
@@ -712,7 +716,7 @@ textarea {
 
 .tool-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
