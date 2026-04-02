@@ -398,6 +398,57 @@ button:active {
   gap: 10px;
 }
 
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.template-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.template-top strong {
+  font-size: 0.98rem;
+}
+
+.template-top span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.template-meta {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.template-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.template-start {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 14px;
+  background: linear-gradient(90deg, var(--accent), #4c9a85);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .list-item {
   display: grid;
   grid-template-columns: auto 1fr auto;

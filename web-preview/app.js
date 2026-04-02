@@ -1,7 +1,30 @@
-const STORAGE_KEY = "lifeos-preview-state-v2";
+const STORAGE_KEY = "lifeos-preview-state-v3";
+
+function isoDaysAgo(days, hour = 9) {
+  const date = new Date();
+  date.setHours(hour, 0, 0, 0);
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
+
+function todayKey(date = new Date()) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+function weekKey(date = new Date()) {
+  const target = new Date(date);
+  const day = (target.getDay() + 6) % 7;
+  target.setDate(target.getDate() - day);
+  target.setHours(0, 0, 0, 0);
+  return `${target.getFullYear()}-${target.getMonth() + 1}-${target.getDate()}`;
+}
 
 const defaultState = {
   activeTab: "today",
+  meta: {
+    lastDailyReset: todayKey(),
+    lastWeeklyReset: weekKey()
+  },
   note: "Zamknij najpierw rzeczy o wysokim zwrocie: trening, 2-3 taski i prosty rytm dnia.",
   habits: [
     { id: "habit-1", title: "Morning mobility", detail: "2 min minimum", done: true },
@@ -14,23 +37,28 @@ const defaultState = {
     { id: "task-3", title: "Plan na jutro", detail: "top 3 przed 21:30", done: false, priority: "medium" }
   ],
   workouts: [
-    { id: "workout-1", title: "Upper A", duration: 68, focus: "strength", dateLabel: "Mon" },
-    { id: "workout-2", title: "Lower A", duration: 74, focus: "legs", dateLabel: "Wed" },
-    { id: "workout-3", title: "Pull", duration: 42, focus: "back", dateLabel: "Thu" },
-    { id: "workout-4", title: "Push", duration: 55, focus: "chest", dateLabel: "Sat" }
+    { id: "workout-1", title: "Upper A", duration: 68, focus: "strength", dateLabel: "Mon", createdAt: isoDaysAgo(5, 18) },
+    { id: "workout-2", title: "Lower A", duration: 74, focus: "legs", dateLabel: "Wed", createdAt: isoDaysAgo(3, 18) },
+    { id: "workout-3", title: "Pull", duration: 42, focus: "back", dateLabel: "Thu", createdAt: isoDaysAgo(2, 18) },
+    { id: "workout-4", title: "Push", duration: 55, focus: "chest", dateLabel: "Sat", createdAt: isoDaysAgo(0, 12) }
+  ],
+  workoutTemplates: [
+    { id: "tpl-1", title: "Upper A", focus: "strength", rest: 90, exercises: ["Bench Press", "Chest Row", "Overhead Press"] },
+    { id: "tpl-2", title: "Lower A", focus: "legs", rest: 120, exercises: ["Split Squat", "RDL", "Leg Curl"] },
+    { id: "tpl-3", title: "Pull", focus: "back", rest: 75, exercises: ["Pull-up", "Row", "Curl"] }
   ],
   exerciseSets: [
-    { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today" },
-    { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today" },
-    { id: "set-3", exercise: "Chest Row", reps: 10, weight: 36, rest: 75, dateLabel: "Today" }
+    { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
+    { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
+    { id: "set-3", exercise: "Chest Row", reps: 10, weight: 36, rest: 75, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) }
   ],
   weightHistory: [
-    { dateLabel: "D1", value: 81.2 },
-    { dateLabel: "D2", value: 80.9 },
-    { dateLabel: "D3", value: 80.8 },
-    { dateLabel: "D4", value: 80.6 },
-    { dateLabel: "D5", value: 80.5 },
-    { dateLabel: "D6", value: 80.4 }
+    { dateLabel: "D1", value: 81.2, createdAt: isoDaysAgo(5, 8) },
+    { dateLabel: "D2", value: 80.9, createdAt: isoDaysAgo(4, 8) },
+    { dateLabel: "D3", value: 80.8, createdAt: isoDaysAgo(3, 8) },
+    { dateLabel: "D4", value: 80.6, createdAt: isoDaysAgo(2, 8) },
+    { dateLabel: "D5", value: 80.5, createdAt: isoDaysAgo(1, 8) },
+    { dateLabel: "D6", value: 80.4, createdAt: isoDaysAgo(0, 8) }
   ],
   supplements: [
     { name: "Creatine", dosage: "5 g" },
@@ -45,14 +73,21 @@ function cloneState(value) {
 
 function normalizeState(rawState) {
   const state = { ...cloneState(defaultState), ...rawState };
+  state.meta = state.meta && typeof state.meta === "object" ? state.meta : cloneState(defaultState.meta);
   state.habits = Array.isArray(state.habits) ? state.habits : cloneState(defaultState.habits);
   state.tasks = Array.isArray(state.tasks) ? state.tasks : cloneState(defaultState.tasks);
   state.workouts = Array.isArray(state.workouts) ? state.workouts : cloneState(defaultState.workouts);
+  state.workoutTemplates = Array.isArray(state.workoutTemplates) ? state.workoutTemplates : cloneState(defaultState.workoutTemplates);
   state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
   state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
   state.supplements = Array.isArray(state.supplements) ? state.supplements : cloneState(defaultState.supplements);
   state.note = typeof state.note === "string" ? state.note : defaultState.note;
   state.activeTab = typeof state.activeTab === "string" ? state.activeTab : "today";
+  state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
+  state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
+  state.workouts = state.workouts.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.workouts.length - index - 1), 18) }));
+  state.exerciseSets = state.exerciseSets.map((entry) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(0, 12) }));
+  state.weightHistory = state.weightHistory.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.weightHistory.length - index - 1), 8) }));
   return state;
 }
 
@@ -69,6 +104,23 @@ let state = loadState();
 let restTimerValue = 90;
 let restTimerRunning = false;
 let restTimerInterval = null;
+
+function applyResets() {
+  const today = todayKey();
+  const week = weekKey();
+
+  if (state.meta.lastDailyReset !== today) {
+    state.habits = state.habits.map((habit) => ({ ...habit, done: false }));
+    state.tasks = state.tasks.filter((task) => !task.done);
+    state.meta.lastDailyReset = today;
+  }
+
+  if (state.meta.lastWeeklyReset !== week) {
+    state.meta.lastWeeklyReset = week;
+  }
+
+  saveState();
+}
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -131,6 +183,11 @@ function totalTrainingMinutes() {
   return state.workouts.reduce((sum, workout) => sum + Number(workout.duration || 0), 0);
 }
 
+function workoutsThisWeek() {
+  const currentWeek = weekKey();
+  return state.workouts.filter((workout) => weekKey(new Date(workout.createdAt)) === currentWeek);
+}
+
 function averageWeight() {
   if (!state.weightHistory.length) return null;
   const sum = state.weightHistory.reduce((acc, item) => acc + Number(item.value), 0);
@@ -184,19 +241,22 @@ function renderToday() {
       : "Zrob kilka prostych rzeczy i odbuduj flow.";
 
   const weight = latestWeight();
+  const weekCount = workoutsThisWeek().length;
   document.getElementById("latest-weight").textContent = weight ? `${weight.toFixed(1)} kg` : "-";
   document.getElementById("open-task-count").textContent = String(progress.openTasks);
   document.getElementById("habit-done-count").textContent = `${progress.doneHabits}/${state.habits.length}`;
-  document.getElementById("week-workout-count").textContent = String(state.workouts.length);
+  document.getElementById("week-workout-count").textContent = `${weekCount}/4`;
   document.getElementById("habit-summary").textContent = `${progress.doneHabits}/${state.habits.length}`;
   document.getElementById("task-summary").textContent = `${progress.openTasks} open`;
   document.getElementById("workout-summary").textContent = `${totalTrainingMinutes()} min`;
   document.getElementById("set-summary").textContent = `${state.exerciseSets.length} wpisow`;
+  document.getElementById("template-summary").textContent = `${state.workoutTemplates.length}`;
   document.getElementById("today-note").textContent = state.note;
 
   renderHabitList();
   renderTaskList();
   renderWorkoutList();
+  renderTemplateList();
   renderSetList();
 }
 
@@ -303,6 +363,42 @@ function renderWorkoutList() {
     );
     wrapper.appendChild(tools);
     node.appendChild(wrapper);
+  });
+}
+
+function renderTemplateList() {
+  const node = document.getElementById("template-list");
+  node.innerHTML = "";
+
+  if (!state.workoutTemplates.length) {
+    node.appendChild(emptyNode("Brak szablonow."));
+    return;
+  }
+
+  state.workoutTemplates.forEach((template) => {
+    const item = document.createElement("div");
+    item.className = "template-item";
+    item.innerHTML = `
+      <div class="template-top">
+        <div class="list-copy">
+          <strong>${escapeHtml(template.title)}</strong>
+          <span>${escapeHtml(template.focus)} - rest ${template.rest}s</span>
+        </div>
+      </div>
+      <div class="template-meta">${escapeHtml(template.exercises.join(", "))}</div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "template-actions";
+    const start = document.createElement("button");
+    start.type = "button";
+    start.className = "template-start";
+    start.textContent = "Uzyj";
+    start.addEventListener("click", () => applyWorkoutTemplate(template.id));
+    actions.appendChild(start);
+    actions.appendChild(makeToolButton("Edit", () => editTemplate(template.id)));
+    item.appendChild(actions);
+    node.appendChild(item);
   });
 }
 
@@ -500,6 +596,7 @@ function toggleRestTimer() {
     clearInterval(restTimerInterval);
     restTimerInterval = null;
     renderRestTimer();
+    notifyTimerComplete();
     setFeedback("Koniec przerwy.");
   }, 1000);
 }
@@ -510,6 +607,28 @@ function resetRestTimer() {
   restTimerInterval = null;
   restTimerValue = 90;
   renderRestTimer();
+}
+
+function notifyTimerComplete() {
+  if (navigator.vibrate) {
+    navigator.vibrate([120, 80, 120]);
+  }
+
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.05;
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.18);
+    oscillator.onended = () => audioContext.close();
+  } catch {
+    // Silent fallback for unsupported browsers.
+  }
 }
 
 function editHabit(id) {
@@ -552,6 +671,49 @@ function editWorkout(id) {
     duration: Number.isFinite(numeric) && numeric > 0 ? numeric : item.duration
   } : item);
   setFeedback(`Zmieniono trening: ${title.trim() || workout.title}.`);
+  saveState();
+  renderAll();
+}
+
+function editTemplate(id) {
+  const template = state.workoutTemplates.find((item) => item.id === id);
+  if (!template) return;
+  const title = prompt("Szablon", template.title);
+  if (title === null) return;
+  const focus = prompt("Focus", template.focus);
+  if (focus === null) return;
+  const rest = prompt("Rest s", String(template.rest));
+  if (rest === null) return;
+
+  state.workoutTemplates = state.workoutTemplates.map((item) => item.id === id ? {
+    ...item,
+    title: title.trim() || item.title,
+    focus: focus.trim() || item.focus,
+    rest: Number.isFinite(Number(rest)) && Number(rest) > 0 ? Number(rest) : item.rest
+  } : item);
+
+  setFeedback(`Zmieniono szablon: ${title.trim() || template.title}.`);
+  saveState();
+  renderAll();
+}
+
+function applyWorkoutTemplate(id) {
+  const template = state.workoutTemplates.find((item) => item.id === id);
+  if (!template) return;
+
+  const dayLabel = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date());
+  state.workouts.push({
+    id: uid("workout"),
+    title: template.title,
+    duration: template.exercises.length * 18,
+    focus: template.focus,
+    dateLabel: dayLabel,
+    createdAt: new Date().toISOString()
+  });
+
+  restTimerValue = template.rest;
+  renderRestTimer();
+  setFeedback(`Dodano trening z szablonu: ${template.title}.`);
   saveState();
   renderAll();
 }
@@ -638,7 +800,8 @@ function bindForms() {
 
     state.weightHistory = [...state.weightHistory.slice(-6), {
       dateLabel: `D${state.weightHistory.length + 1}`,
-      value
+      value,
+      createdAt: new Date().toISOString()
     }];
     input.value = "";
     setFeedback(`Zapisano wage ${value.toFixed(1)} kg.`);
@@ -706,7 +869,8 @@ function bindForms() {
       title,
       duration,
       focus: focusInput.value.trim() || "general",
-      dateLabel: dayLabel
+      dateLabel: dayLabel,
+      createdAt: new Date().toISOString()
     });
 
     titleInput.value = "";
@@ -736,7 +900,8 @@ function bindForms() {
       reps,
       weight,
       rest: Number.isFinite(rest) && rest >= 0 ? rest : restTimerValue,
-      dateLabel: "Today"
+      dateLabel: "Today",
+      createdAt: new Date().toISOString()
     });
 
     exerciseInput.value = "";
@@ -804,6 +969,7 @@ function renderAll() {
 bindTabs();
 bindForms();
 bindTools();
+applyResets();
 renderAll();
 
 if ("serviceWorker" in navigator) {
