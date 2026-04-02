@@ -171,6 +171,28 @@
 
               <article class="glass card">
                 <div class="card-head">
+                  <h3>Finanse</h3>
+                  <span id="finance-balance">0 zl</span>
+                </div>
+                <div class="metric-row">
+                  <div class="metric">
+                    <span>Przychod</span>
+                    <strong id="today-income">0 zl</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Wydatek</span>
+                    <strong id="today-expense">0 zl</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Planowane</span>
+                    <strong id="today-planned">0 zl</strong>
+                  </div>
+                </div>
+                <div id="finance-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
                   <h3>Ostatnie serie</h3>
                   <span id="set-summary">0 wpisow</span>
                 </div>
@@ -297,6 +319,72 @@
 
               <div class="glass card">
                 <div class="card-head">
+                  <h3>Finanse</h3>
+                  <span>Cashflow</span>
+                </div>
+                <form id="finance-form" class="form-block">
+                  <select id="finance-type-input">
+                    <option value="expense" selected>Wydatek</option>
+                    <option value="income">Przychod</option>
+                  </select>
+                  <input id="finance-title-input" type="text" placeholder="Np. silownia / projekt / zakupy">
+                  <div class="inline-form inline-form-two">
+                    <input id="finance-amount-input" type="number" step="0.01" placeholder="Kwota zl">
+                    <input id="finance-category-input" type="text" placeholder="Kategoria">
+                  </div>
+                  <button type="submit" class="full-button">Dodaj wpis</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Planowany wydatek</h3>
+                  <span>Later</span>
+                </div>
+                <form id="planned-form" class="form-block">
+                  <input id="planned-title-input" type="text" placeholder="Np. sluchawki / kurs">
+                  <div class="inline-form inline-form-two">
+                    <input id="planned-amount-input" type="number" step="0.01" placeholder="Kwota zl">
+                    <input id="planned-date-input" type="text" placeholder="Np. ten tydzien">
+                  </div>
+                  <button type="submit" class="full-button">Dodaj plan</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Ocena zakupu</h3>
+                  <span>Quick</span>
+                </div>
+                <form id="evaluator-form" class="form-block">
+                  <div class="inline-form inline-form-two">
+                    <input id="eval-cost-input" type="number" step="0.01" placeholder="Koszt zl">
+                    <input id="eval-uses-input" type="number" step="1" placeholder="Uzycia / mies.">
+                  </div>
+                  <div class="inline-form inline-form-two">
+                    <input id="eval-value-input" type="number" step="1" min="1" max="10" placeholder="Wartosc 1-10">
+                    <input id="eval-goal-input" type="number" step="1" min="1" max="10" placeholder="Wplyw 1-10">
+                  </div>
+                  <button type="submit" class="full-button">Policz</button>
+                </form>
+                <div class="metric-row evaluator-output">
+                  <div class="metric">
+                    <span>Score</span>
+                    <strong id="evaluator-score">-</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Komentarz</span>
+                    <strong id="evaluator-label">-</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Koszt/uzycie</span>
+                    <strong id="evaluator-cpu">-</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
                   <h3>Timer przerw</h3>
                   <span id="rest-timer-status">Ready</span>
                 </div>
@@ -392,6 +480,28 @@
                   <strong id="insight-carb-fat">0/0</strong>
                 </div>
               </div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Finance</h3>
+                <span>This month</span>
+              </div>
+              <div class="metric-row">
+                <div class="metric">
+                  <span>Balance</span>
+                  <strong id="insight-balance">0 zl</strong>
+                </div>
+                <div class="metric">
+                  <span>Savings rate</span>
+                  <strong id="insight-savings-rate">0%</strong>
+                </div>
+                <div class="metric">
+                  <span>Planned</span>
+                  <strong id="insight-planned">0 zl</strong>
+                </div>
+              </div>
+              <div id="finance-chart" class="chart chart-bars"></div>
             </div>
 
             <div class="glass card">

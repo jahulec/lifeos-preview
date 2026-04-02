@@ -57,6 +57,21 @@ const defaultState = {
     { id: "meal-tpl-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19 },
     { id: "meal-tpl-3", title: "Light dinner", calories: 520, protein: 35, carbs: 34, fats: 21 }
   ],
+  financeEntries: [
+    { id: "fin-1", type: "income", title: "Projekt", amount: 3200, category: "Praca", createdAt: isoDaysAgo(6, 11) },
+    { id: "fin-2", type: "expense", title: "Silownia", amount: 169, category: "Zdrowie", createdAt: isoDaysAgo(4, 10) },
+    { id: "fin-3", type: "expense", title: "Zakupy", amount: 240, category: "Jedzenie", createdAt: isoDaysAgo(1, 19) },
+    { id: "fin-4", type: "income", title: "Zlecenie", amount: 780, category: "Praca", createdAt: isoDaysAgo(0, 14) }
+  ],
+  plannedExpenses: [
+    { id: "plan-1", title: "Sluchawki", amount: 499, dueLabel: "ten tydzien" },
+    { id: "plan-2", title: "Kurs", amount: 299, dueLabel: "ten miesiac" }
+  ],
+  evaluator: {
+    score: null,
+    label: "-",
+    costPerUse: null
+  },
   exerciseSets: [
     { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
     { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
@@ -90,6 +105,9 @@ function normalizeState(rawState) {
   state.workoutTemplates = Array.isArray(state.workoutTemplates) ? state.workoutTemplates : cloneState(defaultState.workoutTemplates);
   state.meals = Array.isArray(state.meals) ? state.meals : cloneState(defaultState.meals);
   state.mealTemplates = Array.isArray(state.mealTemplates) ? state.mealTemplates : cloneState(defaultState.mealTemplates);
+  state.financeEntries = Array.isArray(state.financeEntries) ? state.financeEntries : cloneState(defaultState.financeEntries);
+  state.plannedExpenses = Array.isArray(state.plannedExpenses) ? state.plannedExpenses : cloneState(defaultState.plannedExpenses);
+  state.evaluator = state.evaluator && typeof state.evaluator === "object" ? state.evaluator : cloneState(defaultState.evaluator);
   state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
   state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
   state.supplements = Array.isArray(state.supplements) ? state.supplements : cloneState(defaultState.supplements);
@@ -99,6 +117,7 @@ function normalizeState(rawState) {
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
   state.workouts = state.workouts.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.workouts.length - index - 1), 18) }));
   state.meals = state.meals.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.meals.length - index - 1), 12) }));
+  state.financeEntries = state.financeEntries.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.financeEntries.length - index - 1), 12) }));
   state.exerciseSets = state.exerciseSets.map((entry) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(0, 12) }));
   state.weightHistory = state.weightHistory.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.weightHistory.length - index - 1), 8) }));
   return state;
@@ -216,6 +235,39 @@ function nutritionToday() {
   }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
 }
 
+function monthKey(date = new Date()) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}`;
+}
+
+function financeThisMonth() {
+  const currentMonth = monthKey();
+  return state.financeEntries.filter((entry) => monthKey(new Date(entry.createdAt)) === currentMonth);
+}
+
+function financeToday() {
+  const today = todayKey();
+  return state.financeEntries.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
+}
+
+function financeSummary(entries = financeThisMonth()) {
+  return entries.reduce((totals, entry) => {
+    if (entry.type === "income") {
+      totals.income += Number(entry.amount || 0);
+    } else {
+      totals.expense += Number(entry.amount || 0);
+    }
+    return totals;
+  }, { income: 0, expense: 0 });
+}
+
+function plannedTotal() {
+  return state.plannedExpenses.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+}
+
+function formatZl(value) {
+  return `${Math.round(value)} zl`;
+}
+
 function averageWeight() {
   if (!state.weightHistory.length) return null;
   const sum = state.weightHistory.reduce((acc, item) => acc + Number(item.value), 0);
@@ -258,6 +310,7 @@ function setFeedback(message) {
 function renderToday() {
   const progress = computeProgress();
   const nutrition = nutritionToday();
+  const todayFinance = financeSummary(financeToday());
   document.getElementById("main-progress-value").textContent = `${progress.percent}%`;
   document.getElementById("main-progress-bar").style.width = `${progress.percent}%`;
   document.getElementById("top-progress-chip").textContent = `${progress.percent}%`;
@@ -284,6 +337,10 @@ function renderToday() {
   document.getElementById("today-kcal").textContent = `${nutrition.calories}`;
   document.getElementById("today-protein").textContent = `${nutrition.protein} g`;
   document.getElementById("today-macros").textContent = `${nutrition.carbs}/${nutrition.fats}`;
+  document.getElementById("finance-balance").textContent = formatZl(todayFinance.income - todayFinance.expense);
+  document.getElementById("today-income").textContent = formatZl(todayFinance.income);
+  document.getElementById("today-expense").textContent = formatZl(todayFinance.expense);
+  document.getElementById("today-planned").textContent = formatZl(plannedTotal());
   document.getElementById("today-note").textContent = state.note;
 
   renderHabitList();
@@ -291,6 +348,7 @@ function renderToday() {
   renderWorkoutList();
   renderTemplateList();
   renderMealList();
+  renderFinanceList();
   renderSetList();
 }
 
@@ -504,6 +562,60 @@ function renderMealTemplateList() {
   });
 }
 
+function renderFinanceList() {
+  const node = document.getElementById("finance-list");
+  node.innerHTML = "";
+  const entries = financeToday().slice().reverse();
+
+  if (!entries.length) {
+    node.appendChild(emptyNode("Brak finansow dzisiaj."));
+    return;
+  }
+
+  entries.slice(0, 4).forEach((entry) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${entry.type === "income" ? "Przychod" : "Wydatek"} - ${formatZl(entry.amount)} - ${escapeHtml(entry.category || "Inne")}</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editFinanceEntry(entry.id)),
+      makeToolButton("Del", () => deleteFinanceEntry(entry.id), true)
+    );
+    item.appendChild(tools);
+    node.appendChild(item);
+  });
+}
+
+function renderFinanceChart() {
+  const node = document.getElementById("finance-chart");
+  node.innerHTML = "";
+  const entries = financeThisMonth();
+  const maxAmount = Math.max(...entries.map((entry) => entry.amount), 1);
+
+  if (!entries.length) {
+    node.appendChild(emptyNode("Brak wpisow finansowych."));
+    return;
+  }
+
+  entries.slice().reverse().slice(0, 5).forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <span>${escapeHtml(entry.title)}</span>
+      <div class="bar-track"><i style="width:${Math.round((entry.amount / maxAmount) * 100)}%"></i></div>
+      <strong>${entry.type === "income" ? "+" : "-"}${Math.round(entry.amount)}</strong>
+    `;
+    node.appendChild(row);
+  });
+}
+
 function renderSetList() {
   const node = document.getElementById("set-list");
   node.innerHTML = "";
@@ -537,11 +649,13 @@ function renderSetList() {
 function renderZones() {
   const progress = computeProgress();
   const fitnessProgress = Math.min(Math.round((state.workouts.length / 5) * 100), 100);
+  const finance = financeSummary();
+  const financeProgress = finance.income > 0 ? Math.max(Math.min(Math.round(((finance.income - finance.expense) / finance.income) * 100), 100), 0) : 0;
   const zones = [
     { title: "Fitness", copy: "Trening, waga, output i baza progresu.", percent: fitnessProgress },
     { title: "Habits", copy: "Codzienny rytm z minimalnym progiem wejscia.", percent: state.habits.length ? Math.round((progress.doneHabits / state.habits.length) * 100) : 0 },
     { title: "Tasks", copy: "Inbox i egzekucja najwazniejszych rzeczy.", percent: state.tasks.length ? Math.round((progress.doneTasks / state.tasks.length) * 100) : 0 },
-    { title: "Finanse", copy: "Pozniej: cashflow, wydatki i ocena zakupow.", percent: 14 },
+    { title: "Finanse", copy: "Cashflow, planowane wydatki i ocena zakupow.", percent: financeProgress },
     { title: "Gitara", copy: "Pozniej: BPM, metronom i skill tracker.", percent: 8 }
   ];
 
@@ -606,15 +720,21 @@ function renderInsights() {
   renderWeightChart();
   renderTrainingChart();
   renderExerciseSummary();
+  renderFinanceChart();
 
   const average = averageWeight();
   const nutrition = nutritionToday();
+  const finance = financeSummary();
+  const savingsRate = finance.income > 0 ? Math.round(((finance.income - finance.expense) / finance.income) * 100) : 0;
   document.getElementById("average-weight").textContent = average ? `${average.toFixed(1)} kg` : "-";
   document.getElementById("total-training-minutes").textContent = `${totalTrainingMinutes()}`;
   document.getElementById("insight-progress").textContent = `${computeProgress().percent}%`;
   document.getElementById("insight-kcal").textContent = `${nutrition.calories}`;
   document.getElementById("insight-protein").textContent = `${nutrition.protein} g`;
   document.getElementById("insight-carb-fat").textContent = `${nutrition.carbs}/${nutrition.fats}`;
+  document.getElementById("insight-balance").textContent = formatZl(finance.income - finance.expense);
+  document.getElementById("insight-savings-rate").textContent = `${savingsRate}%`;
+  document.getElementById("insight-planned").textContent = formatZl(plannedTotal());
   document.getElementById("review-copy").textContent =
     computeProgress().percent >= 70
       ? "Dobry tydzien. Najmocniej dziala rytm i regularnosc."
@@ -658,6 +778,10 @@ function renderMe() {
     `;
     node.appendChild(item);
   });
+
+  document.getElementById("evaluator-score").textContent = state.evaluator.score ?? "-";
+  document.getElementById("evaluator-label").textContent = state.evaluator.label ?? "-";
+  document.getElementById("evaluator-cpu").textContent = state.evaluator.costPerUse != null ? `${state.evaluator.costPerUse.toFixed(0)} zl` : "-";
 }
 
 function renderDate() {
@@ -897,6 +1021,45 @@ function applyMealTemplate(id) {
   renderAll();
 }
 
+function editFinanceEntry(id) {
+  const entry = state.financeEntries.find((item) => item.id === id);
+  if (!entry) return;
+  const title = prompt("Wpis", entry.title);
+  if (title === null) return;
+  const amount = prompt("Kwota", String(entry.amount));
+  if (amount === null) return;
+  const category = prompt("Kategoria", entry.category || "");
+  if (category === null) return;
+
+  state.financeEntries = state.financeEntries.map((item) => item.id === id ? {
+    ...item,
+    title: title.trim() || item.title,
+    amount: Number.isFinite(Number(amount)) ? Number(amount) : item.amount,
+    category: category.trim() || item.category
+  } : item);
+
+  setFeedback(`Zmieniono wpis finansowy: ${title.trim() || entry.title}.`);
+  saveState();
+  renderAll();
+}
+
+function deleteFinanceEntry(id) {
+  state.financeEntries = state.financeEntries.filter((item) => item.id !== id);
+  setFeedback("Usunieto wpis finansowy.");
+  saveState();
+  renderAll();
+}
+
+function computeEvaluator(cost, uses, value, goalImpact) {
+  const costPerUse = uses > 0 ? cost / uses : cost;
+  const scoreRaw = (value * 4 + goalImpact * 4) - Math.min(costPerUse / 10, 20);
+  const score = Math.max(Math.min(Math.round(scoreRaw), 99), 0);
+  let label = "Srednio";
+  if (score >= 65) label = "Ma sens";
+  if (score < 40) label = "Raczej nie";
+  return { score, label, costPerUse };
+}
+
 function deleteHabit(id) {
   state.habits = state.habits.filter((item) => item.id !== id);
   setFeedback("Usunieto habit.");
@@ -1123,6 +1286,75 @@ function bindForms() {
     carbsInput.value = "";
     fatsInput.value = "";
     setFeedback(`Dodano posilek: ${title}.`);
+    saveState();
+    renderAll();
+  });
+
+  document.getElementById("finance-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const typeInput = document.getElementById("finance-type-input");
+    const titleInput = document.getElementById("finance-title-input");
+    const amountInput = document.getElementById("finance-amount-input");
+    const categoryInput = document.getElementById("finance-category-input");
+    const title = titleInput.value.trim();
+    const amount = Number(amountInput.value);
+
+    if (!title || !Number.isFinite(amount) || amount <= 0) return;
+
+    state.financeEntries.push({
+      id: uid("fin"),
+      type: typeInput.value,
+      title,
+      amount,
+      category: categoryInput.value.trim() || "Inne",
+      createdAt: new Date().toISOString()
+    });
+
+    titleInput.value = "";
+    amountInput.value = "";
+    categoryInput.value = "";
+    typeInput.value = "expense";
+    setFeedback(`Dodano wpis finansowy: ${title}.`);
+    saveState();
+    renderAll();
+  });
+
+  document.getElementById("planned-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const titleInput = document.getElementById("planned-title-input");
+    const amountInput = document.getElementById("planned-amount-input");
+    const dateInput = document.getElementById("planned-date-input");
+    const title = titleInput.value.trim();
+    const amount = Number(amountInput.value);
+
+    if (!title || !Number.isFinite(amount) || amount <= 0) return;
+
+    state.plannedExpenses.push({
+      id: uid("plan"),
+      title,
+      amount,
+      dueLabel: dateInput.value.trim() || "pozniej"
+    });
+
+    titleInput.value = "";
+    amountInput.value = "";
+    dateInput.value = "";
+    setFeedback(`Dodano planowany wydatek: ${title}.`);
+    saveState();
+    renderAll();
+  });
+
+  document.getElementById("evaluator-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const cost = Number(document.getElementById("eval-cost-input").value);
+    const uses = Number(document.getElementById("eval-uses-input").value);
+    const value = Number(document.getElementById("eval-value-input").value);
+    const goal = Number(document.getElementById("eval-goal-input").value);
+
+    if (![cost, uses, value, goal].every(Number.isFinite)) return;
+
+    state.evaluator = computeEvaluator(cost, uses, value, goal);
+    setFeedback(`Policzono ocene zakupu: ${state.evaluator.label}.`);
     saveState();
     renderAll();
   });
