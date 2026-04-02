@@ -32,7 +32,7 @@
         </div>
         <div class="meta-card">
           <span>Zakres</span>
-          <strong>Fitness + Habits + Tasks</strong>
+          <strong>Fitness + Tasks + Gitara</strong>
         </div>
         <div class="meta-card">
           <span>Cel</span>
@@ -45,7 +45,7 @@
         <ul>
           <li>Today z prawdziwym stanem dnia</li>
           <li>Dodawanie, odhaczanie, edycja i usuwanie</li>
-          <li>Waga, treningi, taski, habity i notatka</li>
+          <li>Waga, treningi, taski, finanse i gitara</li>
           <li>Instalacja na iPhonie z Safari</li>
         </ul>
       </div>
@@ -189,6 +189,28 @@
                   </div>
                 </div>
                 <div id="finance-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
+                  <h3>Gitara</h3>
+                  <span id="guitar-summary">0 sesji</span>
+                </div>
+                <div class="metric-row">
+                  <div class="metric">
+                    <span>Sesje</span>
+                    <strong id="guitar-session-count">0</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Top BPM</span>
+                    <strong id="guitar-top-bpm">0</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Cwiczenia</span>
+                    <strong id="guitar-exercise-count">0</strong>
+                  </div>
+                </div>
+                <div id="guitar-list" class="stack-list"></div>
               </article>
 
               <article class="glass card">
@@ -402,6 +424,40 @@
                 </div>
               </div>
 
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Gitara</h3>
+                  <span>BPM</span>
+                </div>
+                <form id="guitar-form" class="form-block">
+                  <input id="guitar-title-input" type="text" placeholder="Np. alternate picking">
+                  <div class="inline-form inline-form-two">
+                    <input id="guitar-bpm-input" type="number" step="1" placeholder="BPM">
+                    <input id="guitar-note-input" type="text" placeholder="Krótka notatka">
+                  </div>
+                  <button type="submit" class="full-button">Dodaj cwiczenie</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Metronom</h3>
+                  <span id="metronome-status">Ready</span>
+                </div>
+                <div class="rest-timer">
+                  <div class="timer-value" id="metronome-bpm-value">80 BPM</div>
+                  <div class="timer-presets">
+                    <button type="button" class="timer-preset" data-metronome-preset="60">60</button>
+                    <button type="button" class="timer-preset" data-metronome-preset="80">80</button>
+                    <button type="button" class="timer-preset" data-metronome-preset="100">100</button>
+                  </div>
+                  <div class="timer-actions">
+                    <button type="button" id="metronome-start-button" class="action-button">Start</button>
+                    <button type="button" id="metronome-stop-button" class="action-button subtle">Stop</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="glass card capture-wide">
                 <div class="card-head">
                   <h3>Notatka dnia</h3>
@@ -510,6 +566,28 @@
                 <span>Sets</span>
               </div>
               <div id="exercise-summary-list" class="stack-list"></div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Gitara</h3>
+                <span>This week</span>
+              </div>
+              <div class="metric-row">
+                <div class="metric">
+                  <span>Top</span>
+                  <strong id="insight-guitar-top">0 BPM</strong>
+                </div>
+                <div class="metric">
+                  <span>Sesje</span>
+                  <strong id="insight-guitar-sessions">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Srednia</span>
+                  <strong id="insight-guitar-average">0 BPM</strong>
+                </div>
+              </div>
+              <div id="guitar-chart" class="chart chart-bars"></div>
             </div>
 
             <div class="glass card">

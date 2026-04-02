@@ -674,7 +674,7 @@ textarea {
 }
 
 .bar-row {
-  grid-template-columns: 72px 1fr auto;
+  grid-template-columns: minmax(82px, 112px) 1fr auto;
 }
 
 .line-row span,

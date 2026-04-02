@@ -67,6 +67,11 @@ const defaultState = {
     { id: "plan-1", title: "Sluchawki", amount: 499, dueLabel: "ten tydzien" },
     { id: "plan-2", title: "Kurs", amount: 299, dueLabel: "ten miesiac" }
   ],
+  guitarLogs: [
+    { id: "guitar-1", title: "Alternate picking", bpm: 92, note: "czysto przy 16tkach", createdAt: isoDaysAgo(2, 20) },
+    { id: "guitar-2", title: "Spider 1234", bpm: 88, note: "lewa reka rowniej", createdAt: isoDaysAgo(1, 20) },
+    { id: "guitar-3", title: "Pentatonic sequence", bpm: 104, note: "krótki burst", createdAt: isoDaysAgo(0, 21) }
+  ],
   evaluator: {
     score: null,
     label: "-",
@@ -107,6 +112,7 @@ function normalizeState(rawState) {
   state.mealTemplates = Array.isArray(state.mealTemplates) ? state.mealTemplates : cloneState(defaultState.mealTemplates);
   state.financeEntries = Array.isArray(state.financeEntries) ? state.financeEntries : cloneState(defaultState.financeEntries);
   state.plannedExpenses = Array.isArray(state.plannedExpenses) ? state.plannedExpenses : cloneState(defaultState.plannedExpenses);
+  state.guitarLogs = Array.isArray(state.guitarLogs) ? state.guitarLogs : cloneState(defaultState.guitarLogs);
   state.evaluator = state.evaluator && typeof state.evaluator === "object" ? state.evaluator : cloneState(defaultState.evaluator);
   state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
   state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
@@ -118,6 +124,7 @@ function normalizeState(rawState) {
   state.workouts = state.workouts.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.workouts.length - index - 1), 18) }));
   state.meals = state.meals.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.meals.length - index - 1), 12) }));
   state.financeEntries = state.financeEntries.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.financeEntries.length - index - 1), 12) }));
+  state.guitarLogs = state.guitarLogs.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.guitarLogs.length - index - 1), 20) }));
   state.exerciseSets = state.exerciseSets.map((entry) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(0, 12) }));
   state.weightHistory = state.weightHistory.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.weightHistory.length - index - 1), 8) }));
   return state;
@@ -136,6 +143,10 @@ let state = loadState();
 let restTimerValue = 90;
 let restTimerRunning = false;
 let restTimerInterval = null;
+let metronomeBpm = 80;
+let metronomeRunning = false;
+let metronomeInterval = null;
+let metronomeAudioContext = null;
 
 function applyResets() {
   const today = todayKey();
@@ -290,6 +301,28 @@ function exerciseSummary() {
     .slice(0, 4);
 }
 
+function guitarLogsThisWeek() {
+  const currentWeek = weekKey();
+  return state.guitarLogs.filter((entry) => weekKey(new Date(entry.createdAt)) === currentWeek);
+}
+
+function guitarSummary(entries = state.guitarLogs) {
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const sessions = safeEntries.length;
+  const topBpm = sessions ? Math.max(...safeEntries.map((entry) => Number(entry.bpm || 0)), 0) : 0;
+  const averageBpm = sessions
+    ? Math.round(safeEntries.reduce((sum, entry) => sum + Number(entry.bpm || 0), 0) / sessions)
+    : 0;
+  const exerciseCount = new Set(safeEntries.map((entry) => entry.title)).size;
+
+  return {
+    sessions,
+    topBpm,
+    averageBpm,
+    exerciseCount
+  };
+}
+
 function priorityLabel(priority) {
   return { high: "High", medium: "Medium", low: "Low" }[priority] || "Medium";
 }
@@ -311,6 +344,7 @@ function renderToday() {
   const progress = computeProgress();
   const nutrition = nutritionToday();
   const todayFinance = financeSummary(financeToday());
+  const guitar = guitarSummary(guitarLogsThisWeek());
   document.getElementById("main-progress-value").textContent = `${progress.percent}%`;
   document.getElementById("main-progress-bar").style.width = `${progress.percent}%`;
   document.getElementById("top-progress-chip").textContent = `${progress.percent}%`;
@@ -341,6 +375,10 @@ function renderToday() {
   document.getElementById("today-income").textContent = formatZl(todayFinance.income);
   document.getElementById("today-expense").textContent = formatZl(todayFinance.expense);
   document.getElementById("today-planned").textContent = formatZl(plannedTotal());
+  document.getElementById("guitar-summary").textContent = `${guitar.sessions} sesji`;
+  document.getElementById("guitar-session-count").textContent = `${guitar.sessions}`;
+  document.getElementById("guitar-top-bpm").textContent = `${guitar.topBpm || 0}`;
+  document.getElementById("guitar-exercise-count").textContent = `${guitar.exerciseCount}`;
   document.getElementById("today-note").textContent = state.note;
 
   renderHabitList();
@@ -349,6 +387,7 @@ function renderToday() {
   renderTemplateList();
   renderMealList();
   renderFinanceList();
+  renderGuitarList();
   renderSetList();
 }
 
@@ -593,6 +632,36 @@ function renderFinanceList() {
   });
 }
 
+function renderGuitarList() {
+  const node = document.getElementById("guitar-list");
+  node.innerHTML = "";
+
+  if (!state.guitarLogs.length) {
+    node.appendChild(emptyNode("Brak wpisow gitarowych."));
+    return;
+  }
+
+  state.guitarLogs.slice().reverse().slice(0, 4).forEach((entry) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${entry.bpm} BPM${entry.note ? ` - ${escapeHtml(entry.note)}` : ""}</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editGuitarLog(entry.id)),
+      makeToolButton("Del", () => deleteGuitarLog(entry.id), true)
+    );
+    item.appendChild(tools);
+    node.appendChild(item);
+  });
+}
+
 function renderFinanceChart() {
   const node = document.getElementById("finance-chart");
   node.innerHTML = "";
@@ -651,12 +720,14 @@ function renderZones() {
   const fitnessProgress = Math.min(Math.round((state.workouts.length / 5) * 100), 100);
   const finance = financeSummary();
   const financeProgress = finance.income > 0 ? Math.max(Math.min(Math.round(((finance.income - finance.expense) / finance.income) * 100), 100), 0) : 0;
+  const guitarWeek = guitarSummary(guitarLogsThisWeek());
+  const guitarProgress = Math.min(Math.round((guitarWeek.sessions / 4) * 100), 100);
   const zones = [
     { title: "Fitness", copy: "Trening, waga, output i baza progresu.", percent: fitnessProgress },
     { title: "Habits", copy: "Codzienny rytm z minimalnym progiem wejscia.", percent: state.habits.length ? Math.round((progress.doneHabits / state.habits.length) * 100) : 0 },
     { title: "Tasks", copy: "Inbox i egzekucja najwazniejszych rzeczy.", percent: state.tasks.length ? Math.round((progress.doneTasks / state.tasks.length) * 100) : 0 },
     { title: "Finanse", copy: "Cashflow, planowane wydatki i ocena zakupow.", percent: financeProgress },
-    { title: "Gitara", copy: "Pozniej: BPM, metronom i skill tracker.", percent: 8 }
+    { title: "Gitara", copy: "BPM, metronom i regularnosc cwiczen.", percent: guitarProgress }
   ];
 
   const node = document.getElementById("zones-list");
@@ -716,15 +787,50 @@ function renderTrainingChart() {
   });
 }
 
+function renderGuitarChart() {
+  const node = document.getElementById("guitar-chart");
+  node.innerHTML = "";
+  const grouped = new Map();
+
+  state.guitarLogs.forEach((entry) => {
+    const current = grouped.get(entry.title) ?? 0;
+    grouped.set(entry.title, Math.max(current, Number(entry.bpm || 0)));
+  });
+
+  const rows = [...grouped.entries()]
+    .map(([title, bpm]) => ({ title, bpm }))
+    .sort((a, b) => b.bpm - a.bpm)
+    .slice(0, 4);
+
+  if (!rows.length) {
+    node.appendChild(emptyNode("Brak danych gitarowych."));
+    return;
+  }
+
+  const maxBpm = Math.max(...rows.map((entry) => entry.bpm), 1);
+  rows.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <span>${escapeHtml(entry.title)}</span>
+      <div class="bar-track"><i style="width:${Math.round((entry.bpm / maxBpm) * 100)}%"></i></div>
+      <strong>${entry.bpm}</strong>
+    `;
+    node.appendChild(row);
+  });
+}
+
 function renderInsights() {
   renderWeightChart();
   renderTrainingChart();
   renderExerciseSummary();
   renderFinanceChart();
+  renderGuitarChart();
 
   const average = averageWeight();
   const nutrition = nutritionToday();
   const finance = financeSummary();
+  const guitar = guitarSummary(guitarLogsThisWeek());
   const savingsRate = finance.income > 0 ? Math.round(((finance.income - finance.expense) / finance.income) * 100) : 0;
   document.getElementById("average-weight").textContent = average ? `${average.toFixed(1)} kg` : "-";
   document.getElementById("total-training-minutes").textContent = `${totalTrainingMinutes()}`;
@@ -735,6 +841,9 @@ function renderInsights() {
   document.getElementById("insight-balance").textContent = formatZl(finance.income - finance.expense);
   document.getElementById("insight-savings-rate").textContent = `${savingsRate}%`;
   document.getElementById("insight-planned").textContent = formatZl(plannedTotal());
+  document.getElementById("insight-guitar-top").textContent = `${guitar.topBpm || 0} BPM`;
+  document.getElementById("insight-guitar-sessions").textContent = `${guitar.sessions}`;
+  document.getElementById("insight-guitar-average").textContent = `${guitar.averageBpm || 0} BPM`;
   document.getElementById("review-copy").textContent =
     computeProgress().percent >= 70
       ? "Dobry tydzien. Najmocniej dziala rytm i regularnosc."
@@ -859,6 +968,64 @@ function notifyTimerComplete() {
   } catch {
     // Silent fallback for unsupported browsers.
   }
+}
+
+function renderMetronome() {
+  const valueNode = document.getElementById("metronome-bpm-value");
+  const statusNode = document.getElementById("metronome-status");
+  const startButton = document.getElementById("metronome-start-button");
+  if (!valueNode || !statusNode || !startButton) return;
+
+  valueNode.textContent = `${metronomeBpm} BPM`;
+  statusNode.textContent = metronomeRunning ? "Running" : "Ready";
+  startButton.textContent = metronomeRunning ? "Running" : "Start";
+}
+
+function ensureMetronomeAudio() {
+  if (!metronomeAudioContext) {
+    metronomeAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if (metronomeAudioContext.state === "suspended") {
+    metronomeAudioContext.resume().catch(() => {});
+  }
+}
+
+function playMetronomeClick() {
+  try {
+    ensureMetronomeAudio();
+    if (!metronomeAudioContext) return;
+
+    const oscillator = metronomeAudioContext.createOscillator();
+    const gain = metronomeAudioContext.createGain();
+    oscillator.type = "square";
+    oscillator.frequency.value = 1240;
+    gain.gain.value = 0.03;
+    oscillator.connect(gain);
+    gain.connect(metronomeAudioContext.destination);
+    oscillator.start();
+    oscillator.stop(metronomeAudioContext.currentTime + 0.04);
+  } catch {
+    // Silent fallback for unsupported browsers.
+  }
+}
+
+function stopMetronome() {
+  metronomeRunning = false;
+  clearInterval(metronomeInterval);
+  metronomeInterval = null;
+  renderMetronome();
+}
+
+function startMetronome() {
+  if (metronomeRunning) {
+    return;
+  }
+
+  metronomeRunning = true;
+  renderMetronome();
+  playMetronomeClick();
+  metronomeInterval = setInterval(playMetronomeClick, Math.max(120, Math.round(60000 / metronomeBpm)));
 }
 
 function editHabit(id) {
@@ -1050,6 +1217,35 @@ function deleteFinanceEntry(id) {
   renderAll();
 }
 
+function editGuitarLog(id) {
+  const entry = state.guitarLogs.find((item) => item.id === id);
+  if (!entry) return;
+  const title = prompt("Cwiczenie", entry.title);
+  if (title === null) return;
+  const bpm = prompt("BPM", String(entry.bpm));
+  if (bpm === null) return;
+  const note = prompt("Notatka", entry.note || "");
+  if (note === null) return;
+
+  state.guitarLogs = state.guitarLogs.map((item) => item.id === id ? {
+    ...item,
+    title: title.trim() || item.title,
+    bpm: Number.isFinite(Number(bpm)) && Number(bpm) > 0 ? Number(bpm) : item.bpm,
+    note: note.trim()
+  } : item);
+
+  setFeedback(`Zmieniono wpis gitarowy: ${title.trim() || entry.title}.`);
+  saveState();
+  renderAll();
+}
+
+function deleteGuitarLog(id) {
+  state.guitarLogs = state.guitarLogs.filter((item) => item.id !== id);
+  setFeedback("Usunieto wpis gitarowy.");
+  saveState();
+  renderAll();
+}
+
 function computeEvaluator(cost, uses, value, goalImpact) {
   const costPerUse = uses > 0 ? cost / uses : cost;
   const scoreRaw = (value * 4 + goalImpact * 4) - Math.min(costPerUse / 10, 20);
@@ -1128,6 +1324,8 @@ function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
   resetRestTimer();
+  stopMetronome();
+  metronomeBpm = 80;
   saveState();
   renderAll();
   setFeedback("Przywrocono demo data.");
@@ -1359,6 +1557,32 @@ function bindForms() {
     renderAll();
   });
 
+  document.getElementById("guitar-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const titleInput = document.getElementById("guitar-title-input");
+    const bpmInput = document.getElementById("guitar-bpm-input");
+    const noteInput = document.getElementById("guitar-note-input");
+    const title = titleInput.value.trim();
+    const bpm = Number(bpmInput.value);
+
+    if (!title || !Number.isFinite(bpm) || bpm <= 0) return;
+
+    state.guitarLogs.push({
+      id: uid("guitar"),
+      title,
+      bpm,
+      note: noteInput.value.trim(),
+      createdAt: new Date().toISOString()
+    });
+
+    titleInput.value = "";
+    bpmInput.value = "";
+    noteInput.value = "";
+    setFeedback(`Dodano wpis gitarowy: ${title}.`);
+    saveState();
+    renderAll();
+  });
+
   document.getElementById("note-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const input = document.getElementById("note-input");
@@ -1397,9 +1621,22 @@ function bindTools() {
       renderRestTimer();
     });
   });
+  document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      metronomeBpm = Number(button.dataset.metronomePreset);
+      if (metronomeRunning) {
+        stopMetronome();
+        startMetronome();
+      } else {
+        renderMetronome();
+      }
+    });
+  });
 
   document.getElementById("rest-start-button").addEventListener("click", toggleRestTimer);
   document.getElementById("rest-reset-button").addEventListener("click", resetRestTimer);
+  document.getElementById("metronome-start-button").addEventListener("click", startMetronome);
+  document.getElementById("metronome-stop-button").addEventListener("click", stopMetronome);
 }
 
 function renderAll() {
@@ -1410,6 +1647,7 @@ function renderAll() {
   renderMe();
   renderMealTemplateList();
   renderRestTimer();
+  renderMetronome();
   setTab(state.activeTab);
 }
 
