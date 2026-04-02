@@ -19,6 +19,11 @@ const defaultState = {
     { id: "workout-3", title: "Pull", duration: 42, focus: "back", dateLabel: "Thu" },
     { id: "workout-4", title: "Push", duration: 55, focus: "chest", dateLabel: "Sat" }
   ],
+  exerciseSets: [
+    { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today" },
+    { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today" },
+    { id: "set-3", exercise: "Chest Row", reps: 10, weight: 36, rest: 75, dateLabel: "Today" }
+  ],
   weightHistory: [
     { dateLabel: "D1", value: 81.2 },
     { dateLabel: "D2", value: 80.9 },
@@ -43,6 +48,7 @@ function normalizeState(rawState) {
   state.habits = Array.isArray(state.habits) ? state.habits : cloneState(defaultState.habits);
   state.tasks = Array.isArray(state.tasks) ? state.tasks : cloneState(defaultState.tasks);
   state.workouts = Array.isArray(state.workouts) ? state.workouts : cloneState(defaultState.workouts);
+  state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
   state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
   state.supplements = Array.isArray(state.supplements) ? state.supplements : cloneState(defaultState.supplements);
   state.note = typeof state.note === "string" ? state.note : defaultState.note;
@@ -60,6 +66,9 @@ function loadState() {
 }
 
 let state = loadState();
+let restTimerValue = 90;
+let restTimerRunning = false;
+let restTimerInterval = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -128,6 +137,22 @@ function averageWeight() {
   return sum / state.weightHistory.length;
 }
 
+function exerciseSummary() {
+  const grouped = new Map();
+
+  state.exerciseSets.forEach((entry) => {
+    const current = grouped.get(entry.exercise) ?? { sets: 0, topWeight: 0 };
+    current.sets += 1;
+    current.topWeight = Math.max(current.topWeight, Number(entry.weight || 0));
+    grouped.set(entry.exercise, current);
+  });
+
+  return [...grouped.entries()]
+    .map(([exercise, data]) => ({ exercise, ...data }))
+    .sort((a, b) => b.sets - a.sets)
+    .slice(0, 4);
+}
+
 function priorityLabel(priority) {
   return { high: "High", medium: "Medium", low: "Low" }[priority] || "Medium";
 }
@@ -166,11 +191,13 @@ function renderToday() {
   document.getElementById("habit-summary").textContent = `${progress.doneHabits}/${state.habits.length}`;
   document.getElementById("task-summary").textContent = `${progress.openTasks} open`;
   document.getElementById("workout-summary").textContent = `${totalTrainingMinutes()} min`;
+  document.getElementById("set-summary").textContent = `${state.exerciseSets.length} wpisow`;
   document.getElementById("today-note").textContent = state.note;
 
   renderHabitList();
   renderTaskList();
   renderWorkoutList();
+  renderSetList();
 }
 
 function emptyNode(label) {
@@ -279,6 +306,36 @@ function renderWorkoutList() {
   });
 }
 
+function renderSetList() {
+  const node = document.getElementById("set-list");
+  node.innerHTML = "";
+  if (!state.exerciseSets.length) {
+    node.appendChild(emptyNode("Brak serii."));
+    return;
+  }
+
+  state.exerciseSets.slice().reverse().slice(0, 4).forEach((set) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <div class="list-toggle" aria-hidden="true"></div>
+      <div class="list-copy">
+        <strong>${escapeHtml(set.exercise)}</strong>
+        <span>${set.reps} reps - ${set.weight} kg - ${set.rest}s rest</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editSet(set.id)),
+      makeToolButton("Del", () => deleteSet(set.id), true)
+    );
+    item.appendChild(tools);
+    node.appendChild(item);
+  });
+}
+
 function renderZones() {
   const progress = computeProgress();
   const fitnessProgress = Math.min(Math.round((state.workouts.length / 5) * 100), 100);
@@ -350,6 +407,7 @@ function renderTrainingChart() {
 function renderInsights() {
   renderWeightChart();
   renderTrainingChart();
+  renderExerciseSummary();
 
   const average = averageWeight();
   document.getElementById("average-weight").textContent = average ? `${average.toFixed(1)} kg` : "-";
@@ -359,6 +417,29 @@ function renderInsights() {
     computeProgress().percent >= 70
       ? "Dobry tydzien. Najmocniej dziala rytm i regularnosc."
       : "System potrzebuje prostszego domykania rzeczy. Zacznij od 2-3 pewniakow dziennie.";
+}
+
+function renderExerciseSummary() {
+  const node = document.getElementById("exercise-summary-list");
+  node.innerHTML = "";
+  const summary = exerciseSummary();
+
+  if (!summary.length) {
+    node.appendChild(emptyNode("Brak cwiczen."));
+    return;
+  }
+
+  summary.forEach((entry) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.exercise)}</strong>
+        <span>${entry.sets} sets - top ${entry.topWeight} kg</span>
+      </div>
+    `;
+    node.appendChild(item);
+  });
 }
 
 function renderMe() {
@@ -384,6 +465,51 @@ function renderDate() {
     month: "short"
   });
   document.getElementById("today-date").textContent = formatter.format(new Date());
+}
+
+function renderRestTimer() {
+  const valueNode = document.getElementById("rest-timer-value");
+  const statusNode = document.getElementById("rest-timer-status");
+  const startButton = document.getElementById("rest-start-button");
+  if (!valueNode || !statusNode || !startButton) return;
+
+  valueNode.textContent = String(restTimerValue);
+  statusNode.textContent = restTimerRunning ? "Running" : "Ready";
+  startButton.textContent = restTimerRunning ? "Pause" : "Start";
+}
+
+function toggleRestTimer() {
+  if (restTimerRunning) {
+    restTimerRunning = false;
+    clearInterval(restTimerInterval);
+    restTimerInterval = null;
+    renderRestTimer();
+    return;
+  }
+
+  restTimerRunning = true;
+  renderRestTimer();
+  restTimerInterval = setInterval(() => {
+    if (restTimerValue > 0) {
+      restTimerValue -= 1;
+      renderRestTimer();
+      return;
+    }
+
+    restTimerRunning = false;
+    clearInterval(restTimerInterval);
+    restTimerInterval = null;
+    renderRestTimer();
+    setFeedback("Koniec przerwy.");
+  }, 1000);
+}
+
+function resetRestTimer() {
+  restTimerRunning = false;
+  clearInterval(restTimerInterval);
+  restTimerInterval = null;
+  restTimerValue = 90;
+  renderRestTimer();
 }
 
 function editHabit(id) {
@@ -451,6 +577,38 @@ function deleteWorkout(id) {
   renderAll();
 }
 
+function editSet(id) {
+  const set = state.exerciseSets.find((item) => item.id === id);
+  if (!set) return;
+  const exercise = prompt("Cwiczenie", set.exercise);
+  if (exercise === null) return;
+  const reps = prompt("Reps", String(set.reps));
+  if (reps === null) return;
+  const weight = prompt("Kg", String(set.weight));
+  if (weight === null) return;
+  const rest = prompt("Rest s", String(set.rest));
+  if (rest === null) return;
+
+  state.exerciseSets = state.exerciseSets.map((item) => item.id === id ? {
+    ...item,
+    exercise: exercise.trim() || item.exercise,
+    reps: Number.isFinite(Number(reps)) && Number(reps) > 0 ? Number(reps) : item.reps,
+    weight: Number.isFinite(Number(weight)) && Number(weight) >= 0 ? Number(weight) : item.weight,
+    rest: Number.isFinite(Number(rest)) && Number(rest) >= 0 ? Number(rest) : item.rest
+  } : item);
+
+  setFeedback(`Zmieniono serie: ${exercise.trim() || set.exercise}.`);
+  saveState();
+  renderAll();
+}
+
+function deleteSet(id) {
+  state.exerciseSets = state.exerciseSets.filter((item) => item.id !== id);
+  setFeedback("Usunieto serie.");
+  saveState();
+  renderAll();
+}
+
 function exportState() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -465,6 +623,7 @@ function exportState() {
 function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
+  resetRestTimer();
   saveState();
   renderAll();
   setFeedback("Przywrocono demo data.");
@@ -558,6 +717,37 @@ function bindForms() {
     renderAll();
   });
 
+  document.getElementById("set-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const exerciseInput = document.getElementById("set-exercise-input");
+    const repsInput = document.getElementById("set-reps-input");
+    const weightInput = document.getElementById("set-weight-input");
+    const restInput = document.getElementById("set-rest-input");
+    const exercise = exerciseInput.value.trim();
+    const reps = Number(repsInput.value);
+    const weight = Number(weightInput.value);
+    const rest = Number(restInput.value || restTimerValue);
+
+    if (!exercise || !Number.isFinite(reps) || reps <= 0 || !Number.isFinite(weight) || weight < 0) return;
+
+    state.exerciseSets.push({
+      id: uid("set"),
+      exercise,
+      reps,
+      weight,
+      rest: Number.isFinite(rest) && rest >= 0 ? rest : restTimerValue,
+      dateLabel: "Today"
+    });
+
+    exerciseInput.value = "";
+    repsInput.value = "";
+    weightInput.value = "";
+    restInput.value = String(restTimerValue);
+    setFeedback(`Dodano serie: ${exercise}.`);
+    saveState();
+    renderAll();
+  });
+
   document.getElementById("note-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const input = document.getElementById("note-input");
@@ -587,6 +777,18 @@ function bindTabs() {
 function bindTools() {
   document.getElementById("export-button").addEventListener("click", exportState);
   document.getElementById("reset-button").addEventListener("click", resetState);
+  document.querySelectorAll("[data-rest-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      restTimerValue = Number(button.dataset.restPreset);
+      restTimerRunning = false;
+      clearInterval(restTimerInterval);
+      restTimerInterval = null;
+      renderRestTimer();
+    });
+  });
+
+  document.getElementById("rest-start-button").addEventListener("click", toggleRestTimer);
+  document.getElementById("rest-reset-button").addEventListener("click", resetRestTimer);
 }
 
 function renderAll() {
@@ -595,6 +797,7 @@ function renderAll() {
   renderZones();
   renderInsights();
   renderMe();
+  renderRestTimer();
   setTab(state.activeTab);
 }
 
