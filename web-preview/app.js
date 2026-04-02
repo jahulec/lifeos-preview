@@ -47,6 +47,16 @@ const defaultState = {
     { id: "tpl-2", title: "Lower A", focus: "legs", rest: 120, exercises: ["Split Squat", "RDL", "Leg Curl"] },
     { id: "tpl-3", title: "Pull", focus: "back", rest: 75, exercises: ["Pull-up", "Row", "Curl"] }
   ],
+  meals: [
+    { id: "meal-1", title: "High protein breakfast", calories: 640, protein: 42, carbs: 51, fats: 24, createdAt: isoDaysAgo(0, 8) },
+    { id: "meal-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19, createdAt: isoDaysAgo(0, 15) },
+    { id: "meal-3", title: "Dinner", calories: 620, protein: 38, carbs: 46, fats: 22, createdAt: isoDaysAgo(0, 19) }
+  ],
+  mealTemplates: [
+    { id: "meal-tpl-1", title: "Breakfast", calories: 640, protein: 42, carbs: 51, fats: 24 },
+    { id: "meal-tpl-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19 },
+    { id: "meal-tpl-3", title: "Light dinner", calories: 520, protein: 35, carbs: 34, fats: 21 }
+  ],
   exerciseSets: [
     { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
     { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
@@ -78,6 +88,8 @@ function normalizeState(rawState) {
   state.tasks = Array.isArray(state.tasks) ? state.tasks : cloneState(defaultState.tasks);
   state.workouts = Array.isArray(state.workouts) ? state.workouts : cloneState(defaultState.workouts);
   state.workoutTemplates = Array.isArray(state.workoutTemplates) ? state.workoutTemplates : cloneState(defaultState.workoutTemplates);
+  state.meals = Array.isArray(state.meals) ? state.meals : cloneState(defaultState.meals);
+  state.mealTemplates = Array.isArray(state.mealTemplates) ? state.mealTemplates : cloneState(defaultState.mealTemplates);
   state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
   state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
   state.supplements = Array.isArray(state.supplements) ? state.supplements : cloneState(defaultState.supplements);
@@ -86,6 +98,7 @@ function normalizeState(rawState) {
   state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
   state.workouts = state.workouts.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.workouts.length - index - 1), 18) }));
+  state.meals = state.meals.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.meals.length - index - 1), 12) }));
   state.exerciseSets = state.exerciseSets.map((entry) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(0, 12) }));
   state.weightHistory = state.weightHistory.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.weightHistory.length - index - 1), 8) }));
   return state;
@@ -188,6 +201,21 @@ function workoutsThisWeek() {
   return state.workouts.filter((workout) => weekKey(new Date(workout.createdAt)) === currentWeek);
 }
 
+function mealsToday() {
+  const today = todayKey();
+  return state.meals.filter((meal) => todayKey(new Date(meal.createdAt)) === today);
+}
+
+function nutritionToday() {
+  return mealsToday().reduce((totals, meal) => {
+    totals.calories += Number(meal.calories || 0);
+    totals.protein += Number(meal.protein || 0);
+    totals.carbs += Number(meal.carbs || 0);
+    totals.fats += Number(meal.fats || 0);
+    return totals;
+  }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
+}
+
 function averageWeight() {
   if (!state.weightHistory.length) return null;
   const sum = state.weightHistory.reduce((acc, item) => acc + Number(item.value), 0);
@@ -229,6 +257,7 @@ function setFeedback(message) {
 
 function renderToday() {
   const progress = computeProgress();
+  const nutrition = nutritionToday();
   document.getElementById("main-progress-value").textContent = `${progress.percent}%`;
   document.getElementById("main-progress-bar").style.width = `${progress.percent}%`;
   document.getElementById("top-progress-chip").textContent = `${progress.percent}%`;
@@ -251,12 +280,17 @@ function renderToday() {
   document.getElementById("workout-summary").textContent = `${totalTrainingMinutes()} min`;
   document.getElementById("set-summary").textContent = `${state.exerciseSets.length} wpisow`;
   document.getElementById("template-summary").textContent = `${state.workoutTemplates.length}`;
+  document.getElementById("meal-summary").textContent = `${nutrition.calories} kcal`;
+  document.getElementById("today-kcal").textContent = `${nutrition.calories}`;
+  document.getElementById("today-protein").textContent = `${nutrition.protein} g`;
+  document.getElementById("today-macros").textContent = `${nutrition.carbs}/${nutrition.fats}`;
   document.getElementById("today-note").textContent = state.note;
 
   renderHabitList();
   renderTaskList();
   renderWorkoutList();
   renderTemplateList();
+  renderMealList();
   renderSetList();
 }
 
@@ -402,6 +436,74 @@ function renderTemplateList() {
   });
 }
 
+function renderMealList() {
+  const node = document.getElementById("meal-list");
+  node.innerHTML = "";
+  const meals = mealsToday().slice().reverse();
+
+  if (!meals.length) {
+    node.appendChild(emptyNode("Brak posilkow dzisiaj."));
+    return;
+  }
+
+  meals.slice(0, 4).forEach((meal) => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(meal.title)}</strong>
+        <span>${meal.calories} kcal - P ${meal.protein} / W ${meal.carbs} / T ${meal.fats}</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editMeal(meal.id)),
+      makeToolButton("Del", () => deleteMeal(meal.id), true)
+    );
+    item.appendChild(tools);
+    node.appendChild(item);
+  });
+}
+
+function renderMealTemplateList() {
+  const node = document.getElementById("meal-template-list");
+  node.innerHTML = "";
+  document.getElementById("meal-template-summary").textContent = `${state.mealTemplates.length}`;
+
+  if (!state.mealTemplates.length) {
+    node.appendChild(emptyNode("Brak szablonow jedzenia."));
+    return;
+  }
+
+  state.mealTemplates.forEach((template) => {
+    const item = document.createElement("div");
+    item.className = "template-item";
+    item.innerHTML = `
+      <div class="template-top">
+        <div class="list-copy">
+          <strong>${escapeHtml(template.title)}</strong>
+          <span>${template.calories} kcal</span>
+        </div>
+      </div>
+      <div class="template-meta">P ${template.protein} / W ${template.carbs} / T ${template.fats}</div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "template-actions";
+    const start = document.createElement("button");
+    start.type = "button";
+    start.className = "template-start";
+    start.textContent = "Uzyj";
+    start.addEventListener("click", () => applyMealTemplate(template.id));
+    actions.appendChild(start);
+    actions.appendChild(makeToolButton("Edit", () => editMealTemplate(template.id)));
+    item.appendChild(actions);
+    node.appendChild(item);
+  });
+}
+
 function renderSetList() {
   const node = document.getElementById("set-list");
   node.innerHTML = "";
@@ -506,9 +608,13 @@ function renderInsights() {
   renderExerciseSummary();
 
   const average = averageWeight();
+  const nutrition = nutritionToday();
   document.getElementById("average-weight").textContent = average ? `${average.toFixed(1)} kg` : "-";
   document.getElementById("total-training-minutes").textContent = `${totalTrainingMinutes()}`;
   document.getElementById("insight-progress").textContent = `${computeProgress().percent}%`;
+  document.getElementById("insight-kcal").textContent = `${nutrition.calories}`;
+  document.getElementById("insight-protein").textContent = `${nutrition.protein} g`;
+  document.getElementById("insight-carb-fat").textContent = `${nutrition.carbs}/${nutrition.fats}`;
   document.getElementById("review-copy").textContent =
     computeProgress().percent >= 70
       ? "Dobry tydzien. Najmocniej dziala rytm i regularnosc."
@@ -718,6 +824,79 @@ function applyWorkoutTemplate(id) {
   renderAll();
 }
 
+function editMeal(id) {
+  const meal = state.meals.find((item) => item.id === id);
+  if (!meal) return;
+  const title = prompt("Posilek", meal.title);
+  if (title === null) return;
+  const calories = prompt("Kcal", String(meal.calories));
+  if (calories === null) return;
+  const protein = prompt("Bialko", String(meal.protein));
+  if (protein === null) return;
+  const carbs = prompt("Wegle", String(meal.carbs));
+  if (carbs === null) return;
+  const fats = prompt("Tluscze", String(meal.fats));
+  if (fats === null) return;
+
+  state.meals = state.meals.map((item) => item.id === id ? {
+    ...item,
+    title: title.trim() || item.title,
+    calories: Number.isFinite(Number(calories)) ? Number(calories) : item.calories,
+    protein: Number.isFinite(Number(protein)) ? Number(protein) : item.protein,
+    carbs: Number.isFinite(Number(carbs)) ? Number(carbs) : item.carbs,
+    fats: Number.isFinite(Number(fats)) ? Number(fats) : item.fats
+  } : item);
+
+  setFeedback(`Zmieniono posilek: ${title.trim() || meal.title}.`);
+  saveState();
+  renderAll();
+}
+
+function deleteMeal(id) {
+  state.meals = state.meals.filter((item) => item.id !== id);
+  setFeedback("Usunieto posilek.");
+  saveState();
+  renderAll();
+}
+
+function editMealTemplate(id) {
+  const template = state.mealTemplates.find((item) => item.id === id);
+  if (!template) return;
+  const title = prompt("Szablon posilku", template.title);
+  if (title === null) return;
+  const calories = prompt("Kcal", String(template.calories));
+  if (calories === null) return;
+
+  state.mealTemplates = state.mealTemplates.map((item) => item.id === id ? {
+    ...item,
+    title: title.trim() || item.title,
+    calories: Number.isFinite(Number(calories)) ? Number(calories) : item.calories
+  } : item);
+
+  setFeedback(`Zmieniono szablon jedzenia: ${title.trim() || template.title}.`);
+  saveState();
+  renderAll();
+}
+
+function applyMealTemplate(id) {
+  const template = state.mealTemplates.find((item) => item.id === id);
+  if (!template) return;
+
+  state.meals.push({
+    id: uid("meal"),
+    title: template.title,
+    calories: template.calories,
+    protein: template.protein,
+    carbs: template.carbs,
+    fats: template.fats,
+    createdAt: new Date().toISOString()
+  });
+
+  setFeedback(`Dodano posilek z szablonu: ${template.title}.`);
+  saveState();
+  renderAll();
+}
+
 function deleteHabit(id) {
   state.habits = state.habits.filter((item) => item.id !== id);
   setFeedback("Usunieto habit.");
@@ -913,6 +1092,41 @@ function bindForms() {
     renderAll();
   });
 
+  document.getElementById("meal-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const titleInput = document.getElementById("meal-title-input");
+    const kcalInput = document.getElementById("meal-kcal-input");
+    const proteinInput = document.getElementById("meal-protein-input");
+    const carbsInput = document.getElementById("meal-carbs-input");
+    const fatsInput = document.getElementById("meal-fats-input");
+    const title = titleInput.value.trim();
+    const calories = Number(kcalInput.value);
+    const protein = Number(proteinInput.value);
+    const carbs = Number(carbsInput.value);
+    const fats = Number(fatsInput.value);
+
+    if (!title || !Number.isFinite(calories) || calories <= 0) return;
+
+    state.meals.push({
+      id: uid("meal"),
+      title,
+      calories,
+      protein: Number.isFinite(protein) ? protein : 0,
+      carbs: Number.isFinite(carbs) ? carbs : 0,
+      fats: Number.isFinite(fats) ? fats : 0,
+      createdAt: new Date().toISOString()
+    });
+
+    titleInput.value = "";
+    kcalInput.value = "";
+    proteinInput.value = "";
+    carbsInput.value = "";
+    fatsInput.value = "";
+    setFeedback(`Dodano posilek: ${title}.`);
+    saveState();
+    renderAll();
+  });
+
   document.getElementById("note-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const input = document.getElementById("note-input");
@@ -962,6 +1176,7 @@ function renderAll() {
   renderZones();
   renderInsights();
   renderMe();
+  renderMealTemplateList();
   renderRestTimer();
   setTab(state.activeTab);
 }

@@ -149,6 +149,28 @@
 
               <article class="glass card">
                 <div class="card-head">
+                  <h3>Jedzenie</h3>
+                  <span id="meal-summary">0 kcal</span>
+                </div>
+                <div class="metric-row">
+                  <div class="metric">
+                    <span>Kcal</span>
+                    <strong id="today-kcal">0</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Bialko</span>
+                    <strong id="today-protein">0 g</strong>
+                  </div>
+                  <div class="metric">
+                    <span>Makra</span>
+                    <strong id="today-macros">0/0</strong>
+                  </div>
+                </div>
+                <div id="meal-list" class="stack-list"></div>
+              </article>
+
+              <article class="glass card">
+                <div class="card-head">
                   <h3>Ostatnie serie</h3>
                   <span id="set-summary">0 wpisow</span>
                 </div>
@@ -248,6 +270,33 @@
 
               <div class="glass card">
                 <div class="card-head">
+                  <h3>Posilek</h3>
+                  <span>Macros</span>
+                </div>
+                <form id="meal-form" class="form-block">
+                  <input id="meal-title-input" type="text" placeholder="Np. bowl z kurczakiem">
+                  <div class="inline-form inline-form-two">
+                    <input id="meal-kcal-input" type="number" step="1" placeholder="Kcal">
+                    <input id="meal-protein-input" type="number" step="1" placeholder="Bialko g">
+                  </div>
+                  <div class="inline-form inline-form-two">
+                    <input id="meal-carbs-input" type="number" step="1" placeholder="Wegle g">
+                    <input id="meal-fats-input" type="number" step="1" placeholder="Tluscze g">
+                  </div>
+                  <button type="submit" class="full-button">Dodaj posilek</button>
+                </form>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
+                  <h3>Szablony jedzenia</h3>
+                  <span id="meal-template-summary">0</span>
+                </div>
+                <div id="meal-template-list" class="template-list"></div>
+              </div>
+
+              <div class="glass card">
+                <div class="card-head">
                   <h3>Timer przerw</h3>
                   <span id="rest-timer-status">Ready</span>
                 </div>
@@ -320,6 +369,27 @@
                 <div class="metric">
                   <span>Skutecznosc</span>
                   <strong id="insight-progress">0%</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="card-head">
+                <h3>Nutrition</h3>
+                <span>Today</span>
+              </div>
+              <div class="metric-row">
+                <div class="metric">
+                  <span>Kcal</span>
+                  <strong id="insight-kcal">0</strong>
+                </div>
+                <div class="metric">
+                  <span>Bialko</span>
+                  <strong id="insight-protein">0 g</strong>
+                </div>
+                <div class="metric">
+                  <span>W/T</span>
+                  <strong id="insight-carb-fat">0/0</strong>
                 </div>
               </div>
             </div>
