@@ -485,8 +485,82 @@ button:active {
   letter-spacing: -0.08em;
 }
 
+.metronome-slider-wrap {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0 14px;
+}
+
+.metronome-slider {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  accent-color: #ffffff;
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.8rem;
+}
+
+.signature-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.signature-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.signature-button.active,
+.preset-button.active {
+  background: rgba(255, 255, 255, 0.92);
+  color: #111111;
+}
+
+.beat-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.beat-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transform: scale(1);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.beat-dot.accent {
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 196, 0, 0.34);
+}
+
+.beat-dot.current {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.12);
+  transform: scale(1.18);
+}
+
 .dial-step,
 .preset-button,
+.signature-button,
 .primary-button,
 .secondary-button,
 .danger-button {
@@ -529,6 +603,7 @@ button:active {
   padding: 12px 10px;
   background: rgba(255, 255, 255, 0.14);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .primary-button,
@@ -650,6 +725,15 @@ textarea:focus {
   font-size: 0.88rem;
   line-height: 1.4;
   backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.floating-feedback.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .tabbar {
@@ -722,6 +806,7 @@ textarea:focus {
   .inline-form,
   .inline-form-two,
   .inline-form-three,
+  .signature-row,
   .preset-row,
   .button-row,
   .button-grid,

@@ -186,6 +186,23 @@
                   <button type="button" class="dial-step" id="metronome-plus-button">+</button>
                 </div>
 
+                <div class="metronome-slider-wrap">
+                  <input id="metronome-bpm-slider" class="metronome-slider" type="range" min="30" max="240" step="1" value="80">
+                  <div class="slider-scale">
+                    <span>30</span>
+                    <span>240</span>
+                  </div>
+                </div>
+
+                <div class="signature-row" id="signature-row">
+                  <button type="button" class="signature-button active" data-signature="3">3/4</button>
+                  <button type="button" class="signature-button" data-signature="4">4/4</button>
+                  <button type="button" class="signature-button" data-signature="5">5/4</button>
+                  <button type="button" class="signature-button" data-signature="6">6/8</button>
+                </div>
+
+                <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
+
                 <div class="preset-row">
                   <button type="button" class="preset-button" data-metronome-preset="60">60</button>
                   <button type="button" class="preset-button" data-metronome-preset="80">80</button>

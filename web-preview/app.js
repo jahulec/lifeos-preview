@@ -270,6 +270,9 @@ let metronomeInterval = null;
 let metronomeUiInterval = null;
 let metronomeStartedAt = null;
 let metronomeAudioContext = null;
+let metronomeBeatIndex = 0;
+let metronomeSignature = 4;
+let feedbackHideTimer = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -283,6 +286,11 @@ function setFeedback(message) {
   const node = document.getElementById("feedback-pill");
   if (node) {
     node.textContent = message;
+    node.classList.add("visible");
+    clearTimeout(feedbackHideTimer);
+    feedbackHideTimer = setTimeout(() => {
+      node.classList.remove("visible");
+    }, 2600);
   }
 }
 
@@ -1081,13 +1089,14 @@ function playMetronomeClick() {
     ensureMetronomeAudio();
     const oscillator = metronomeAudioContext.createOscillator();
     const gain = metronomeAudioContext.createGain();
-    oscillator.type = "square";
-    oscillator.frequency.value = 1240;
-    gain.gain.value = 0.03;
+    const accented = metronomeBeatIndex === 0;
+    oscillator.type = accented ? "triangle" : "sine";
+    oscillator.frequency.value = accented ? 1620 : 1080;
+    gain.gain.value = accented ? 0.07 : 0.04;
     oscillator.connect(gain);
     gain.connect(metronomeAudioContext.destination);
     oscillator.start();
-    oscillator.stop(metronomeAudioContext.currentTime + 0.04);
+    oscillator.stop(metronomeAudioContext.currentTime + (accented ? 0.06 : 0.04));
   } catch {
     // Silent fallback.
   }
@@ -1096,6 +1105,23 @@ function playMetronomeClick() {
 function renderMetronome() {
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
   document.getElementById("metronome-status").textContent = metronomeRunning ? "Running" : "Ready";
+  document.getElementById("metronome-bpm-slider").value = String(metronomeBpm);
+
+  document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.metronomePreset) === metronomeBpm);
+  });
+
+  document.querySelectorAll("[data-signature]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.signature) === metronomeSignature);
+  });
+
+  const dotsNode = document.getElementById("metronome-dots");
+  dotsNode.innerHTML = "";
+  for (let index = 0; index < metronomeSignature; index += 1) {
+    const dot = document.createElement("span");
+    dot.className = `beat-dot${index === 0 ? " accent" : ""}${metronomeRunning && index === metronomeBeatIndex ? " current" : ""}`;
+    dotsNode.appendChild(dot);
+  }
 
   if (metronomeRunning && metronomeStartedAt) {
     const elapsed = Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000));
@@ -1126,9 +1152,14 @@ function startMetronome() {
 
   metronomeRunning = true;
   metronomeStartedAt = Date.now();
+  metronomeBeatIndex = 0;
   playMetronomeClick();
   renderMetronome();
-  metronomeInterval = setInterval(playMetronomeClick, Math.max(140, Math.round(60000 / metronomeBpm)));
+  metronomeInterval = setInterval(() => {
+    metronomeBeatIndex = (metronomeBeatIndex + 1) % metronomeSignature;
+    playMetronomeClick();
+    renderMetronome();
+  }, Math.max(140, Math.round(60000 / metronomeBpm)));
   metronomeUiInterval = setInterval(renderMetronome, 1000);
 }
 
@@ -1148,6 +1179,7 @@ function stopMetronome(skipSave = false) {
 
   metronomeRunning = false;
   metronomeStartedAt = null;
+  metronomeBeatIndex = 0;
 
   if (!skipSave && active && durationSec > 0) {
     state.guitarSessions.push({
@@ -1751,9 +1783,32 @@ function bindTools() {
     }
   });
 
+  document.getElementById("metronome-bpm-slider").addEventListener("input", (event) => {
+    metronomeBpm = Number(event.target.value);
+    if (metronomeRunning) {
+      stopMetronome(true);
+      startMetronome();
+    } else {
+      renderMetronome();
+    }
+  });
+
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       metronomeBpm = Number(button.dataset.metronomePreset);
+      if (metronomeRunning) {
+        stopMetronome(true);
+        startMetronome();
+      } else {
+        renderMetronome();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-signature]").forEach((button) => {
+    button.addEventListener("click", () => {
+      metronomeSignature = Number(button.dataset.signature);
+      metronomeBeatIndex = 0;
       if (metronomeRunning) {
         stopMetronome(true);
         startMetronome();
