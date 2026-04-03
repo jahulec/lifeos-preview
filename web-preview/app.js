@@ -1168,9 +1168,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, 0.45);
-    positionMetronomeLabel("metronome-label-mid", 120, wheel, 0.46);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, 0.45);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, 0.4);
+    positionMetronomeLabel("metronome-label-mid", 120, wheel, 0.4);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, 0.4);
   }
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
@@ -1260,8 +1260,8 @@ function updateMetronomeFromPoint(clientX, clientY) {
   const deltaY = clientY - centerY;
   const distance = Math.hypot(deltaX, deltaY);
   const size = Math.min(rect.width, rect.height);
-  const outerRadius = size * 0.54;
-  const innerRadius = size * 0.25;
+  const outerRadius = size * 0.6;
+  const innerRadius = size * 0.18;
   const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
   const normalized = angle > 180 ? angle - 360 : angle;
   if (distance < innerRadius || distance > outerRadius) return;

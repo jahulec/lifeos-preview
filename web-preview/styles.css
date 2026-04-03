@@ -122,6 +122,7 @@ button:active {
   min-height: 860px;
   border-radius: 30px;
   overflow: hidden;
+  overflow-x: clip;
   background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 52%, #f1f1f1 100%);
   padding: 28px 16px 114px;
 }
@@ -133,6 +134,8 @@ button:active {
 
 .tab-page.active {
   display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 @keyframes rise {
@@ -149,6 +152,7 @@ button:active {
 .section-feed {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .card {
@@ -157,6 +161,7 @@ button:active {
   border-radius: 24px;
   padding: 18px;
   box-shadow: var(--shadow);
+  min-width: 0;
 }
 
 .hero-card,
@@ -168,6 +173,9 @@ button:active {
   color: white;
   border: 0;
   width: 100%;
+  overflow: hidden;
+  contain: layout paint;
+  padding-bottom: 24px;
 }
 
 .hero-card .muted-copy,
@@ -492,10 +500,10 @@ button:active {
 
 .metronome-wheel {
   position: relative;
-  width: min(100%, 330px);
-  aspect-ratio: 1 / 1.05;
-  margin: 4px auto 10px;
-  overflow: visible;
+  width: min(100%, 320px);
+  aspect-ratio: 1 / 1;
+  margin: 8px auto 10px;
+  overflow: hidden;
 }
 
 .metronome-arc {
@@ -579,7 +587,7 @@ button:active {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -58%);
+  transform: translate(-50%, -50%);
   border: 0;
   border-radius: 999px;
   width: 128px;
@@ -611,7 +619,7 @@ button:active {
 .metronome-tap-button {
   position: absolute;
   left: 50%;
-  bottom: -6px;
+  bottom: 16px;
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
@@ -742,7 +750,7 @@ button:active {
 }
 
 .metronome-toggle-button:active {
-  transform: translate(-50%, -58%);
+  transform: translate(-50%, -50%);
 }
 
 .metronome-tap-button:active {
@@ -1013,7 +1021,7 @@ textarea:focus {
   }
 
   .metronome-tap-button {
-    bottom: -2px;
+    bottom: 14px;
   }
 
   .floating-feedback {
