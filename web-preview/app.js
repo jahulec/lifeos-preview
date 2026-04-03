@@ -143,7 +143,7 @@ const METRONOME_ARC_SPAN = 300;
 const METRONOME_ARC_END = METRONOME_ARC_START + METRONOME_ARC_SPAN;
 const METRONOME_SVG_SIZE = 320;
 const METRONOME_CENTER = 160;
-const METRONOME_RADIUS = 118;
+const METRONOME_RADIUS = 124;
 
 function angleToBpm(angle) {
   return Math.round(30 + ((clamp(angle, METRONOME_ARC_START, METRONOME_ARC_END) - METRONOME_ARC_START) / METRONOME_ARC_SPAN) * 210);
@@ -791,7 +791,7 @@ function renderGuitar() {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
   const percent = active ? Math.min(Math.round((stats.topBpm / active.targetBpm) * 100), 100) : 0;
-  const deleteButton = document.getElementById("guitar-active-delete");
+  const clearButton = document.getElementById("guitar-active-clear");
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
   document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM` : "Dodaj nazwe i cel BPM.";
@@ -799,8 +799,8 @@ function renderGuitar() {
   document.getElementById("guitar-active-time").textContent = minutesFromSeconds(stats.totalSec);
   document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
   document.getElementById("guitar-active-progress-value").textContent = `${percent}%`;
-  if (deleteButton) {
-    deleteButton.hidden = !active;
+  if (clearButton) {
+    clearButton.hidden = !active;
   }
 
   renderGuitarExercises();
@@ -1217,7 +1217,7 @@ function renderMetronome() {
     items.forEach((item) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `${item.type === "signature" ? "signature-button" : "preset-button"}${(item.type === "signature" ? metronomeSignature === item.value : metronomeBpm === item.value) ? " active" : ""}`;
+      button.className = `metronome-option-button${(item.type === "signature" ? metronomeSignature === item.value : metronomeBpm === item.value) ? " active" : ""}`;
       button.dataset.optionType = item.type;
       button.dataset.optionValue = String(item.value);
       button.textContent = item.label;
@@ -1354,6 +1354,13 @@ function startMetronome() {
   renderMetronome();
   restartMetronomeInterval();
   metronomeUiInterval = setInterval(renderMetronome, 1000);
+}
+
+function clearActiveGuitarExercise() {
+  if (!state.guitarActiveId) return;
+  state.guitarActiveId = null;
+  saveState();
+  renderAll();
 }
 
 function stopMetronome(skipSave = false) {
@@ -2040,11 +2047,7 @@ function bindTools() {
     }
   });
   document.getElementById("metronome-tap-button").addEventListener("click", registerTapTempo);
-  document.getElementById("guitar-active-delete").addEventListener("click", () => {
-    const active = activeGuitarExercise();
-    if (!active) return;
-    deleteGuitarExercise(active.id);
-  });
+  document.getElementById("guitar-active-clear").addEventListener("click", clearActiveGuitarExercise);
 
   const importInput = document.getElementById("import-input");
   document.getElementById("import-button").addEventListener("click", () => importInput.click());
