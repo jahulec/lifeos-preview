@@ -203,7 +203,6 @@
                       <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
                     </div>
                     <div class="active-stats">
-                      <strong id="guitar-active-time">0 s</strong>
                       <button type="button" id="guitar-active-clear" class="mini-danger-button">Odznacz</button>
                     </div>
                   </div>
@@ -316,8 +315,8 @@
               <div class="subview-header">
                 <button type="button" id="guitar-create-back" class="back-button" aria-label="Wroc">&larr;</button>
                 <div class="subview-copy">
-                  <h2>Nowe cwiczenie</h2>
-                  <span>Nazwa, BPM i czas</span>
+                  <h2 id="guitar-form-title">Nowe cwiczenie</h2>
+                  <span id="guitar-form-subtitle">Nazwa, BPM i czas</span>
                 </div>
                 <div></div>
               </div>
@@ -329,7 +328,7 @@
                       <input id="guitar-exercise-target-input" type="number" step="1" placeholder="Cel BPM">
                       <input id="guitar-exercise-minutes-input" type="number" step="1" placeholder="Czas min">
                     </div>
-                    <button type="submit" class="primary-button full-button">Dodaj cwiczenie</button>
+                    <button type="submit" id="guitar-form-submit" class="primary-button full-button">Dodaj cwiczenie</button>
                   </form>
                 </article>
               </div>

@@ -336,6 +336,7 @@ let pendingGuitarSession = null;
 let lockedGuitarCardWidth = null;
 let guitarView = "main";
 const guitarScrollMemory = { main: 0, detail: 0, create: 0 };
+let editingGuitarExerciseId = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -387,6 +388,7 @@ function setGuitarView(view, options = {}) {
 
 function focusField(id) {
   if (id === "guitar-exercise-name-input" && guitarView !== "create") {
+    editingGuitarExerciseId = null;
     setGuitarView("create", { scrollTop: true });
   }
   const target = document.getElementById(id);
@@ -1019,7 +1021,6 @@ function renderGuitarExerciseDetail() {
 
 function renderGuitar() {
   const active = activeGuitarExercise();
-  const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
   const targetSec = Number(active?.practiceMinutes || 0) * 60;
   const elapsedSec = active ? exerciseTodaySec(active.id) + currentMetronomeElapsedSec() + pendingExerciseSec(active.id) : 0;
   const timePercent = active ? computeTimeProgress(targetSec, elapsedSec) : 0;
@@ -1028,6 +1029,12 @@ function renderGuitar() {
   const mainView = document.getElementById("guitar-main-view");
   const detailView = document.getElementById("guitar-detail-view");
   const createView = document.getElementById("guitar-create-view");
+  const formTitle = document.getElementById("guitar-form-title");
+  const formSubtitle = document.getElementById("guitar-form-subtitle");
+  const formSubmit = document.getElementById("guitar-form-submit");
+  const editingExercise = editingGuitarExerciseId
+    ? state.guitarExercises.find((entry) => entry.id === editingGuitarExerciseId)
+    : null;
 
   if (mainView) mainView.hidden = guitarView !== "main";
   if (detailView) detailView.hidden = guitarView !== "detail";
@@ -1035,10 +1042,12 @@ function renderGuitar() {
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
   document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM - ${active.practiceMinutes} min` : "Dodaj nazwe, cel BPM i czas.";
-  document.getElementById("guitar-active-time").textContent = active ? formatDuration(elapsedSec) : "0 s";
   document.getElementById("guitar-active-progress-bar").style.width = `${timePercent}%`;
   document.getElementById("guitar-active-progress-value").textContent = `${timePercent}%`;
   document.getElementById("guitar-active-progress-copy").textContent = active ? `${formatDuration(elapsedSec)} / ${formatDuration(targetSec)}` : "";
+  if (formTitle) formTitle.textContent = editingExercise ? "Edycja cwiczenia" : "Nowe cwiczenie";
+  if (formSubtitle) formSubtitle.textContent = editingExercise ? "Zmien nazwe, BPM i czas" : "Nazwa, BPM i czas";
+  if (formSubmit) formSubmit.textContent = editingExercise ? "Zapisz zmiany" : "Dodaj cwiczenie";
   if (clearButton) {
     clearButton.hidden = !active;
   }
@@ -1527,6 +1536,24 @@ function inspectGuitarExercise(id) {
 }
 
 function openGuitarCreateView() {
+  editingGuitarExerciseId = null;
+  const nameInput = document.getElementById("guitar-exercise-name-input");
+  const targetInput = document.getElementById("guitar-exercise-target-input");
+  const minutesInput = document.getElementById("guitar-exercise-minutes-input");
+  if (nameInput) nameInput.value = "";
+  if (targetInput) targetInput.value = "";
+  if (minutesInput) minutesInput.value = "";
+  setGuitarView("create", { scrollTop: true });
+  focusField("guitar-exercise-name-input");
+}
+
+function openGuitarEditView(id) {
+  const exercise = state.guitarExercises.find((entry) => entry.id === id);
+  if (!exercise) return;
+  editingGuitarExerciseId = id;
+  document.getElementById("guitar-exercise-name-input").value = exercise.title;
+  document.getElementById("guitar-exercise-target-input").value = String(exercise.targetBpm);
+  document.getElementById("guitar-exercise-minutes-input").value = String(exercise.practiceMinutes || 10);
   setGuitarView("create", { scrollTop: true });
   focusField("guitar-exercise-name-input");
 }
@@ -2030,27 +2057,14 @@ function deletePlannedExpense(id) {
 }
 
 function editGuitarExercise(id) {
-  const exercise = state.guitarExercises.find((entry) => entry.id === id);
-  if (!exercise) return;
-  const title = prompt("Cwiczenie", exercise.title);
-  if (title === null) return;
-  const target = prompt("Cel BPM", String(exercise.targetBpm));
-  if (target === null) return;
-  const practiceMinutes = prompt("Czas min", String(exercise.practiceMinutes || 10));
-  if (practiceMinutes === null) return;
-  state.guitarExercises = state.guitarExercises.map((entry) => entry.id === id ? {
-    ...entry,
-    title: title.trim() || entry.title,
-    targetBpm: Number.isFinite(Number(target)) && Number(target) > 0 ? Number(target) : entry.targetBpm,
-    practiceMinutes: Number.isFinite(Number(practiceMinutes)) && Number(practiceMinutes) > 0 ? Number(practiceMinutes) : entry.practiceMinutes
-  } : entry);
-  state.guitarInspectId = id;
-  saveState();
-  renderAll();
+  openGuitarEditView(id);
 }
 
 function deleteGuitarExercise(id) {
   const deletedInspected = state.guitarInspectId === id;
+  if (editingGuitarExerciseId === id) {
+    editingGuitarExerciseId = null;
+  }
   state.guitarExercises = state.guitarExercises.filter((entry) => entry.id !== id);
   state.guitarSessions = state.guitarSessions.filter((entry) => entry.exerciseId !== id);
   if (state.guitarActiveId === id) {
@@ -2094,6 +2108,7 @@ function importState(file) {
       const parsed = JSON.parse(String(reader.result || "{}"));
       if (!confirm("Nadpisac obecne dane importem?")) return;
       state = normalizeState(parsed);
+      editingGuitarExerciseId = null;
       resetRestTimer();
       stopMetronome(true);
       metronomeBpm = 80;
@@ -2110,6 +2125,7 @@ function importState(file) {
 function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
+  editingGuitarExerciseId = null;
   resetRestTimer();
   stopMetronome(true);
   metronomeBpm = 80;
@@ -2337,23 +2353,38 @@ function bindForms() {
     const targetBpm = Number(targetInput.value);
     const practiceMinutes = Number(minutesInput.value);
     if (!title || !Number.isFinite(targetBpm) || targetBpm <= 0 || !Number.isFinite(practiceMinutes) || practiceMinutes <= 0) return;
-    const id = uid("gex");
-    state.guitarExercises.push({
-      id,
-      title,
-      targetBpm,
-      practiceMinutes
-    });
-    state.guitarActiveId = id;
+    let id = editingGuitarExerciseId;
+    if (id) {
+      state.guitarExercises = state.guitarExercises.map((entry) => entry.id === id ? {
+        ...entry,
+        title,
+        targetBpm,
+        practiceMinutes
+      } : entry);
+      if (state.guitarActiveId === id) {
+        metronomeBpm = targetBpm;
+      }
+    } else {
+      id = uid("gex");
+      state.guitarExercises.push({
+        id,
+        title,
+        targetBpm,
+        practiceMinutes
+      });
+      state.guitarActiveId = id;
+      metronomeBpm = targetBpm;
+    }
     state.guitarInspectId = id;
-    metronomeBpm = targetBpm;
     nameInput.value = "";
     targetInput.value = "";
     minutesInput.value = "";
+    const wasEditing = Boolean(editingGuitarExerciseId);
+    editingGuitarExerciseId = null;
     saveState();
     guitarView = "detail";
     renderAll();
-    setFeedback(`Dodano cwiczenie gitarowe: ${title}.`);
+    setFeedback(wasEditing ? `Zapisano zmiany: ${title}.` : `Dodano cwiczenie gitarowe: ${title}.`);
   });
 }
 
@@ -2466,7 +2497,10 @@ function bindTools() {
   bindPressAction(document.getElementById("metronome-tap-button"), registerTapTempo);
   bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
   bindPressAction(document.getElementById("guitar-open-create"), openGuitarCreateView);
-  bindPressAction(document.getElementById("guitar-create-back"), () => setGuitarView("main"));
+  bindPressAction(document.getElementById("guitar-create-back"), () => {
+    editingGuitarExerciseId = null;
+    setGuitarView("main");
+  });
   bindPressAction(document.getElementById("guitar-detail-back"), () => setGuitarView("main"));
   bindPressAction(document.getElementById("guitar-detail-use"), handleGuitarDetailToggle);
   bindPressAction(document.getElementById("guitar-detail-edit"), () => {
