@@ -152,142 +152,172 @@
           </section>
 
           <section class="tab-page" data-tab="guitar">
-            <div class="section-feed">
-              <article class="card metronome-card">
-                <div class="tempo-head">
-                  <button type="button" class="dial-step" id="metronome-minus-button" aria-label="Zmniejsz tempo">-</button>
-                  <div class="tempo-readout">
-                    <strong id="metronome-bpm-display">80</strong>
-                    <span class="metronome-unit">Beats per min</span>
+            <div id="guitar-main-view" class="guitar-view">
+              <div class="section-feed">
+                <article class="card metronome-card">
+                  <div class="tempo-head">
+                    <button type="button" class="dial-step" id="metronome-minus-button" aria-label="Zmniejsz tempo">-</button>
+                    <div class="tempo-readout">
+                      <strong id="metronome-bpm-display">80</strong>
+                      <span class="metronome-unit">Beats per min</span>
+                    </div>
+                    <button type="button" class="dial-step" id="metronome-plus-button" aria-label="Zwieksz tempo">+</button>
                   </div>
-                  <button type="button" class="dial-step" id="metronome-plus-button" aria-label="Zwieksz tempo">+</button>
-                </div>
 
-                <div class="metronome-wheel" id="metronome-wheel">
-                  <div class="metronome-arc">
-                    <svg class="metronome-arc-svg" viewBox="0 0 320 320" aria-hidden="true">
-                      <defs>
-                        <linearGradient id="metronome-progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stop-color="#84f7d7"></stop>
-                          <stop offset="58%" stop-color="#58f0c2"></stop>
-                          <stop offset="100%" stop-color="#2dd4bf"></stop>
-                        </linearGradient>
-                      </defs>
-                      <path class="metronome-arc-track" id="metronome-arc-track"></path>
-                      <path class="metronome-arc-progress" id="metronome-arc-progress"></path>
-                      <circle class="metronome-arc-knob" id="metronome-arc-knob" cx="160" cy="160" r="15"></circle>
-                      <path class="metronome-arc-hitbox" id="metronome-arc-hitbox"></path>
-                    </svg>
+                  <div class="metronome-wheel" id="metronome-wheel">
+                    <div class="metronome-arc">
+                      <svg class="metronome-arc-svg" viewBox="0 0 320 320" aria-hidden="true">
+                        <defs>
+                          <linearGradient id="metronome-progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#84f7d7"></stop>
+                            <stop offset="58%" stop-color="#58f0c2"></stop>
+                            <stop offset="100%" stop-color="#2dd4bf"></stop>
+                          </linearGradient>
+                        </defs>
+                        <path class="metronome-arc-track" id="metronome-arc-track"></path>
+                        <path class="metronome-arc-progress" id="metronome-arc-progress"></path>
+                        <circle class="metronome-arc-knob" id="metronome-arc-knob" cx="160" cy="160" r="15"></circle>
+                        <path class="metronome-arc-hitbox" id="metronome-arc-hitbox"></path>
+                      </svg>
+                    </div>
+                    <div class="arc-label" id="metronome-label-min">30</div>
+                    <div class="arc-label" id="metronome-label-mid">135</div>
+                    <div class="arc-label" id="metronome-label-max">240</div>
+                    <button type="button" id="metronome-toggle-button" class="metronome-toggle-button" aria-label="Start metronomu">Start</button>
+                    <button type="button" id="metronome-tap-button" class="metronome-tap-button" aria-label="Tap tempo">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3v9m0 0V8.5a1.5 1.5 0 0 1 3 0V12m-3 0v-1a1.5 1.5 0 0 0-3 0v1m3 0v-1.5a1.5 1.5 0 0 1 3 0V12m0 0v-.5a1.5 1.5 0 0 1 3 0V14c0 3.314-2.686 6-6 6h-.5A5.5 5.5 0 0 1 6 14.5V11a1.5 1.5 0 0 1 3 0v1" />
+                      </svg>
+                    </button>
                   </div>
-                  <div class="arc-label" id="metronome-label-min">30</div>
-                  <div class="arc-label" id="metronome-label-mid">135</div>
-                  <div class="arc-label" id="metronome-label-max">240</div>
-                  <button type="button" id="metronome-toggle-button" class="metronome-toggle-button" aria-label="Start metronomu">Start</button>
-                  <button type="button" id="metronome-tap-button" class="metronome-tap-button" aria-label="Tap tempo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 3v9m0 0V8.5a1.5 1.5 0 0 1 3 0V12m-3 0v-1a1.5 1.5 0 0 0-3 0v1m3 0v-1.5a1.5 1.5 0 0 1 3 0V12m0 0v-.5a1.5 1.5 0 0 1 3 0V14c0 3.314-2.686 6-6 6h-.5A5.5 5.5 0 0 1 6 14.5V11a1.5 1.5 0 0 1 3 0v1" />
-                    </svg>
+
+                  <button type="button" class="beat-dots-button" id="metronome-dots-button" aria-expanded="false" aria-controls="metronome-option-grid">
+                    <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
                   </button>
-                </div>
 
-                <button type="button" class="beat-dots-button" id="metronome-dots-button" aria-expanded="false" aria-controls="metronome-option-grid">
-                  <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
-                </button>
+                  <button type="button" class="signature-pill" id="signature-pill">4/4</button>
 
-                <button type="button" class="signature-pill" id="signature-pill">4/4</button>
-
-                <div class="preset-row" id="metronome-option-grid"></div>
-                <div class="active-exercise-card compact-exercise-card">
-                  <div>
-                    <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
-                    <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
+                  <div class="preset-row" id="metronome-option-grid"></div>
+                  <div class="active-exercise-card compact-exercise-card">
+                    <div>
+                      <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
+                      <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
+                    </div>
+                    <div class="active-stats">
+                      <span id="guitar-active-top">0 BPM</span>
+                      <strong id="guitar-active-time">0 min</strong>
+                      <button type="button" id="guitar-active-clear" class="mini-danger-button">Odznacz</button>
+                    </div>
                   </div>
-                  <div class="active-stats">
-                    <span id="guitar-active-top">0 BPM</span>
-                    <strong id="guitar-active-time">0 min</strong>
-                    <button type="button" id="guitar-active-clear" class="mini-danger-button">Odznacz</button>
+                  <div class="progress-track">
+                    <div class="progress-fill" id="guitar-active-progress-bar"></div>
                   </div>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" id="guitar-active-progress-bar"></div>
-                </div>
-                <div class="hero-meta-row">
-                  <span>Progres</span>
-                  <strong id="guitar-active-progress-value">0%</strong>
-                </div>
-                <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
-                <div id="guitar-result-card" class="result-entry-card" hidden>
-                  <div class="card-head inline-card-head">
-                    <h2>Wynik sesji</h2>
-                    <span id="guitar-result-summary">0 s</span>
+                  <div class="hero-meta-row">
+                    <span>Progres</span>
+                    <strong id="guitar-active-progress-value">0%</strong>
                   </div>
-                  <div class="inline-form inline-form-two">
-                    <input id="guitar-result-bpm-input" type="number" step="1" min="30" max="240" placeholder="Wpisz BPM">
-                    <button type="button" id="guitar-result-save" class="primary-button">Zapisz</button>
+                  <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
+                  <div id="guitar-result-card" class="result-entry-card" hidden>
+                    <div class="card-head inline-card-head">
+                      <h2>Wynik sesji</h2>
+                      <span id="guitar-result-summary">0 s</span>
+                    </div>
+                    <div class="inline-form inline-form-two">
+                      <input id="guitar-result-bpm-input" type="number" step="1" min="30" max="240" placeholder="Wpisz BPM">
+                      <button type="button" id="guitar-result-save" class="primary-button">Zapisz</button>
+                    </div>
+                    <button type="button" id="guitar-result-cancel" class="secondary-button full-button">Pomin</button>
                   </div>
-                  <button type="button" id="guitar-result-cancel" class="secondary-button full-button">Pomin</button>
-                </div>
-              </article>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Nowe cwiczenie</h2>
-                  <span>Cel BPM</span>
-                </div>
-                <form id="guitar-exercise-form" class="form-block">
-                  <input id="guitar-exercise-name-input" type="text" placeholder="Np. alternate picking">
-                  <div class="inline-form inline-form-two">
-                    <input id="guitar-exercise-target-input" type="number" step="1" placeholder="Cel BPM">
-                    <input id="guitar-exercise-minutes-input" type="number" step="1" placeholder="Czas min">
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Cwiczenia</h2>
+                    <div class="card-head-actions">
+                      <span id="guitar-exercise-count">0</span>
+                      <button type="button" id="guitar-open-create" class="head-icon-button" aria-label="Dodaj cwiczenie">+</button>
+                    </div>
                   </div>
-                  <button type="submit" class="primary-button full-button">Dodaj cwiczenie</button>
-                </form>
-              </article>
+                  <div id="guitar-exercise-list" class="stack-list"></div>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Cwiczenia</h2>
-                  <span id="guitar-exercise-count">0</span>
-                </div>
-                <div id="guitar-exercise-list" class="stack-list"></div>
-              </article>
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Ostatnie sesje</h2>
+                    <span id="guitar-session-summary">0</span>
+                  </div>
+                  <div id="guitar-session-list" class="stack-list"></div>
+                </article>
+              </div>
+            </div>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2 id="guitar-detail-title">Statystyki cwiczenia</h2>
+            <div id="guitar-detail-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="guitar-detail-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2 id="guitar-detail-nav-title">Cwiczenie</h2>
                   <span id="guitar-detail-summary">0 sesji</span>
                 </div>
-                <div class="stat-grid stat-grid-four">
-                  <div class="stat-card">
-                    <span>Top BPM</span>
-                    <strong id="guitar-detail-top">0</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Ostatni BPM</span>
-                    <strong id="guitar-detail-latest">0</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Lacznie</span>
-                    <strong id="guitar-detail-time">0 s</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Cel</span>
-                    <strong id="guitar-detail-goal">0%</strong>
-                  </div>
+                <div class="subview-actions">
+                  <button type="button" id="guitar-detail-use" class="header-pill-button">Uzyj</button>
                 </div>
-                <div class="exercise-chart-card">
-                  <svg id="guitar-detail-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
-                </div>
-                <div id="guitar-detail-list" class="stack-list compact-stack"></div>
-              </article>
+              </div>
+              <div class="section-feed">
+                <article class="card">
+                  <div class="card-head">
+                    <h2 id="guitar-detail-title">Statystyki cwiczenia</h2>
+                    <div class="card-head-actions">
+                      <button type="button" id="guitar-detail-edit" class="tool-button">Edit</button>
+                      <button type="button" id="guitar-detail-delete" class="tool-button delete">Del</button>
+                    </div>
+                  </div>
+                  <div class="stat-grid stat-grid-four">
+                    <div class="stat-card">
+                      <span>Top BPM</span>
+                      <strong id="guitar-detail-top">0</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Ostatni BPM</span>
+                      <strong id="guitar-detail-latest">0</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Lacznie</span>
+                      <strong id="guitar-detail-time">0 s</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Cel</span>
+                      <strong id="guitar-detail-goal">0%</strong>
+                    </div>
+                  </div>
+                  <div class="exercise-chart-card">
+                    <svg id="guitar-detail-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
+                  </div>
+                  <div id="guitar-detail-list" class="stack-list compact-stack"></div>
+                </article>
+              </div>
+            </div>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Ostatnie sesje</h2>
-                  <span id="guitar-session-summary">0</span>
+            <div id="guitar-create-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="guitar-create-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2>Nowe cwiczenie</h2>
+                  <span>Nazwa, BPM i czas</span>
                 </div>
-                <div id="guitar-session-list" class="stack-list"></div>
-              </article>
+                <div></div>
+              </div>
+              <div class="section-feed">
+                <article class="card">
+                  <form id="guitar-exercise-form" class="form-block">
+                    <input id="guitar-exercise-name-input" type="text" placeholder="Np. alternate picking">
+                    <div class="inline-form inline-form-two">
+                      <input id="guitar-exercise-target-input" type="number" step="1" placeholder="Cel BPM">
+                      <input id="guitar-exercise-minutes-input" type="number" step="1" placeholder="Czas min">
+                    </div>
+                    <button type="submit" class="primary-button full-button">Dodaj cwiczenie</button>
+                  </form>
+                </article>
+              </div>
             </div>
           </section>
 

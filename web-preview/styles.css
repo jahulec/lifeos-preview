@@ -163,6 +163,15 @@ button:active {
   min-width: 0;
 }
 
+.guitar-view[hidden] {
+  display: none !important;
+}
+
+.guitar-subview {
+  display: grid;
+  gap: 14px;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -349,6 +358,13 @@ button:active {
   margin-bottom: 14px;
 }
 
+.card-head-actions,
+.subview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .card-head h2 {
   margin: 0;
   font-size: 1.08rem;
@@ -357,6 +373,56 @@ button:active {
 .card-head span {
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.subview-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 2px 6px;
+}
+
+.subview-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.subview-copy h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.subview-copy span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.back-button,
+.head-icon-button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.08);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.header-pill-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #111111;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .stack-list {
