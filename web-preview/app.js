@@ -948,9 +948,11 @@ function renderGuitarSessions() {
   const node = document.getElementById("guitar-session-list");
   const summaryNode = document.getElementById("guitar-session-summary");
   const toggle = document.getElementById("guitar-session-toggle");
+  const card = node.closest(".card");
   node.innerHTML = "";
   summaryNode.textContent = `${state.guitarSessions.length}`;
   node.hidden = !guitarSessionsExpanded;
+  card?.classList.toggle("collapsed-section-card", !guitarSessionsExpanded);
   if (toggle) {
     toggle.textContent = guitarSessionsExpanded ? "-" : "+";
     toggle.setAttribute("aria-label", guitarSessionsExpanded ? "Zwin sesje" : "Rozwin sesje");
@@ -1467,9 +1469,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 42, -20, 12);
-    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 22, 0, -18);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 42, 20, 12);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 40, -18, 16);
+    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS - 6, 0, 8);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 40, 18, 16);
   }
 
   if (optionGrid) {

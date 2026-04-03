@@ -1,4 +1,4 @@
-const CACHE_NAME = "lifeos-preview-v29";
+const CACHE_NAME = "lifeos-preview-v30";
 const APP_SHELL = [
   "./",
   "./index.html",
