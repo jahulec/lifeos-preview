@@ -165,9 +165,18 @@
 
                 <div class="metronome-wheel" id="metronome-wheel">
                   <div class="metronome-arc">
-                    <div class="metronome-arc-track"></div>
-                    <div class="metronome-arc-progress" id="metronome-arc-progress"></div>
-                    <div class="metronome-arc-knob" id="metronome-arc-knob"></div>
+                    <svg class="metronome-arc-svg" viewBox="0 0 320 320" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="metronome-progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#84f7d7"></stop>
+                          <stop offset="58%" stop-color="#58f0c2"></stop>
+                          <stop offset="100%" stop-color="#2dd4bf"></stop>
+                        </linearGradient>
+                      </defs>
+                      <path class="metronome-arc-track" id="metronome-arc-track"></path>
+                      <path class="metronome-arc-progress" id="metronome-arc-progress"></path>
+                      <circle class="metronome-arc-knob" id="metronome-arc-knob" cx="160" cy="160" r="13"></circle>
+                    </svg>
                     <div
                       id="metronome-arc-hitbox"
                       class="metronome-arc-hitbox"

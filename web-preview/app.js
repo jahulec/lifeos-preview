@@ -141,6 +141,9 @@ function bpmProgress(bpm) {
 const METRONOME_ARC_START = -150;
 const METRONOME_ARC_SPAN = 300;
 const METRONOME_ARC_END = METRONOME_ARC_START + METRONOME_ARC_SPAN;
+const METRONOME_SVG_SIZE = 320;
+const METRONOME_CENTER = 160;
+const METRONOME_RADIUS = 118;
 
 function angleToBpm(angle) {
   return Math.round(30 + ((clamp(angle, METRONOME_ARC_START, METRONOME_ARC_END) - METRONOME_ARC_START) / METRONOME_ARC_SPAN) * 210);
@@ -148,6 +151,21 @@ function angleToBpm(angle) {
 
 function bpmToArcAngle(bpm) {
   return METRONOME_ARC_START + bpmProgress(bpm) * METRONOME_ARC_SPAN;
+}
+
+function metronomePolarPoint(angle, radius = METRONOME_RADIUS) {
+  const rad = angle * (Math.PI / 180);
+  return {
+    x: METRONOME_CENTER + Math.sin(rad) * radius,
+    y: METRONOME_CENTER - Math.cos(rad) * radius
+  };
+}
+
+function describeMetronomeArc(startAngle, endAngle, radius = METRONOME_RADIUS) {
+  const start = metronomePolarPoint(startAngle, radius);
+  const end = metronomePolarPoint(endAngle, radius);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+  return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
 }
 
 function normalizeArray(value, fallback) {
@@ -1130,6 +1148,7 @@ function playMetronomeClick() {
 }
 
 function renderMetronome() {
+  const arcTrack = document.getElementById("metronome-arc-track");
   const arcProgress = document.getElementById("metronome-arc-progress");
   const arcKnob = document.getElementById("metronome-arc-knob");
   const arcHitbox = document.getElementById("metronome-arc-hitbox");
@@ -1139,17 +1158,21 @@ function renderMetronome() {
   const toggleButton = document.getElementById("metronome-toggle-button");
   const signaturePill = document.getElementById("signature-pill");
   const progressPercent = bpmProgress(metronomeBpm);
-  const arcDegrees = progressPercent * METRONOME_ARC_SPAN;
+  const currentAngle = bpmToArcAngle(metronomeBpm);
 
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
+  if (arcTrack) {
+    arcTrack.setAttribute("d", describeMetronomeArc(METRONOME_ARC_START, METRONOME_ARC_END));
+  }
   if (arcProgress) {
-    arcProgress.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
+    arcProgress.setAttribute("d", describeMetronomeArc(METRONOME_ARC_START, currentAngle));
   }
   if (arcKnob) {
-    arcKnob.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
+    const point = metronomePolarPoint(currentAngle);
+    arcKnob.setAttribute("cx", point.x.toFixed(2));
+    arcKnob.setAttribute("cy", point.y.toFixed(2));
   }
   if (arcHitbox) {
-    arcHitbox.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
     arcHitbox.setAttribute("aria-valuenow", String(metronomeBpm));
     arcHitbox.setAttribute("aria-valuetext", `${metronomeBpm} BPM`);
   }
@@ -1168,9 +1191,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, 0.4);
-    positionMetronomeLabel("metronome-label-mid", 120, wheel, 0.4);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, 0.4);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 18);
+    positionMetronomeLabel("metronome-label-mid", 120, wheel, METRONOME_RADIUS + 18);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 18);
   }
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
@@ -1197,13 +1220,13 @@ function renderMetronome() {
   }
 }
 
-function positionMetronomeLabel(id, bpm, wheel, radiusFactor) {
+function positionMetronomeLabel(id, bpm, wheel, radiusPx) {
   const node = document.getElementById(id);
   if (!node || !wheel) return;
   if (!wheel.clientWidth || !wheel.clientHeight) return;
-  const size = Math.min(wheel.clientWidth, wheel.clientHeight);
-  const radius = size * radiusFactor;
   const angle = bpmToArcAngle(bpm) * (Math.PI / 180);
+  const scale = Math.min(wheel.clientWidth, wheel.clientHeight) / METRONOME_SVG_SIZE;
+  const radius = radiusPx * scale;
   const x = wheel.clientWidth / 2 + Math.sin(angle) * radius;
   const y = wheel.clientHeight / 2 - Math.cos(angle) * radius;
   node.style.left = `${x}px`;
@@ -1259,9 +1282,9 @@ function updateMetronomeFromPoint(clientX, clientY) {
   const deltaX = clientX - centerX;
   const deltaY = clientY - centerY;
   const distance = Math.hypot(deltaX, deltaY);
-  const size = Math.min(rect.width, rect.height);
-  const outerRadius = size * 0.6;
-  const innerRadius = size * 0.18;
+  const scale = Math.min(rect.width, rect.height) / METRONOME_SVG_SIZE;
+  const outerRadius = (METRONOME_RADIUS + 30) * scale;
+  const innerRadius = (METRONOME_RADIUS - 34) * scale;
   const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
   const normalized = angle > 180 ? angle - 360 : angle;
   if (distance < innerRadius || distance > outerRadius) return;
