@@ -94,6 +94,7 @@ const defaultState = {
     { id: "gs-3", exerciseId: "gex-3", exerciseTitle: "Pentatonic sequence", bpm: 104, durationSec: 540, createdAt: isoDaysAgo(0, 21) }
   ],
   guitarActiveId: "gex-1",
+  guitarInspectId: "gex-1",
   supplements: [
     { name: "Creatine", dosage: "5 g" },
     { name: "Omega-3", dosage: "2 caps" },
@@ -124,6 +125,15 @@ function formatZl(value) {
 
 function minutesFromSeconds(value) {
   return `${Math.max(1, Math.round(Number(value || 0) / 60))} min`;
+}
+
+function formatDuration(value) {
+  const totalSec = Math.max(0, Math.floor(Number(value || 0)));
+  if (totalSec < 60) return `${totalSec} s`;
+  const minutes = Math.floor(totalSec / 60);
+  const seconds = totalSec % 60;
+  if (!seconds) return `${minutes} min`;
+  return `${minutes} min ${seconds} s`;
 }
 
 function priorityLabel(priority) {
@@ -225,7 +235,8 @@ function migrateGuitarData(rawState) {
   return {
     guitarExercises,
     guitarSessions,
-    guitarActiveId: guitarExercises[0]?.id || null
+    guitarActiveId: guitarExercises[0]?.id || null,
+    guitarInspectId: guitarExercises[0]?.id || null
   };
 }
 
@@ -234,7 +245,8 @@ function normalizeState(rawState = {}) {
     ? {
         guitarExercises: normalizeArray(rawState.guitarExercises, defaultState.guitarExercises),
         guitarSessions: normalizeArray(rawState.guitarSessions, defaultState.guitarSessions),
-        guitarActiveId: rawState.guitarActiveId || rawState.guitarExercises?.[0]?.id || defaultState.guitarActiveId
+        guitarActiveId: rawState.guitarActiveId !== undefined ? rawState.guitarActiveId : (rawState.guitarExercises?.[0]?.id || defaultState.guitarActiveId),
+        guitarInspectId: rawState.guitarInspectId !== undefined ? rawState.guitarInspectId : ((rawState.guitarActiveId !== undefined ? rawState.guitarActiveId : rawState.guitarExercises?.[0]?.id) || defaultState.guitarInspectId)
       }
     : migrateGuitarData(rawState);
 
@@ -268,12 +280,15 @@ function normalizeState(rawState = {}) {
     exerciseId: entry.exerciseId || state.guitarExercises[0]?.id || null,
     exerciseTitle: entry.exerciseTitle || "Cwiczenie",
     bpm: Math.max(30, Number(entry.bpm || 60)),
-    durationSec: Math.max(5, Number(entry.durationSec || 300)),
+    durationSec: Math.max(1, Number(entry.durationSec || 300)),
     createdAt: entry.createdAt || new Date().toISOString()
   }));
   state.guitarActiveId = state.guitarActiveId && state.guitarExercises.some((exercise) => exercise.id === state.guitarActiveId)
     ? state.guitarActiveId
     : null;
+  state.guitarInspectId = state.guitarInspectId && state.guitarExercises.some((exercise) => exercise.id === state.guitarInspectId)
+    ? state.guitarInspectId
+    : (state.guitarActiveId || state.guitarExercises[0]?.id || null);
   state.supplements = normalizeArray(state.supplements, defaultState.supplements);
   state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
@@ -317,6 +332,8 @@ let metronomeRefreshTimer = null;
 let metronomeTapTimes = [];
 let metronomeSliderActive = false;
 let feedbackHideTimer = null;
+let pendingGuitarSession = null;
+let lockedGuitarCardWidth = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -343,7 +360,10 @@ function setTab(tab) {
   tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
   if (tab === "guitar") {
-    requestAnimationFrame(() => renderMetronome());
+    requestAnimationFrame(() => {
+      renderMetronome();
+      stabilizeGuitarLayout();
+    });
   }
   saveState();
 }
@@ -445,12 +465,62 @@ function activeGuitarExercise() {
   return state.guitarExercises.find((exercise) => exercise.id === state.guitarActiveId) || null;
 }
 
+function inspectedGuitarExercise() {
+  return state.guitarExercises.find((exercise) => exercise.id === state.guitarInspectId) || null;
+}
+
 function exerciseSessionStats(exerciseId) {
   const sessions = state.guitarSessions.filter((entry) => entry.exerciseId === exerciseId);
   const topBpm = sessions.length ? Math.max(...sessions.map((entry) => Number(entry.bpm || 0)), 0) : 0;
   const totalSec = sessions.reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
   const latestBpm = sessions.at(-1)?.bpm || 0;
   return { sessions, topBpm, totalSec, latestBpm };
+}
+
+function formatShortDateLabel(value) {
+  const date = new Date(value);
+  return `${date.getDate()}.${date.getMonth() + 1}`;
+}
+
+function renderGuitarDetailChart(exercise, sessions) {
+  const chart = document.getElementById("guitar-detail-chart");
+  if (!chart) return;
+  if (!exercise || !sessions.length) {
+    chart.innerHTML = `
+      <text x="160" y="92" text-anchor="middle" class="chart-axis-label">Brak sesji dla tego cwiczenia.</text>
+    `;
+    return;
+  }
+
+  const points = sessions.slice(-6);
+  const maxBpm = Math.max(exercise.targetBpm, ...points.map((entry) => Number(entry.bpm || 0)), 30);
+  const left = 24;
+  const right = 296;
+  const top = 18;
+  const bottom = 122;
+  const stepX = points.length === 1 ? 0 : (right - left) / (points.length - 1);
+  const path = points.map((entry, index) => {
+    const x = points.length === 1 ? (left + right) / 2 : left + stepX * index;
+    const ratio = maxBpm <= 0 ? 0 : Number(entry.bpm || 0) / maxBpm;
+    const y = bottom - ratio * (bottom - top);
+    return { x, y, entry };
+  });
+
+  const lineD = path.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
+
+  chart.innerHTML = `
+    <line x1="${left}" y1="${bottom}" x2="${right}" y2="${bottom}" class="chart-grid-line"></line>
+    <line x1="${left}" y1="${top}" x2="${right}" y2="${top}" class="chart-grid-line"></line>
+    <text x="${left}" y="${top - 4}" class="chart-axis-label">${maxBpm} BPM</text>
+    <text x="${left}" y="${bottom + 16}" class="chart-axis-label">czas</text>
+    <path d="${lineD}" class="chart-line"></path>
+    ${path.map((point) => `
+      <circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="5" class="chart-point"></circle>
+      <text x="${point.x.toFixed(2)}" y="${(point.y - 10).toFixed(2)}" text-anchor="middle" class="chart-point-label">${point.entry.bpm}</text>
+      <text x="${point.x.toFixed(2)}" y="${(bottom + 18).toFixed(2)}" text-anchor="middle" class="chart-point-duration">${formatDuration(point.entry.durationSec)}</text>
+      <text x="${point.x.toFixed(2)}" y="${(bottom + 32).toFixed(2)}" text-anchor="middle" class="chart-axis-label">${formatShortDateLabel(point.entry.createdAt)}</text>
+    `).join("")}
+  `;
 }
 
 function guitarOverview() {
@@ -720,7 +790,7 @@ function renderHome() {
   document.getElementById("home-progress-copy").textContent = `${progress.completed} z ${progress.total} rzeczy domkniete dzisiaj.`;
   document.getElementById("home-weight").textContent = latest ? `${Number(latest.value).toFixed(1)} kg` : "-";
   document.getElementById("home-tasks-open").textContent = `${progress.openTasks}`;
-  document.getElementById("home-guitar-output").textContent = minutesFromSeconds(guitarTodaySec);
+  document.getElementById("home-guitar-output").textContent = formatDuration(guitarTodaySec);
   document.getElementById("home-gym-output").textContent = `${workoutsThisWeek().length}/4`;
   document.getElementById("home-kcal").textContent = `${nutrition.calories}`;
   document.getElementById("home-protein").textContent = `${nutrition.protein} g`;
@@ -749,13 +819,21 @@ function renderGuitarExercises() {
     const stats = exerciseSessionStats(exercise.id);
     const percent = Math.min(Math.round((stats.topBpm / exercise.targetBpm) * 100), 100);
     const item = document.createElement("div");
-    item.className = `list-item list-item-block${exercise.id === state.guitarActiveId ? " active" : ""}`;
+    item.className = `list-item list-item-block${exercise.id === state.guitarInspectId ? " active" : ""}`;
+    item.tabIndex = 0;
     item.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(exercise.title)}</strong>
         <span>Cel ${exercise.targetBpm} BPM - ${exercise.practiceMinutes} min - top ${stats.topBpm || 0} BPM</span>
       </div>
     `;
+    item.addEventListener("click", () => inspectGuitarExercise(exercise.id));
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        inspectGuitarExercise(exercise.id);
+      }
+    });
 
     const progress = document.createElement("div");
     progress.className = "mini-progress";
@@ -802,7 +880,7 @@ function renderGuitarSessions() {
     row.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(session.exerciseTitle)}</strong>
-        <span>${session.bpm} BPM - ${minutesFromSeconds(session.durationSec)}</span>
+        <span>${session.bpm} BPM - ${formatDuration(session.durationSec)}</span>
       </div>
     `;
 
@@ -814,25 +892,68 @@ function renderGuitarSessions() {
   });
 }
 
+function renderGuitarExerciseDetail() {
+  const exercise = inspectedGuitarExercise();
+  const sessions = exercise ? exerciseSessionStats(exercise.id) : { sessions: [], topBpm: 0, latestBpm: 0, totalSec: 0 };
+  const percent = exercise ? Math.min(Math.round((sessions.topBpm / exercise.targetBpm) * 100), 100) : 0;
+  const detailList = document.getElementById("guitar-detail-list");
+
+  document.getElementById("guitar-detail-title").textContent = exercise ? exercise.title : "Statystyki cwiczenia";
+  document.getElementById("guitar-detail-summary").textContent = `${sessions.sessions.length} sesji`;
+  document.getElementById("guitar-detail-top").textContent = `${sessions.topBpm || 0}`;
+  document.getElementById("guitar-detail-latest").textContent = `${sessions.latestBpm || 0}`;
+  document.getElementById("guitar-detail-time").textContent = formatDuration(sessions.totalSec);
+  document.getElementById("guitar-detail-goal").textContent = `${percent}%`;
+
+  renderGuitarDetailChart(exercise, sessions.sessions);
+
+  detailList.innerHTML = "";
+  if (!exercise || !sessions.sessions.length) {
+    detailList.appendChild(emptyNode("Kliknij cwiczenie i buduj pierwsze wpisy."));
+    return;
+  }
+
+  sessions.sessions.slice().reverse().slice(0, 5).forEach((session) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${session.bpm} BPM</strong>
+        <span>${formatDuration(session.durationSec)} - ${formatShortDateLabel(session.createdAt)}</span>
+      </div>
+    `;
+    detailList.appendChild(row);
+  });
+}
+
 function renderGuitar() {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
   const percent = active ? Math.min(Math.round((stats.topBpm / active.targetBpm) * 100), 100) : 0;
   const clearButton = document.getElementById("guitar-active-clear");
+  const resultCard = document.getElementById("guitar-result-card");
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
   document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM - ${active.practiceMinutes} min` : "Dodaj nazwe, cel BPM i czas.";
   document.getElementById("guitar-active-top").textContent = `${stats.topBpm || 0} BPM`;
-  document.getElementById("guitar-active-time").textContent = minutesFromSeconds(stats.totalSec);
+  document.getElementById("guitar-active-time").textContent = formatDuration(stats.totalSec);
   document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
   document.getElementById("guitar-active-progress-value").textContent = `${percent}%`;
   if (clearButton) {
     clearButton.hidden = !active;
   }
+  if (resultCard) {
+    resultCard.hidden = !pendingGuitarSession;
+  }
+  if (pendingGuitarSession) {
+    document.getElementById("guitar-result-summary").textContent = formatDuration(pendingGuitarSession.durationSec);
+  }
 
   renderGuitarExercises();
+  renderGuitarExerciseDetail();
   renderGuitarSessions();
   renderMetronome();
+  stabilizeGuitarLayout();
 }
 
 function renderWorkoutTemplates() {
@@ -1269,12 +1390,16 @@ function renderMetronome() {
   if (metronomeRunning && metronomeStartedAt) {
     const elapsed = Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000));
     document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
-      ? `Sesja trwa ${elapsed}s na aktywnym cwiczeniu.`
-      : `Metronom gra od ${elapsed}s.`;
+      ? `Sesja trwa ${formatDuration(elapsed)} na aktywnym cwiczeniu.`
+      : `Metronom gra od ${formatDuration(elapsed)}.`;
   } else {
     document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
       ? "Sesja zapisze sie po zatrzymaniu metronomu."
       : "Metronom moze dzialac bez cwiczenia.";
+  }
+
+  if (state.activeTab === "guitar") {
+    stabilizeGuitarLayout();
   }
 }
 
@@ -1293,6 +1418,7 @@ function positionMetronomeLabel(id, bpm, wheel, radiusPx, offsetX = 0, offsetY =
 
 function selectGuitarExercise(id) {
   state.guitarActiveId = id;
+  state.guitarInspectId = id;
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : null;
   metronomeBpm = stats?.latestBpm || active?.targetBpm || 80;
@@ -1300,6 +1426,42 @@ function selectGuitarExercise(id) {
   saveState();
   renderAll();
   setFeedback(`Aktywne cwiczenie: ${active?.title || "brak"}.`);
+}
+
+function inspectGuitarExercise(id) {
+  if (!state.guitarExercises.some((exercise) => exercise.id === id)) return;
+  state.guitarInspectId = id;
+  saveState();
+  renderGuitar();
+}
+
+function stabilizeGuitarLayout() {
+  const page = document.querySelector('.tab-page[data-tab="guitar"]');
+  const feed = page?.querySelector(".section-feed");
+  const card = page?.querySelector(".metronome-card");
+  if (!page || !feed || !card) return;
+
+  page.style.width = "100%";
+  page.style.maxWidth = "100%";
+  feed.style.width = "100%";
+  feed.style.maxWidth = "100%";
+
+  if (window.innerWidth > 520) {
+    card.style.removeProperty("width");
+    card.style.removeProperty("min-width");
+    card.style.removeProperty("max-width");
+    lockedGuitarCardWidth = null;
+    return;
+  }
+
+  const feedWidth = Math.round(feed.getBoundingClientRect().width);
+  if (!feedWidth) return;
+  if (lockedGuitarCardWidth !== feedWidth) {
+    lockedGuitarCardWidth = feedWidth;
+  }
+  card.style.width = `${lockedGuitarCardWidth}px`;
+  card.style.minWidth = `${lockedGuitarCardWidth}px`;
+  card.style.maxWidth = `${lockedGuitarCardWidth}px`;
 }
 
 function restartMetronomeInterval() {
@@ -1378,6 +1540,10 @@ function registerTapTempo() {
 
 function startMetronome() {
   if (metronomeRunning) return;
+  if (pendingGuitarSession) {
+    setFeedback("Zapisz albo pomin poprzednia sesje.");
+    return;
+  }
   metronomeRunning = true;
   metronomeStartedAt = Date.now();
   metronomeBeatIndex = 0;
@@ -1385,6 +1551,7 @@ function startMetronome() {
   clearTimeout(metronomeRefreshTimer);
   playMetronomeClick();
   renderMetronome();
+  stabilizeGuitarLayout();
   restartMetronomeInterval();
   metronomeUiInterval = setInterval(renderMetronome, 1000);
 }
@@ -1459,7 +1626,7 @@ function stopMetronome(skipSave = false) {
   metronomeInterval = null;
   metronomeUiInterval = null;
 
-  const durationSec = metronomeStartedAt ? Math.max(5, Math.floor((Date.now() - metronomeStartedAt) / 1000)) : 0;
+  const durationSec = metronomeStartedAt ? Math.max(1, Math.floor((Date.now() - metronomeStartedAt) / 1000)) : 0;
   const active = activeGuitarExercise();
 
   metronomeRunning = false;
@@ -1467,21 +1634,55 @@ function stopMetronome(skipSave = false) {
   metronomeBeatIndex = 0;
 
   if (!skipSave && active && durationSec > 0) {
-    state.guitarSessions.push({
-      id: uid("gs"),
+    pendingGuitarSession = {
       exerciseId: active.id,
       exerciseTitle: active.title,
-      bpm: metronomeBpm,
       durationSec,
       createdAt: new Date().toISOString()
-    });
-    saveState();
-    renderAll();
-    setFeedback(`Zapisano sesje ${active.title}: ${metronomeBpm} BPM, ${minutesFromSeconds(durationSec)}.`);
+    };
+    renderGuitar();
+    const bpmInput = document.getElementById("guitar-result-bpm-input");
+    if (bpmInput) {
+      bpmInput.value = "";
+      setTimeout(() => bpmInput.focus(), 40);
+    }
     return;
   }
 
+  pendingGuitarSession = null;
   renderMetronome();
+}
+
+function savePendingGuitarSession() {
+  if (!pendingGuitarSession) return;
+  const input = document.getElementById("guitar-result-bpm-input");
+  const bpm = Number(input?.value);
+  if (!Number.isFinite(bpm) || bpm < 30 || bpm > 240) {
+    setFeedback("Wpisz BPM z zakresu 30-240.");
+    input?.focus();
+    return;
+  }
+
+  state.guitarSessions.push({
+    id: uid("gs"),
+    exerciseId: pendingGuitarSession.exerciseId,
+    exerciseTitle: pendingGuitarSession.exerciseTitle,
+    bpm,
+    durationSec: pendingGuitarSession.durationSec,
+    createdAt: pendingGuitarSession.createdAt
+  });
+  state.guitarInspectId = pendingGuitarSession.exerciseId;
+  pendingGuitarSession = null;
+  saveState();
+  renderAll();
+  setFeedback(`Zapisano sesje: ${bpm} BPM, ${formatDuration(state.guitarSessions.at(-1)?.durationSec || 0)}.`);
+}
+
+function cancelPendingGuitarSession() {
+  if (!pendingGuitarSession) return;
+  pendingGuitarSession = null;
+  renderGuitar();
+  setFeedback("Sesja nie zostala zapisana.");
 }
 
 function notifyPulse() {
@@ -1731,6 +1932,7 @@ function editGuitarExercise(id) {
     targetBpm: Number.isFinite(Number(target)) && Number(target) > 0 ? Number(target) : entry.targetBpm,
     practiceMinutes: Number.isFinite(Number(practiceMinutes)) && Number(practiceMinutes) > 0 ? Number(practiceMinutes) : entry.practiceMinutes
   } : entry);
+  state.guitarInspectId = id;
   saveState();
   renderAll();
 }
@@ -1740,6 +1942,9 @@ function deleteGuitarExercise(id) {
   state.guitarSessions = state.guitarSessions.filter((entry) => entry.exerciseId !== id);
   if (state.guitarActiveId === id) {
     state.guitarActiveId = null;
+  }
+  if (state.guitarInspectId === id) {
+    state.guitarInspectId = state.guitarActiveId || state.guitarExercises[0]?.id || null;
   }
   saveState();
   renderAll();
@@ -2021,6 +2226,7 @@ function bindForms() {
       practiceMinutes
     });
     state.guitarActiveId = id;
+    state.guitarInspectId = id;
     metronomeBpm = targetBpm;
     nameInput.value = "";
     targetInput.value = "";
@@ -2139,6 +2345,14 @@ function bindTools() {
   });
   bindPressAction(document.getElementById("metronome-tap-button"), registerTapTempo);
   bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
+  bindPressAction(document.getElementById("guitar-result-save"), savePendingGuitarSession);
+  bindPressAction(document.getElementById("guitar-result-cancel"), cancelPendingGuitarSession);
+  document.getElementById("guitar-result-bpm-input").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      savePendingGuitarSession();
+    }
+  });
 
   const importInput = document.getElementById("import-input");
   document.getElementById("import-button").addEventListener("click", () => importInput.click());
@@ -2190,6 +2404,11 @@ document.addEventListener("touchcancel", () => {
 
 window.addEventListener("resize", () => {
   renderMetronome();
+  stabilizeGuitarLayout();
+});
+
+window.visualViewport?.addEventListener("resize", () => {
+  stabilizeGuitarLayout();
 });
 
 if ("serviceWorker" in navigator) {

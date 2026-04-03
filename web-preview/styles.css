@@ -32,6 +32,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 90, 95, 0.12), transparent 24%),
     radial-gradient(circle at top right, rgba(88, 81, 219, 0.08), transparent 22%),
@@ -96,10 +97,12 @@ button:active {
 .phone-shell {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .device-frame {
   width: min(430px, 100%);
+  max-width: 100%;
   padding: 12px;
   border-radius: 42px;
   background: linear-gradient(180deg, #111111, #252525);
@@ -137,6 +140,7 @@ button:active {
 .tab-page.active {
   display: block;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -154,6 +158,8 @@ button:active {
 .section-feed {
   display: grid;
   gap: 14px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -163,6 +169,8 @@ button:active {
   border-radius: 24px;
   padding: 18px;
   box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -492,6 +500,18 @@ button:active {
   align-items: start;
 }
 
+.inline-card-head {
+  margin-bottom: 10px;
+}
+
+.result-entry-card {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .tempo-head {
   display: grid;
   grid-template-columns: 40px 1fr 40px;
@@ -763,6 +783,61 @@ button:active {
   line-height: 1;
 }
 
+.compact-stack {
+  margin-top: 14px;
+}
+
+.exercise-chart-card {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
+.exercise-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-grid-line {
+  stroke: rgba(107, 107, 107, 0.16);
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--accent-3);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-point {
+  fill: white;
+  stroke: var(--accent-3);
+  stroke-width: 3;
+}
+
+.chart-point-label {
+  fill: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.chart-point-duration {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .metronome-option-button.active {
   background: rgba(255, 255, 255, 0.92);
   color: #111111;
@@ -969,6 +1044,8 @@ textarea:focus {
     min-height: 100vh;
     border-radius: 0;
     padding: 18px 14px 126px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .story-row,

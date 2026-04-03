@@ -216,6 +216,17 @@
                   <strong id="guitar-active-progress-value">0%</strong>
                 </div>
                 <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
+                <div id="guitar-result-card" class="result-entry-card" hidden>
+                  <div class="card-head inline-card-head">
+                    <h2>Wynik sesji</h2>
+                    <span id="guitar-result-summary">0 s</span>
+                  </div>
+                  <div class="inline-form inline-form-two">
+                    <input id="guitar-result-bpm-input" type="number" step="1" min="30" max="240" placeholder="Wpisz BPM">
+                    <button type="button" id="guitar-result-save" class="primary-button">Zapisz</button>
+                  </div>
+                  <button type="button" id="guitar-result-cancel" class="secondary-button full-button">Pomin</button>
+                </div>
               </article>
 
               <article class="card">
@@ -239,6 +250,35 @@
                   <span id="guitar-exercise-count">0</span>
                 </div>
                 <div id="guitar-exercise-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2 id="guitar-detail-title">Statystyki cwiczenia</h2>
+                  <span id="guitar-detail-summary">0 sesji</span>
+                </div>
+                <div class="stat-grid stat-grid-four">
+                  <div class="stat-card">
+                    <span>Top BPM</span>
+                    <strong id="guitar-detail-top">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Ostatni BPM</span>
+                    <strong id="guitar-detail-latest">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Lacznie</span>
+                    <strong id="guitar-detail-time">0 s</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Cel</span>
+                    <strong id="guitar-detail-goal">0%</strong>
+                  </div>
+                </div>
+                <div class="exercise-chart-card">
+                  <svg id="guitar-detail-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
+                </div>
+                <div id="guitar-detail-list" class="stack-list compact-stack"></div>
               </article>
 
               <article class="card">
