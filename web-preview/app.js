@@ -748,7 +748,13 @@ function renderGuitarExercises() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Uzyj", () => selectGuitarExercise(exercise.id)),
+      makeToolButton(exercise.id === state.guitarActiveId ? "Off" : "Uzyj", () => {
+        if (exercise.id === state.guitarActiveId) {
+          clearActiveGuitarExercise();
+          return;
+        }
+        selectGuitarExercise(exercise.id);
+      }),
       makeToolButton("Edit", () => editGuitarExercise(exercise.id)),
       makeToolButton("Del", () => deleteGuitarExercise(exercise.id), true)
     );
@@ -1171,14 +1177,20 @@ function renderMetronome() {
   if (arcProgress) {
     arcProgress.setAttribute("d", describeMetronomeArc(METRONOME_ARC_START, currentAngle));
   }
+  if (arcHitbox) {
+    arcHitbox.setAttribute("d", describeMetronomeArc(METRONOME_ARC_START, METRONOME_ARC_END));
+    arcHitbox.setAttribute("tabindex", "0");
+    arcHitbox.setAttribute("role", "slider");
+    arcHitbox.setAttribute("aria-label", "Tempo");
+    arcHitbox.setAttribute("aria-valuemin", "30");
+    arcHitbox.setAttribute("aria-valuemax", "240");
+    arcHitbox.setAttribute("aria-valuenow", String(metronomeBpm));
+    arcHitbox.setAttribute("aria-valuetext", `${metronomeBpm} BPM`);
+  }
   if (arcKnob) {
     const point = metronomePolarPoint(currentAngle);
     arcKnob.setAttribute("cx", point.x.toFixed(2));
     arcKnob.setAttribute("cy", point.y.toFixed(2));
-  }
-  if (arcHitbox) {
-    arcHitbox.setAttribute("aria-valuenow", String(metronomeBpm));
-    arcHitbox.setAttribute("aria-valuetext", `${metronomeBpm} BPM`);
   }
   if (dotsButton) {
     dotsButton.setAttribute("aria-expanded", metronomeOptionMode === "signature" ? "true" : "false");
@@ -1361,6 +1373,32 @@ function clearActiveGuitarExercise() {
   state.guitarActiveId = null;
   saveState();
   renderAll();
+}
+
+function bindPressAction(node, handler) {
+  if (!node) return;
+  let handledTouch = false;
+
+  node.addEventListener("touchend", (event) => {
+    handledTouch = true;
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+    setTimeout(() => {
+      handledTouch = false;
+    }, 320);
+  }, { passive: false });
+
+  node.addEventListener("click", (event) => {
+    if (handledTouch) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+  });
 }
 
 function stopMetronome(skipSave = false) {
@@ -2039,15 +2077,15 @@ function bindTools() {
   arcHitbox.addEventListener("touchend", stopArcDrag, { passive: true });
   arcHitbox.addEventListener("touchcancel", stopArcDrag, { passive: true });
 
-  document.getElementById("metronome-toggle-button").addEventListener("click", () => {
+  bindPressAction(document.getElementById("metronome-toggle-button"), () => {
     if (metronomeRunning) {
       stopMetronome(false);
     } else {
       startMetronome();
     }
   });
-  document.getElementById("metronome-tap-button").addEventListener("click", registerTapTempo);
-  document.getElementById("guitar-active-clear").addEventListener("click", clearActiveGuitarExercise);
+  bindPressAction(document.getElementById("metronome-tap-button"), registerTapTempo);
+  bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
 
   const importInput = document.getElementById("import-input");
   document.getElementById("import-button").addEventListener("click", () => importInput.click());

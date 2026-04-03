@@ -557,14 +557,12 @@ button:active {
 }
 
 .metronome-arc-hitbox {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: transparent;
+  fill: none;
+  stroke: transparent;
+  stroke-width: 58;
+  stroke-linecap: round;
+  pointer-events: stroke;
   cursor: pointer;
-  touch-action: none;
-  z-index: 2;
-  outline: none;
 }
 
 .arc-label {
@@ -754,6 +752,9 @@ button:active {
   background: rgba(255, 255, 255, 0.14);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  line-height: 1;
 }
 
 .metronome-option-button.active {
