@@ -176,27 +176,34 @@
                   <strong id="guitar-active-progress-value">0%</strong>
                 </div>
 
-                <div class="metronome-dial-wrap">
-                  <button type="button" class="dial-step" id="metronome-minus-button">-</button>
-                  <div class="metronome-dial" id="metronome-dial">
-                    <div class="metronome-ring">
-                      <div class="metronome-pointer" id="metronome-pointer"></div>
-                    </div>
-                    <span class="metronome-label">Tempo</span>
+                <div class="tempo-head">
+                  <button type="button" class="dial-step" id="metronome-minus-button" aria-label="Zmniejsz tempo">-</button>
+                  <div class="tempo-readout">
                     <strong id="metronome-bpm-display">80</strong>
-                    <span class="metronome-unit">BPM</span>
+                    <span class="metronome-unit">Beats per min</span>
                   </div>
-                  <button type="button" class="dial-step" id="metronome-plus-button">+</button>
+                  <button type="button" class="dial-step" id="metronome-plus-button" aria-label="Zwieksz tempo">+</button>
                 </div>
 
-                <div class="slider-scale">
-                  <span>30</span>
-                  <span>240</span>
+                <div class="metronome-wheel" id="metronome-wheel">
+                  <div class="metronome-arc">
+                    <div class="metronome-arc-track"></div>
+                    <div class="metronome-arc-progress" id="metronome-arc-progress"></div>
+                    <div class="metronome-arc-knob" id="metronome-arc-knob"></div>
+                    <input id="metronome-bpm-slider" class="metronome-arc-slider" type="range" min="30" max="240" step="1" value="80" aria-label="Tempo">
+                  </div>
+                  <div class="arc-label arc-label-left">30</div>
+                  <div class="arc-label arc-label-top" id="metronome-arc-top-label">80</div>
+                  <div class="arc-label arc-label-right">240</div>
+                  <button type="button" id="metronome-toggle-button" class="metronome-toggle-button" aria-label="Start metronomu">Start</button>
+                  <button type="button" id="metronome-tap-button" class="metronome-tap-button">Tap tempo</button>
                 </div>
 
                 <button type="button" class="beat-dots-button" id="metronome-dots-button" aria-expanded="false" aria-controls="signature-row">
                   <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
                 </button>
+
+                <button type="button" class="signature-pill" id="signature-pill">4/4</button>
 
                 <div class="signature-row" id="signature-row" hidden>
                   <button type="button" class="signature-button" data-signature="3">3/4</button>
@@ -210,11 +217,6 @@
                   <button type="button" class="preset-button" data-metronome-preset="80">80</button>
                   <button type="button" class="preset-button" data-metronome-preset="100">100</button>
                   <button type="button" class="preset-button" data-metronome-preset="120">120</button>
-                </div>
-
-                <div class="button-row">
-                  <button type="button" id="metronome-start-button" class="primary-button">Start</button>
-                  <button type="button" id="metronome-stop-button" class="secondary-button">Stop</button>
                 </div>
                 <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
               </article>

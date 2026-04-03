@@ -134,19 +134,8 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function bpmToAngle(bpm) {
-  const minBpm = 30;
-  const maxBpm = 240;
-  const normalized = (clamp(bpm, minBpm, maxBpm) - minBpm) / (maxBpm - minBpm);
-  return -135 + normalized * 270;
-}
-
-function angleToBpm(angle) {
-  const minAngle = -135;
-  const maxAngle = 135;
-  const bounded = clamp(angle, minAngle, maxAngle);
-  const normalized = (bounded - minAngle) / (maxAngle - minAngle);
-  return Math.round(30 + normalized * (240 - 30));
+function bpmProgress(bpm) {
+  return (clamp(bpm, 30, 240) - 30) / 210;
 }
 
 function normalizeArray(value, fallback) {
@@ -293,7 +282,7 @@ let metronomeBeatIndex = 0;
 let metronomeSignature = 4;
 let metronomeSignaturePickerOpen = false;
 let metronomeRefreshTimer = null;
-let metronomeDialDragging = false;
+let metronomeTapTimes = [];
 let feedbackHideTimer = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
@@ -1125,19 +1114,38 @@ function playMetronomeClick() {
 }
 
 function renderMetronome() {
-  const dial = document.getElementById("metronome-dial");
+  const arcProgress = document.getElementById("metronome-arc-progress");
+  const arcKnob = document.getElementById("metronome-arc-knob");
   const signatureRow = document.getElementById("signature-row");
   const dotsButton = document.getElementById("metronome-dots-button");
+  const toggleButton = document.getElementById("metronome-toggle-button");
+  const signaturePill = document.getElementById("signature-pill");
+  const progressPercent = bpmProgress(metronomeBpm);
+  const arcDegrees = progressPercent * 270;
+
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
+  document.getElementById("metronome-arc-top-label").textContent = `${metronomeBpm}`;
   document.getElementById("metronome-status").textContent = metronomeRunning ? "Running" : "Ready";
-  if (dial) {
-    dial.style.setProperty("--knob-angle", `${bpmToAngle(metronomeBpm)}deg`);
+  document.getElementById("metronome-bpm-slider").value = String(metronomeBpm);
+  if (arcProgress) {
+    arcProgress.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
+  }
+  if (arcKnob) {
+    arcKnob.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
   }
   if (signatureRow) {
     signatureRow.hidden = !metronomeSignaturePickerOpen;
   }
   if (dotsButton) {
     dotsButton.setAttribute("aria-expanded", metronomeSignaturePickerOpen ? "true" : "false");
+  }
+  if (signaturePill) {
+    signaturePill.textContent = `${metronomeSignature}/${metronomeSignature === 6 ? 8 : 4}`;
+  }
+  if (toggleButton) {
+    toggleButton.textContent = metronomeRunning ? "Pauza" : "Start";
+    toggleButton.dataset.state = metronomeRunning ? "pause" : "start";
+    toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
@@ -1189,7 +1197,7 @@ function scheduleMetronomeRefresh() {
   clearTimeout(metronomeRefreshTimer);
   metronomeRefreshTimer = setTimeout(() => {
     restartMetronomeInterval();
-  }, 180);
+  }, 260);
 }
 
 function setMetronomeBpm(nextBpm) {
@@ -1198,16 +1206,26 @@ function setMetronomeBpm(nextBpm) {
   scheduleMetronomeRefresh();
 }
 
-function updateMetronomeFromPoint(clientX, clientY) {
-  const dial = document.getElementById("metronome-dial");
-  if (!dial) return;
+function registerTapTempo() {
+  const now = Date.now();
+  metronomeTapTimes = metronomeTapTimes.filter((time) => now - time < 2200);
+  metronomeTapTimes.push(now);
 
-  const rect = dial.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-  const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
-  const normalized = angle > 180 ? angle - 360 : angle;
-  setMetronomeBpm(angleToBpm(normalized));
+  if (metronomeTapTimes.length < 2) {
+    setFeedback("Tapnij jeszcze kilka razy, zeby ustawic tempo.");
+    return;
+  }
+
+  const intervals = [];
+  for (let index = 1; index < metronomeTapTimes.length; index += 1) {
+    intervals.push(metronomeTapTimes[index] - metronomeTapTimes[index - 1]);
+  }
+
+  const averageInterval = intervals.reduce((sum, value) => sum + value, 0) / intervals.length;
+  const tappedBpm = clamp(Math.round(60000 / averageInterval), 30, 240);
+  setMetronomeBpm(tappedBpm);
+  metronomeTapTimes = [];
+  setFeedback(`Tap tempo: ${tappedBpm} BPM.`);
 }
 
 function startMetronome() {
@@ -1839,6 +1857,10 @@ function bindTools() {
     setMetronomeBpm(metronomeBpm + 1);
   });
 
+  document.getElementById("metronome-bpm-slider").addEventListener("input", (event) => {
+    setMetronomeBpm(Number(event.target.value));
+  });
+
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       setMetronomeBpm(Number(button.dataset.metronomePreset));
@@ -1859,26 +1881,19 @@ function bindTools() {
     metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
     renderMetronome();
   });
-
-  const dial = document.getElementById("metronome-dial");
-  const stopDialDrag = () => {
-    metronomeDialDragging = false;
-  };
-  dial.addEventListener("pointerdown", (event) => {
-    metronomeDialDragging = true;
-    dial.setPointerCapture?.(event.pointerId);
-    updateMetronomeFromPoint(event.clientX, event.clientY);
+  document.getElementById("signature-pill").addEventListener("click", () => {
+    metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
+    renderMetronome();
   });
-  dial.addEventListener("pointermove", (event) => {
-    if (!metronomeDialDragging) return;
-    updateMetronomeFromPoint(event.clientX, event.clientY);
-  });
-  dial.addEventListener("pointerup", stopDialDrag);
-  dial.addEventListener("pointercancel", stopDialDrag);
-  dial.addEventListener("lostpointercapture", stopDialDrag);
 
-  document.getElementById("metronome-start-button").addEventListener("click", startMetronome);
-  document.getElementById("metronome-stop-button").addEventListener("click", () => stopMetronome(false));
+  document.getElementById("metronome-toggle-button").addEventListener("click", () => {
+    if (metronomeRunning) {
+      stopMetronome(false);
+    } else {
+      startMetronome();
+    }
+  });
+  document.getElementById("metronome-tap-button").addEventListener("click", registerTapTempo);
 
   const importInput = document.getElementById("import-input");
   document.getElementById("import-button").addEventListener("click", () => importInput.click());
