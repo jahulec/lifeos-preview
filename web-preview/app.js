@@ -1226,9 +1226,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 28, -10, 12);
-    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 18, 0, -8);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 28, 10, 12);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 42, -20, 12);
+    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 22, 0, -18);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 42, 20, 12);
   }
 
   if (optionGrid) {
@@ -1392,6 +1392,7 @@ function startMetronome() {
 function clearActiveGuitarExercise() {
   if (!state.guitarActiveId) return;
   state.guitarActiveId = null;
+  metronomeOptionMode = "bpm";
   saveState();
   renderAll();
   setFeedback("Odznaczono aktywne cwiczenie.");
@@ -1400,16 +1401,41 @@ function clearActiveGuitarExercise() {
 function bindPressAction(node, handler) {
   if (!node) return;
   let handledTouch = false;
+  let lastHandledAt = 0;
+
+  const invoke = (event) => {
+    const now = Date.now();
+    if (now - lastHandledAt < 280) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      return;
+    }
+    lastHandledAt = now;
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    handler();
+  };
 
   node.addEventListener("touchend", (event) => {
     handledTouch = true;
-    event.preventDefault();
-    event.stopPropagation();
-    handler();
+    invoke(event);
     setTimeout(() => {
       handledTouch = false;
     }, 320);
   }, { passive: false });
+
+  node.addEventListener("pointerup", (event) => {
+    if (event.pointerType === "mouse") return;
+    handledTouch = true;
+    invoke(event);
+    setTimeout(() => {
+      handledTouch = false;
+    }, 320);
+  });
 
   node.addEventListener("click", (event) => {
     if (handledTouch) {
@@ -1417,9 +1443,7 @@ function bindPressAction(node, handler) {
       event.stopPropagation();
       return;
     }
-    event.preventDefault();
-    event.stopPropagation();
-    handler();
+    invoke(event);
   });
 }
 

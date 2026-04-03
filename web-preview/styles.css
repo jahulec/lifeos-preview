@@ -24,6 +24,8 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   touch-action: manipulation;
 }
 
@@ -174,7 +176,7 @@ button:active {
   border: 0;
   width: 100%;
   overflow: hidden;
-  contain: layout paint;
+  isolation: isolate;
   padding-bottom: 24px;
 }
 
@@ -486,6 +488,8 @@ button:active {
 
 .compact-exercise-card {
   margin-top: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
 }
 
 .tempo-head {
@@ -515,11 +519,11 @@ button:active {
 
 .metronome-wheel {
   position: relative;
-  width: min(100%, 344px);
+  width: min(100%, 356px);
   aspect-ratio: 1 / 1;
   margin: 8px auto 10px;
-  overflow: hidden;
-  contain: strict;
+  overflow: visible;
+  contain: none;
   flex: 0 0 auto;
 }
 
@@ -984,8 +988,16 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .compact-exercise-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .active-stats {
     justify-items: start;
+  }
+
+  .compact-exercise-card .active-stats {
+    justify-items: end;
   }
 
   .dial-step {
@@ -994,7 +1006,7 @@ textarea:focus {
   }
 
   .metronome-wheel {
-    width: min(100%, 312px);
+    width: min(100%, 326px);
   }
 
   .metronome-toggle-button {
