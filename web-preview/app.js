@@ -549,7 +549,26 @@ function makeToolButton(label, onClick, danger = false) {
   button.type = "button";
   button.className = `tool-button${danger ? " delete" : ""}`;
   button.textContent = label;
-  button.addEventListener("click", onClick);
+  let handledTouch = false;
+  button.addEventListener("touchend", (event) => {
+    handledTouch = true;
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
+    setTimeout(() => {
+      handledTouch = false;
+    }, 320);
+  }, { passive: false });
+  button.addEventListener("click", (event) => {
+    if (handledTouch) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    onClick();
+  });
   return button;
 }
 
@@ -1207,9 +1226,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 22, 0, 6);
-    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 14, 0, -2);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 22, 0, 6);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 28, -10, 12);
+    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 18, 0, -8);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 28, 10, 12);
   }
 
   if (optionGrid) {
@@ -1375,6 +1394,7 @@ function clearActiveGuitarExercise() {
   state.guitarActiveId = null;
   saveState();
   renderAll();
+  setFeedback("Odznaczono aktywne cwiczenie.");
 }
 
 function bindPressAction(node, handler) {
