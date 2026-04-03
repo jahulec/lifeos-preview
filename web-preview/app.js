@@ -84,9 +84,9 @@ const defaultState = {
     { id: "weight-6", value: 80.4, createdAt: isoDaysAgo(0, 8) }
   ],
   guitarExercises: [
-    { id: "gex-1", title: "Alternate picking", targetBpm: 120 },
-    { id: "gex-2", title: "Spider 1234", targetBpm: 110 },
-    { id: "gex-3", title: "Pentatonic sequence", targetBpm: 140 }
+    { id: "gex-1", title: "Alternate picking", targetBpm: 120, practiceMinutes: 12 },
+    { id: "gex-2", title: "Spider 1234", targetBpm: 110, practiceMinutes: 10 },
+    { id: "gex-3", title: "Pentatonic sequence", targetBpm: 140, practiceMinutes: 15 }
   ],
   guitarSessions: [
     { id: "gs-1", exerciseId: "gex-1", exerciseTitle: "Alternate picking", bpm: 92, durationSec: 480, createdAt: isoDaysAgo(2, 20) },
@@ -208,7 +208,8 @@ function migrateGuitarData(rawState) {
   const guitarExercises = [...byTitle.entries()].map(([title, data]) => ({
     id: data.id,
     title,
-    targetBpm: Math.max(60, data.top + 12)
+    targetBpm: Math.max(60, data.top + 12),
+    practiceMinutes: 10
   }));
 
   const titleToId = new Map(guitarExercises.map((exercise) => [exercise.title, exercise.id]));
@@ -259,7 +260,8 @@ function normalizeState(rawState = {}) {
   state.guitarExercises = normalizeArray(state.guitarExercises, defaultState.guitarExercises).map((entry) => ({
     id: entry.id || uid("gex"),
     title: entry.title || "Cwiczenie",
-    targetBpm: Math.max(40, Number(entry.targetBpm || 80))
+    targetBpm: Math.max(40, Number(entry.targetBpm || 80)),
+    practiceMinutes: Math.max(1, Number(entry.practiceMinutes || 10))
   }));
   state.guitarSessions = normalizeArray(state.guitarSessions, defaultState.guitarSessions).map((entry) => ({
     id: entry.id || uid("gs"),
@@ -269,9 +271,9 @@ function normalizeState(rawState = {}) {
     durationSec: Math.max(5, Number(entry.durationSec || 300)),
     createdAt: entry.createdAt || new Date().toISOString()
   }));
-  state.guitarActiveId = state.guitarExercises.some((exercise) => exercise.id === state.guitarActiveId)
+  state.guitarActiveId = state.guitarActiveId && state.guitarExercises.some((exercise) => exercise.id === state.guitarActiveId)
     ? state.guitarActiveId
-    : state.guitarExercises[0]?.id || null;
+    : null;
   state.supplements = normalizeArray(state.supplements, defaultState.supplements);
   state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
@@ -440,7 +442,7 @@ function guitarSessionsThisWeek() {
 }
 
 function activeGuitarExercise() {
-  return state.guitarExercises.find((exercise) => exercise.id === state.guitarActiveId) || state.guitarExercises[0] || null;
+  return state.guitarExercises.find((exercise) => exercise.id === state.guitarActiveId) || null;
 }
 
 function exerciseSessionStats(exerciseId) {
@@ -732,7 +734,7 @@ function renderGuitarExercises() {
     item.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(exercise.title)}</strong>
-        <span>Cel ${exercise.targetBpm} BPM - top ${stats.topBpm || 0} BPM - ${minutesFromSeconds(stats.totalSec)}</span>
+        <span>Cel ${exercise.targetBpm} BPM - ${exercise.practiceMinutes} min - top ${stats.topBpm || 0} BPM</span>
       </div>
     `;
 
@@ -800,7 +802,7 @@ function renderGuitar() {
   const clearButton = document.getElementById("guitar-active-clear");
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
-  document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM` : "Dodaj nazwe i cel BPM.";
+  document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM - ${active.practiceMinutes} min` : "Dodaj nazwe, cel BPM i czas.";
   document.getElementById("guitar-active-top").textContent = `${stats.topBpm || 0} BPM`;
   document.getElementById("guitar-active-time").textContent = minutesFromSeconds(stats.totalSec);
   document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
@@ -1205,9 +1207,9 @@ function renderMetronome() {
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
   if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 18);
-    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 18);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 18);
+    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 22, 0, 6);
+    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 14, 0, -2);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 22, 0, 6);
   }
 
   if (optionGrid) {
@@ -1257,15 +1259,15 @@ function renderMetronome() {
   }
 }
 
-function positionMetronomeLabel(id, bpm, wheel, radiusPx) {
+function positionMetronomeLabel(id, bpm, wheel, radiusPx, offsetX = 0, offsetY = 0) {
   const node = document.getElementById(id);
   if (!node || !wheel) return;
   if (!wheel.clientWidth || !wheel.clientHeight) return;
   const angle = bpmToArcAngle(bpm) * (Math.PI / 180);
   const scale = Math.min(wheel.clientWidth, wheel.clientHeight) / METRONOME_SVG_SIZE;
   const radius = radiusPx * scale;
-  const x = wheel.clientWidth / 2 + Math.sin(angle) * radius;
-  const y = wheel.clientHeight / 2 - Math.cos(angle) * radius;
+  const x = wheel.clientWidth / 2 + Math.sin(angle) * radius + offsetX * scale;
+  const y = wheel.clientHeight / 2 - Math.cos(angle) * radius + offsetY * scale;
   node.style.left = `${x}px`;
   node.style.top = `${y}px`;
 }
@@ -1677,10 +1679,13 @@ function editGuitarExercise(id) {
   if (title === null) return;
   const target = prompt("Cel BPM", String(exercise.targetBpm));
   if (target === null) return;
+  const practiceMinutes = prompt("Czas min", String(exercise.practiceMinutes || 10));
+  if (practiceMinutes === null) return;
   state.guitarExercises = state.guitarExercises.map((entry) => entry.id === id ? {
     ...entry,
     title: title.trim() || entry.title,
-    targetBpm: Number.isFinite(Number(target)) && Number(target) > 0 ? Number(target) : entry.targetBpm
+    targetBpm: Number.isFinite(Number(target)) && Number(target) > 0 ? Number(target) : entry.targetBpm,
+    practiceMinutes: Number.isFinite(Number(practiceMinutes)) && Number(practiceMinutes) > 0 ? Number(practiceMinutes) : entry.practiceMinutes
   } : entry);
   saveState();
   renderAll();
@@ -1690,7 +1695,7 @@ function deleteGuitarExercise(id) {
   state.guitarExercises = state.guitarExercises.filter((entry) => entry.id !== id);
   state.guitarSessions = state.guitarSessions.filter((entry) => entry.exerciseId !== id);
   if (state.guitarActiveId === id) {
-    state.guitarActiveId = state.guitarExercises[0]?.id || null;
+    state.guitarActiveId = null;
   }
   saveState();
   renderAll();
@@ -1959,19 +1964,23 @@ function bindForms() {
     event.preventDefault();
     const nameInput = document.getElementById("guitar-exercise-name-input");
     const targetInput = document.getElementById("guitar-exercise-target-input");
+    const minutesInput = document.getElementById("guitar-exercise-minutes-input");
     const title = nameInput.value.trim();
     const targetBpm = Number(targetInput.value);
-    if (!title || !Number.isFinite(targetBpm) || targetBpm <= 0) return;
+    const practiceMinutes = Number(minutesInput.value);
+    if (!title || !Number.isFinite(targetBpm) || targetBpm <= 0 || !Number.isFinite(practiceMinutes) || practiceMinutes <= 0) return;
     const id = uid("gex");
     state.guitarExercises.push({
       id,
       title,
-      targetBpm
+      targetBpm,
+      practiceMinutes
     });
     state.guitarActiveId = id;
     metronomeBpm = targetBpm;
     nameInput.value = "";
     targetInput.value = "";
+    minutesInput.value = "";
     saveState();
     renderAll();
     setFeedback(`Dodano cwiczenie gitarowe: ${title}.`);
