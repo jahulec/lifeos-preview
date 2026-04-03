@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>LifeOS</title>
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -178,7 +178,10 @@
 
                 <div class="metronome-dial-wrap">
                   <button type="button" class="dial-step" id="metronome-minus-button">-</button>
-                  <div class="metronome-dial">
+                  <div class="metronome-dial" id="metronome-dial">
+                    <div class="metronome-ring">
+                      <div class="metronome-pointer" id="metronome-pointer"></div>
+                    </div>
                     <span class="metronome-label">Tempo</span>
                     <strong id="metronome-bpm-display">80</strong>
                     <span class="metronome-unit">BPM</span>
@@ -186,22 +189,21 @@
                   <button type="button" class="dial-step" id="metronome-plus-button">+</button>
                 </div>
 
-                <div class="metronome-slider-wrap">
-                  <input id="metronome-bpm-slider" class="metronome-slider" type="range" min="30" max="240" step="1" value="80">
-                  <div class="slider-scale">
-                    <span>30</span>
-                    <span>240</span>
-                  </div>
+                <div class="slider-scale">
+                  <span>30</span>
+                  <span>240</span>
                 </div>
 
-                <div class="signature-row" id="signature-row">
-                  <button type="button" class="signature-button active" data-signature="3">3/4</button>
-                  <button type="button" class="signature-button" data-signature="4">4/4</button>
+                <button type="button" class="beat-dots-button" id="metronome-dots-button" aria-expanded="false" aria-controls="signature-row">
+                  <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
+                </button>
+
+                <div class="signature-row" id="signature-row" hidden>
+                  <button type="button" class="signature-button" data-signature="3">3/4</button>
+                  <button type="button" class="signature-button active" data-signature="4">4/4</button>
                   <button type="button" class="signature-button" data-signature="5">5/4</button>
                   <button type="button" class="signature-button" data-signature="6">6/8</button>
                 </div>
-
-                <div class="beat-dots" id="metronome-dots" aria-label="Beats"></div>
 
                 <div class="preset-row">
                   <button type="button" class="preset-button" data-metronome-preset="60">60</button>

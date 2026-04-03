@@ -130,6 +130,25 @@ function priorityLabel(priority) {
   return { high: "Wysoki", medium: "Sredni", low: "Niski" }[priority] || "Sredni";
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function bpmToAngle(bpm) {
+  const minBpm = 30;
+  const maxBpm = 240;
+  const normalized = (clamp(bpm, minBpm, maxBpm) - minBpm) / (maxBpm - minBpm);
+  return -135 + normalized * 270;
+}
+
+function angleToBpm(angle) {
+  const minAngle = -135;
+  const maxAngle = 135;
+  const bounded = clamp(angle, minAngle, maxAngle);
+  const normalized = (bounded - minAngle) / (maxAngle - minAngle);
+  return Math.round(30 + normalized * (240 - 30));
+}
+
 function normalizeArray(value, fallback) {
   return Array.isArray(value) ? value : cloneState(fallback);
 }
@@ -272,6 +291,9 @@ let metronomeStartedAt = null;
 let metronomeAudioContext = null;
 let metronomeBeatIndex = 0;
 let metronomeSignature = 4;
+let metronomeSignaturePickerOpen = false;
+let metronomeRefreshTimer = null;
+let metronomeDialDragging = false;
 let feedbackHideTimer = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
@@ -1103,9 +1125,20 @@ function playMetronomeClick() {
 }
 
 function renderMetronome() {
+  const dial = document.getElementById("metronome-dial");
+  const signatureRow = document.getElementById("signature-row");
+  const dotsButton = document.getElementById("metronome-dots-button");
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
   document.getElementById("metronome-status").textContent = metronomeRunning ? "Running" : "Ready";
-  document.getElementById("metronome-bpm-slider").value = String(metronomeBpm);
+  if (dial) {
+    dial.style.setProperty("--knob-angle", `${bpmToAngle(metronomeBpm)}deg`);
+  }
+  if (signatureRow) {
+    signatureRow.hidden = !metronomeSignaturePickerOpen;
+  }
+  if (dotsButton) {
+    dotsButton.setAttribute("aria-expanded", metronomeSignaturePickerOpen ? "true" : "false");
+  }
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.classList.toggle("active", Number(button.dataset.metronomePreset) === metronomeBpm);
@@ -1136,9 +1169,45 @@ function selectGuitarExercise(id) {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : null;
   metronomeBpm = stats?.latestBpm || active?.targetBpm || 80;
+  metronomeSignaturePickerOpen = false;
   saveState();
   renderAll();
   setFeedback(`Aktywne cwiczenie: ${active?.title || "brak"}.`);
+}
+
+function restartMetronomeInterval() {
+  clearInterval(metronomeInterval);
+  metronomeInterval = setInterval(() => {
+    metronomeBeatIndex = (metronomeBeatIndex + 1) % metronomeSignature;
+    playMetronomeClick();
+    renderMetronome();
+  }, Math.max(140, Math.round(60000 / metronomeBpm)));
+}
+
+function scheduleMetronomeRefresh() {
+  if (!metronomeRunning) return;
+  clearTimeout(metronomeRefreshTimer);
+  metronomeRefreshTimer = setTimeout(() => {
+    restartMetronomeInterval();
+  }, 180);
+}
+
+function setMetronomeBpm(nextBpm) {
+  metronomeBpm = clamp(Math.round(nextBpm), 30, 240);
+  renderMetronome();
+  scheduleMetronomeRefresh();
+}
+
+function updateMetronomeFromPoint(clientX, clientY) {
+  const dial = document.getElementById("metronome-dial");
+  if (!dial) return;
+
+  const rect = dial.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
+  const normalized = angle > 180 ? angle - 360 : angle;
+  setMetronomeBpm(angleToBpm(normalized));
 }
 
 function startMetronome() {
@@ -1153,13 +1222,11 @@ function startMetronome() {
   metronomeRunning = true;
   metronomeStartedAt = Date.now();
   metronomeBeatIndex = 0;
+  metronomeSignaturePickerOpen = false;
+  clearTimeout(metronomeRefreshTimer);
   playMetronomeClick();
   renderMetronome();
-  metronomeInterval = setInterval(() => {
-    metronomeBeatIndex = (metronomeBeatIndex + 1) % metronomeSignature;
-    playMetronomeClick();
-    renderMetronome();
-  }, Math.max(140, Math.round(60000 / metronomeBpm)));
+  restartMetronomeInterval();
   metronomeUiInterval = setInterval(renderMetronome, 1000);
 }
 
@@ -1171,6 +1238,7 @@ function stopMetronome(skipSave = false) {
 
   clearInterval(metronomeInterval);
   clearInterval(metronomeUiInterval);
+  clearTimeout(metronomeRefreshTimer);
   metronomeInterval = null;
   metronomeUiInterval = null;
 
@@ -1764,44 +1832,16 @@ function bindTools() {
   });
 
   document.getElementById("metronome-minus-button").addEventListener("click", () => {
-    metronomeBpm = Math.max(30, metronomeBpm - 1);
-    if (metronomeRunning) {
-      stopMetronome(true);
-      startMetronome();
-    } else {
-      renderMetronome();
-    }
+    setMetronomeBpm(metronomeBpm - 1);
   });
 
   document.getElementById("metronome-plus-button").addEventListener("click", () => {
-    metronomeBpm = Math.min(280, metronomeBpm + 1);
-    if (metronomeRunning) {
-      stopMetronome(true);
-      startMetronome();
-    } else {
-      renderMetronome();
-    }
-  });
-
-  document.getElementById("metronome-bpm-slider").addEventListener("input", (event) => {
-    metronomeBpm = Number(event.target.value);
-    if (metronomeRunning) {
-      stopMetronome(true);
-      startMetronome();
-    } else {
-      renderMetronome();
-    }
+    setMetronomeBpm(metronomeBpm + 1);
   });
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.addEventListener("click", () => {
-      metronomeBpm = Number(button.dataset.metronomePreset);
-      if (metronomeRunning) {
-        stopMetronome(true);
-        startMetronome();
-      } else {
-        renderMetronome();
-      }
+      setMetronomeBpm(Number(button.dataset.metronomePreset));
     });
   });
 
@@ -1809,14 +1849,33 @@ function bindTools() {
     button.addEventListener("click", () => {
       metronomeSignature = Number(button.dataset.signature);
       metronomeBeatIndex = 0;
-      if (metronomeRunning) {
-        stopMetronome(true);
-        startMetronome();
-      } else {
-        renderMetronome();
-      }
+      metronomeSignaturePickerOpen = false;
+      renderMetronome();
+      scheduleMetronomeRefresh();
     });
   });
+
+  document.getElementById("metronome-dots-button").addEventListener("click", () => {
+    metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
+    renderMetronome();
+  });
+
+  const dial = document.getElementById("metronome-dial");
+  const stopDialDrag = () => {
+    metronomeDialDragging = false;
+  };
+  dial.addEventListener("pointerdown", (event) => {
+    metronomeDialDragging = true;
+    dial.setPointerCapture?.(event.pointerId);
+    updateMetronomeFromPoint(event.clientX, event.clientY);
+  });
+  dial.addEventListener("pointermove", (event) => {
+    if (!metronomeDialDragging) return;
+    updateMetronomeFromPoint(event.clientX, event.clientY);
+  });
+  dial.addEventListener("pointerup", stopDialDrag);
+  dial.addEventListener("pointercancel", stopDialDrag);
+  dial.addEventListener("lostpointercapture", stopDialDrag);
 
   document.getElementById("metronome-start-button").addEventListener("click", startMetronome);
   document.getElementById("metronome-stop-button").addEventListener("click", () => stopMetronome(false));
@@ -1847,6 +1906,14 @@ bindForms();
 bindTools();
 applyResets();
 renderAll();
+
+document.addEventListener("dblclick", (event) => {
+  event.preventDefault();
+}, { passive: false });
+
+document.addEventListener("gesturestart", (event) => {
+  event.preventDefault();
+}, { passive: false });
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
