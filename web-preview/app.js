@@ -138,8 +138,16 @@ function bpmProgress(bpm) {
   return (clamp(bpm, 30, 240) - 30) / 210;
 }
 
+const METRONOME_ARC_START = -150;
+const METRONOME_ARC_SPAN = 300;
+const METRONOME_ARC_END = METRONOME_ARC_START + METRONOME_ARC_SPAN;
+
 function angleToBpm(angle) {
-  return Math.round(30 + ((clamp(angle, -135, 135) + 135) / 270) * 210);
+  return Math.round(30 + ((clamp(angle, METRONOME_ARC_START, METRONOME_ARC_END) - METRONOME_ARC_START) / METRONOME_ARC_SPAN) * 210);
+}
+
+function bpmToArcAngle(bpm) {
+  return METRONOME_ARC_START + bpmProgress(bpm) * METRONOME_ARC_SPAN;
 }
 
 function normalizeArray(value, fallback) {
@@ -314,6 +322,9 @@ function setTab(tab) {
   state.activeTab = tab;
   tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
+  if (tab === "guitar") {
+    requestAnimationFrame(() => renderMetronome());
+  }
   saveState();
 }
 
@@ -1122,12 +1133,13 @@ function renderMetronome() {
   const arcProgress = document.getElementById("metronome-arc-progress");
   const arcKnob = document.getElementById("metronome-arc-knob");
   const arcHitbox = document.getElementById("metronome-arc-hitbox");
+  const wheel = document.getElementById("metronome-wheel");
   const signatureRow = document.getElementById("signature-row");
   const dotsButton = document.getElementById("metronome-dots-button");
   const toggleButton = document.getElementById("metronome-toggle-button");
   const signaturePill = document.getElementById("signature-pill");
   const progressPercent = bpmProgress(metronomeBpm);
-  const arcDegrees = progressPercent * 270;
+  const arcDegrees = progressPercent * METRONOME_ARC_SPAN;
 
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
   if (arcProgress) {
@@ -1155,6 +1167,11 @@ function renderMetronome() {
     toggleButton.dataset.state = metronomeRunning ? "pause" : "start";
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
+  if (wheel) {
+    positionMetronomeLabel("metronome-label-min", 30, wheel, 0.45);
+    positionMetronomeLabel("metronome-label-mid", 120, wheel, 0.46);
+    positionMetronomeLabel("metronome-label-max", 240, wheel, 0.45);
+  }
 
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.classList.toggle("active", Number(button.dataset.metronomePreset) === metronomeBpm);
@@ -1178,6 +1195,19 @@ function renderMetronome() {
   } else {
     document.getElementById("guitar-session-clock").textContent = "Sesja zapisze sie po zatrzymaniu metronomu.";
   }
+}
+
+function positionMetronomeLabel(id, bpm, wheel, radiusFactor) {
+  const node = document.getElementById(id);
+  if (!node || !wheel) return;
+  if (!wheel.clientWidth || !wheel.clientHeight) return;
+  const size = Math.min(wheel.clientWidth, wheel.clientHeight);
+  const radius = size * radiusFactor;
+  const angle = bpmToArcAngle(bpm) * (Math.PI / 180);
+  const x = wheel.clientWidth / 2 + Math.sin(angle) * radius;
+  const y = wheel.clientHeight / 2 - Math.cos(angle) * radius;
+  node.style.left = `${x}px`;
+  node.style.top = `${y}px`;
 }
 
 function selectGuitarExercise(id) {
@@ -1230,35 +1260,39 @@ function updateMetronomeFromPoint(clientX, clientY) {
   const deltaY = clientY - centerY;
   const distance = Math.hypot(deltaX, deltaY);
   const size = Math.min(rect.width, rect.height);
-  const outerRadius = size * 0.49;
-  const innerRadius = size * 0.31;
+  const outerRadius = size * 0.54;
+  const innerRadius = size * 0.25;
   const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
   const normalized = angle > 180 ? angle - 360 : angle;
   if (distance < innerRadius || distance > outerRadius) return;
-  if (normalized < -135 || normalized > 135) return;
-  setMetronomeBpm(angleToBpm(normalized));
+  setMetronomeBpm(angleToBpm(clamp(normalized, METRONOME_ARC_START, METRONOME_ARC_END)));
 }
 
 function registerTapTempo() {
   const now = Date.now();
-  metronomeTapTimes = metronomeTapTimes.filter((time) => now - time < 2200);
+  if (metronomeTapTimes.length && now - metronomeTapTimes[metronomeTapTimes.length - 1] > 2600) {
+    metronomeTapTimes = [];
+  }
+  metronomeTapTimes = metronomeTapTimes.filter((time) => now - time < 5000);
   metronomeTapTimes.push(now);
+  metronomeTapTimes = metronomeTapTimes.slice(-6);
 
   if (metronomeTapTimes.length < 2) {
-    setFeedback("Tapnij jeszcze kilka razy, zeby ustawic tempo.");
     return;
   }
 
   const intervals = [];
   for (let index = 1; index < metronomeTapTimes.length; index += 1) {
-    intervals.push(metronomeTapTimes[index] - metronomeTapTimes[index - 1]);
+    const gap = metronomeTapTimes[index] - metronomeTapTimes[index - 1];
+    if (gap >= 220 && gap <= 2000) {
+      intervals.push(gap);
+    }
   }
 
-  const averageInterval = intervals.reduce((sum, value) => sum + value, 0) / intervals.length;
-  const tappedBpm = clamp(Math.round(60000 / averageInterval), 30, 240);
+  if (!intervals.length) return;
+  const stableIntervals = intervals.slice(-4);
+  const tappedBpm = clamp(Math.round(60000 / (stableIntervals.reduce((sum, value) => sum + value, 0) / stableIntervals.length)), 30, 240);
   setMetronomeBpm(tappedBpm);
-  metronomeTapTimes = [];
-  setFeedback(`Tap tempo: ${tappedBpm} BPM.`);
 }
 
 function startMetronome() {
@@ -2016,6 +2050,10 @@ document.addEventListener("touchend", () => {
 document.addEventListener("touchcancel", () => {
   setMetronomeSliderActive(false);
 }, { passive: true });
+
+window.addEventListener("resize", () => {
+  renderMetronome();
+});
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

@@ -516,10 +516,10 @@ button:active {
 .metronome-arc-track {
   background:
     conic-gradient(
-      from -135deg,
+      from -150deg,
       rgba(255, 255, 255, 0.24) 0deg,
-      rgba(255, 255, 255, 0.18) 270deg,
-      transparent 270deg 360deg
+      rgba(255, 255, 255, 0.18) 300deg,
+      transparent 300deg 360deg
     );
 }
 
@@ -527,7 +527,7 @@ button:active {
   --arc-degrees: 0deg;
   background:
     conic-gradient(
-      from -135deg,
+      from -150deg,
       #84f7d7 0deg,
       #58f0c2 calc(var(--arc-degrees) * 0.72),
       #2dd4bf var(--arc-degrees),
@@ -551,7 +551,7 @@ button:active {
   transform-origin: center;
   transform:
     translate(-50%, -50%)
-    rotate(calc(-135deg + var(--arc-degrees)))
+    rotate(calc(-150deg + var(--arc-degrees)))
     translateY(-128px);
 }
 
@@ -571,23 +571,7 @@ button:active {
   position: absolute;
   color: rgba(255, 255, 255, 0.56);
   font-size: 0.78rem;
-}
-
-.arc-label-left {
-  left: 50px;
-  top: 242px;
-}
-
-.arc-label-right {
-  right: 50px;
-  top: 242px;
-}
-
-.arc-label-top {
-  left: 50%;
-  top: 22px;
-  transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.72);
+  transform: translate(-50%, -50%);
   font-weight: 800;
 }
 
@@ -749,8 +733,20 @@ button:active {
   font-size: 1rem;
 }
 
-.metronome-card button:active {
+.dial-step:active,
+.preset-button:active,
+.signature-button:active,
+.beat-dots-button:active,
+.signature-pill:active {
   transform: none;
+}
+
+.metronome-toggle-button:active {
+  transform: translate(-50%, -58%);
+}
+
+.metronome-tap-button:active {
+  transform: translateX(-50%);
 }
 
 .preset-row,
@@ -1014,20 +1010,6 @@ textarea:focus {
 
   .metronome-arc-hitbox {
     inset: 0;
-  }
-
-  .arc-label-left {
-    left: 36px;
-    top: 214px;
-  }
-
-  .arc-label-right {
-    right: 36px;
-    top: 214px;
-  }
-
-  .arc-label-top {
-    top: 18px;
   }
 
   .metronome-tap-button {
