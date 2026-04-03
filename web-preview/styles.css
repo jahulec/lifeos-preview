@@ -469,6 +469,21 @@ button:active {
   font-size: 1rem;
 }
 
+.mini-danger-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mini-danger-button[hidden] {
+  display: none;
+}
+
 .compact-exercise-card {
   margin-top: 14px;
 }
@@ -615,23 +630,22 @@ button:active {
   z-index: 3;
 }
 
+.metronome-tap-button svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .slider-scale {
   display: flex;
   justify-content: space-between;
   color: rgba(255, 255, 255, 0.74);
   font-size: 0.8rem;
   margin: -8px 0 12px;
-}
-
-.signature-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.signature-row[hidden] {
-  display: none;
 }
 
 .signature-button {
@@ -663,6 +677,10 @@ button:active {
   cursor: pointer;
   display: block;
   margin: 0 auto 12px;
+}
+
+.signature-pill.active {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .signature-button.active,
@@ -744,7 +762,7 @@ button:active {
 }
 
 .preset-row {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .button-row,
@@ -964,8 +982,6 @@ textarea:focus {
   .inline-form,
   .inline-form-two,
   .inline-form-three,
-  .signature-row,
-  .preset-row,
   .button-row,
   .button-grid {
     grid-template-columns: 1fr;

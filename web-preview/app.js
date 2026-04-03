@@ -310,7 +310,7 @@ let metronomeStartedAt = null;
 let metronomeAudioContext = null;
 let metronomeBeatIndex = 0;
 let metronomeSignature = 4;
-let metronomeSignaturePickerOpen = false;
+let metronomeOptionMode = "bpm";
 let metronomeRefreshTimer = null;
 let metronomeTapTimes = [];
 let metronomeSliderActive = false;
@@ -791,6 +791,7 @@ function renderGuitar() {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
   const percent = active ? Math.min(Math.round((stats.topBpm / active.targetBpm) * 100), 100) : 0;
+  const deleteButton = document.getElementById("guitar-active-delete");
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
   document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM` : "Dodaj nazwe i cel BPM.";
@@ -798,6 +799,9 @@ function renderGuitar() {
   document.getElementById("guitar-active-time").textContent = minutesFromSeconds(stats.totalSec);
   document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
   document.getElementById("guitar-active-progress-value").textContent = `${percent}%`;
+  if (deleteButton) {
+    deleteButton.hidden = !active;
+  }
 
   renderGuitarExercises();
   renderGuitarSessions();
@@ -1153,7 +1157,7 @@ function renderMetronome() {
   const arcKnob = document.getElementById("metronome-arc-knob");
   const arcHitbox = document.getElementById("metronome-arc-hitbox");
   const wheel = document.getElementById("metronome-wheel");
-  const signatureRow = document.getElementById("signature-row");
+  const optionGrid = document.getElementById("metronome-option-grid");
   const dotsButton = document.getElementById("metronome-dots-button");
   const toggleButton = document.getElementById("metronome-toggle-button");
   const signaturePill = document.getElementById("signature-pill");
@@ -1176,14 +1180,12 @@ function renderMetronome() {
     arcHitbox.setAttribute("aria-valuenow", String(metronomeBpm));
     arcHitbox.setAttribute("aria-valuetext", `${metronomeBpm} BPM`);
   }
-  if (signatureRow) {
-    signatureRow.hidden = !metronomeSignaturePickerOpen;
-  }
   if (dotsButton) {
-    dotsButton.setAttribute("aria-expanded", metronomeSignaturePickerOpen ? "true" : "false");
+    dotsButton.setAttribute("aria-expanded", metronomeOptionMode === "signature" ? "true" : "false");
   }
   if (signaturePill) {
     signaturePill.textContent = `${metronomeSignature}/${metronomeSignature === 6 ? 8 : 4}`;
+    signaturePill.classList.toggle("active", metronomeOptionMode === "signature");
   }
   if (toggleButton) {
     toggleButton.textContent = metronomeRunning ? "Pauza" : "Start";
@@ -1192,17 +1194,36 @@ function renderMetronome() {
   }
   if (wheel) {
     positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 18);
-    positionMetronomeLabel("metronome-label-mid", 120, wheel, METRONOME_RADIUS + 18);
+    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS + 18);
     positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 18);
   }
 
-  document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
-    button.classList.toggle("active", Number(button.dataset.metronomePreset) === metronomeBpm);
-  });
+  if (optionGrid) {
+    optionGrid.innerHTML = "";
+    const items = metronomeOptionMode === "signature"
+      ? [
+          { type: "signature", value: 3, label: "3/4" },
+          { type: "signature", value: 4, label: "4/4" },
+          { type: "signature", value: 5, label: "5/4" },
+          { type: "signature", value: 6, label: "6/8" }
+        ]
+      : [
+          { type: "bpm", value: 60, label: "60" },
+          { type: "bpm", value: 80, label: "80" },
+          { type: "bpm", value: 100, label: "100" },
+          { type: "bpm", value: 120, label: "120" }
+        ];
 
-  document.querySelectorAll("[data-signature]").forEach((button) => {
-    button.classList.toggle("active", Number(button.dataset.signature) === metronomeSignature);
-  });
+    items.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `${item.type === "signature" ? "signature-button" : "preset-button"}${(item.type === "signature" ? metronomeSignature === item.value : metronomeBpm === item.value) ? " active" : ""}`;
+      button.dataset.optionType = item.type;
+      button.dataset.optionValue = String(item.value);
+      button.textContent = item.label;
+      optionGrid.appendChild(button);
+    });
+  }
 
   const dotsNode = document.getElementById("metronome-dots");
   dotsNode.innerHTML = "";
@@ -1214,9 +1235,13 @@ function renderMetronome() {
 
   if (metronomeRunning && metronomeStartedAt) {
     const elapsed = Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000));
-    document.getElementById("guitar-session-clock").textContent = `Sesja trwa ${elapsed}s na aktywnym cwiczeniu.`;
+    document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
+      ? `Sesja trwa ${elapsed}s na aktywnym cwiczeniu.`
+      : `Metronom gra od ${elapsed}s.`;
   } else {
-    document.getElementById("guitar-session-clock").textContent = "Sesja zapisze sie po zatrzymaniu metronomu.";
+    document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
+      ? "Sesja zapisze sie po zatrzymaniu metronomu."
+      : "Metronom moze dzialac bez cwiczenia.";
   }
 }
 
@@ -1238,7 +1263,7 @@ function selectGuitarExercise(id) {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : null;
   metronomeBpm = stats?.latestBpm || active?.targetBpm || 80;
-  metronomeSignaturePickerOpen = false;
+  metronomeOptionMode = "bpm";
   saveState();
   renderAll();
   setFeedback(`Aktywne cwiczenie: ${active?.title || "brak"}.`);
@@ -1320,17 +1345,10 @@ function registerTapTempo() {
 
 function startMetronome() {
   if (metronomeRunning) return;
-  const active = activeGuitarExercise();
-  if (!active) {
-    setFeedback("Najpierw dodaj lub wybierz cwiczenie gitarowe.");
-    focusField("guitar-exercise-name-input");
-    return;
-  }
-
   metronomeRunning = true;
   metronomeStartedAt = Date.now();
   metronomeBeatIndex = 0;
-  metronomeSignaturePickerOpen = false;
+  metronomeOptionMode = "bpm";
   clearTimeout(metronomeRefreshTimer);
   playMetronomeClick();
   renderMetronome();
@@ -1947,29 +1965,26 @@ function bindTools() {
     setMetronomeBpm(metronomeBpm + 1);
   });
 
-  document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
-    button.addEventListener("click", () => {
-      setMetronomeBpm(Number(button.dataset.metronomePreset));
-    });
-  });
-
-  document.querySelectorAll("[data-signature]").forEach((button) => {
-    button.addEventListener("click", () => {
-      metronomeSignature = Number(button.dataset.signature);
-      metronomeBeatIndex = 0;
-      metronomeSignaturePickerOpen = false;
-      renderMetronome();
-      scheduleMetronomeRefresh();
-    });
-  });
-
   document.getElementById("metronome-dots-button").addEventListener("click", () => {
-    metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
+    metronomeOptionMode = metronomeOptionMode === "signature" ? "bpm" : "signature";
     renderMetronome();
   });
   document.getElementById("signature-pill").addEventListener("click", () => {
-    metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
+    metronomeOptionMode = metronomeOptionMode === "signature" ? "bpm" : "signature";
     renderMetronome();
+  });
+  document.getElementById("metronome-option-grid").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-option-type]");
+    if (!button) return;
+    if (button.dataset.optionType === "bpm") {
+      setMetronomeBpm(Number(button.dataset.optionValue));
+      return;
+    }
+    metronomeSignature = Number(button.dataset.optionValue);
+    metronomeBeatIndex = 0;
+    metronomeOptionMode = "bpm";
+    renderMetronome();
+    scheduleMetronomeRefresh();
   });
 
   const arcHitbox = document.getElementById("metronome-arc-hitbox");
@@ -2025,6 +2040,11 @@ function bindTools() {
     }
   });
   document.getElementById("metronome-tap-button").addEventListener("click", registerTapTempo);
+  document.getElementById("guitar-active-delete").addEventListener("click", () => {
+    const active = activeGuitarExercise();
+    if (!active) return;
+    deleteGuitarExercise(active.id);
+  });
 
   const importInput = document.getElementById("import-input");
   document.getElementById("import-button").addEventListener("click", () => importInput.click());
