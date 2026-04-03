@@ -676,6 +676,10 @@ button:active {
   justify-items: end;
 }
 
+.active-stats-top {
+  align-self: start;
+}
+
 .active-stats strong {
   font-size: 1.1rem;
   color: white;

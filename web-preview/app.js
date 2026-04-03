@@ -337,6 +337,7 @@ let lockedGuitarCardWidth = null;
 let guitarView = "main";
 const guitarScrollMemory = { main: 0, detail: 0, create: 0 };
 let editingGuitarExerciseId = null;
+let guitarSessionsExpanded = false;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -935,9 +936,7 @@ function renderGuitarExercises() {
           return;
         }
         selectGuitarExercise(exercise.id);
-      }),
-      makeToolButton("Edit", () => editGuitarExercise(exercise.id)),
-      makeToolButton("Del", () => deleteGuitarExercise(exercise.id), true)
+      })
     );
 
     item.append(progress, tools);
@@ -948,8 +947,18 @@ function renderGuitarExercises() {
 function renderGuitarSessions() {
   const node = document.getElementById("guitar-session-list");
   const summaryNode = document.getElementById("guitar-session-summary");
+  const toggle = document.getElementById("guitar-session-toggle");
   node.innerHTML = "";
   summaryNode.textContent = `${state.guitarSessions.length}`;
+  node.hidden = !guitarSessionsExpanded;
+  if (toggle) {
+    toggle.textContent = guitarSessionsExpanded ? "-" : "+";
+    toggle.setAttribute("aria-label", guitarSessionsExpanded ? "Zwin sesje" : "Rozwin sesje");
+  }
+
+  if (!guitarSessionsExpanded) {
+    return;
+  }
 
   if (!state.guitarSessions.length) {
     node.appendChild(emptyNode("Zatrzymaj metronom, zeby zapisac pierwsza sesje."));
@@ -2497,6 +2506,10 @@ function bindTools() {
   bindPressAction(document.getElementById("metronome-tap-button"), registerTapTempo);
   bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
   bindPressAction(document.getElementById("guitar-open-create"), openGuitarCreateView);
+  bindPressAction(document.getElementById("guitar-session-toggle"), () => {
+    guitarSessionsExpanded = !guitarSessionsExpanded;
+    renderGuitarSessions();
+  });
   bindPressAction(document.getElementById("guitar-create-back"), () => {
     editingGuitarExerciseId = null;
     setGuitarView("main");

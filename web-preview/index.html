@@ -202,7 +202,7 @@
                       <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
                       <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
                     </div>
-                    <div class="active-stats">
+                    <div class="active-stats active-stats-top">
                       <button type="button" id="guitar-active-clear" class="mini-danger-button">Odznacz</button>
                     </div>
                   </div>
@@ -240,9 +240,12 @@
                 <article class="card">
                   <div class="card-head">
                     <h2>Ostatnie sesje</h2>
-                    <span id="guitar-session-summary">0</span>
+                    <div class="card-head-actions">
+                      <span id="guitar-session-summary">0</span>
+                      <button type="button" id="guitar-session-toggle" class="head-icon-button" aria-label="Rozwin sesje">+</button>
+                    </div>
                   </div>
-                  <div id="guitar-session-list" class="stack-list"></div>
+                  <div id="guitar-session-list" class="stack-list" hidden></div>
                 </article>
               </div>
             </div>
