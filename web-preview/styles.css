@@ -41,6 +41,7 @@ body {
 
 body.metronome-dragging {
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 button,
@@ -166,6 +167,7 @@ button:active {
     linear-gradient(180deg, #131416 0%, #1b1c20 42%, #22252a 100%);
   color: white;
   border: 0;
+  width: 100%;
 }
 
 .hero-card .muted-copy,
@@ -493,6 +495,7 @@ button:active {
   width: min(100%, 330px);
   aspect-ratio: 1 / 1.05;
   margin: 4px auto 10px;
+  overflow: visible;
 }
 
 .metronome-arc {
@@ -512,10 +515,11 @@ button:active {
 
 .metronome-arc-track {
   background:
-    repeating-conic-gradient(
+    conic-gradient(
       from -135deg,
-      rgba(255, 255, 255, 0.26) 0deg 1.5deg,
-      transparent 1.5deg 4deg
+      rgba(255, 255, 255, 0.24) 0deg,
+      rgba(255, 255, 255, 0.18) 270deg,
+      transparent 270deg 360deg
     );
 }
 
@@ -553,10 +557,8 @@ button:active {
 
 .metronome-arc-hitbox {
   position: absolute;
-  left: 34px;
-  right: 34px;
-  top: 8px;
-  height: 118px;
+  inset: 0;
+  border-radius: 999px;
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -572,20 +574,20 @@ button:active {
 }
 
 .arc-label-left {
-  left: 22px;
-  top: 170px;
+  left: 50px;
+  top: 242px;
 }
 
 .arc-label-right {
-  right: 18px;
-  top: 170px;
+  right: 50px;
+  top: 242px;
 }
 
 .arc-label-top {
   left: 50%;
-  top: 58px;
+  top: 22px;
   transform: translateX(-50%);
-  color: rgba(88, 240, 194, 0.92);
+  color: rgba(255, 255, 255, 0.72);
   font-weight: 800;
 }
 
@@ -604,6 +606,9 @@ button:active {
     linear-gradient(180deg, rgba(88, 240, 194, 0.98), rgba(58, 198, 162, 0.94));
   color: #111111;
   font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+  white-space: nowrap;
   letter-spacing: 0.02em;
   cursor: pointer;
   display: grid;
@@ -622,15 +627,20 @@ button:active {
 .metronome-tap-button {
   position: absolute;
   left: 50%;
-  bottom: 26px;
+  bottom: -6px;
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 10px 16px;
+  width: 52px;
+  height: 52px;
+  padding: 0;
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.9);
+  font-size: 1.35rem;
   font-weight: 800;
   cursor: pointer;
+  display: grid;
+  place-items: center;
   backdrop-filter: blur(12px);
 }
 
@@ -737,6 +747,10 @@ button:active {
   background: rgba(255, 255, 255, 0.12);
   color: white;
   font-size: 1rem;
+}
+
+.metronome-card button:active {
+  transform: none;
 }
 
 .preset-row,
@@ -999,10 +1013,25 @@ textarea:focus {
   }
 
   .metronome-arc-hitbox {
-    left: 30px;
-    right: 30px;
-    top: 6px;
-    height: 112px;
+    inset: 0;
+  }
+
+  .arc-label-left {
+    left: 36px;
+    top: 214px;
+  }
+
+  .arc-label-right {
+    right: 36px;
+    top: 214px;
+  }
+
+  .arc-label-top {
+    top: 18px;
+  }
+
+  .metronome-tap-button {
+    bottom: -2px;
   }
 
   .floating-feedback {

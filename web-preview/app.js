@@ -1130,7 +1130,6 @@ function renderMetronome() {
   const arcDegrees = progressPercent * 270;
 
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
-  document.getElementById("metronome-arc-top-label").textContent = `${metronomeBpm}`;
   if (arcProgress) {
     arcProgress.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
   }
@@ -1227,8 +1226,16 @@ function updateMetronomeFromPoint(clientX, clientY) {
   const rect = wheel.getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
+  const deltaX = clientX - centerX;
+  const deltaY = clientY - centerY;
+  const distance = Math.hypot(deltaX, deltaY);
+  const size = Math.min(rect.width, rect.height);
+  const outerRadius = size * 0.49;
+  const innerRadius = size * 0.31;
   const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
   const normalized = angle > 180 ? angle - 360 : angle;
+  if (distance < innerRadius || distance > outerRadius) return;
+  if (normalized < -135 || normalized > 135) return;
   setMetronomeBpm(angleToBpm(normalized));
 }
 
@@ -1936,6 +1943,22 @@ function bindTools() {
       setMetronomeBpm(metronomeBpm + 1);
     }
   });
+  arcHitbox.addEventListener("touchstart", (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    event.preventDefault();
+    setMetronomeSliderActive(true);
+    updateMetronomeFromPoint(touch.clientX, touch.clientY);
+  }, { passive: false });
+  arcHitbox.addEventListener("touchmove", (event) => {
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    event.preventDefault();
+    setMetronomeSliderActive(true);
+    updateMetronomeFromPoint(touch.clientX, touch.clientY);
+  }, { passive: false });
+  arcHitbox.addEventListener("touchend", stopArcDrag, { passive: true });
+  arcHitbox.addEventListener("touchcancel", stopArcDrag, { passive: true });
 
   document.getElementById("metronome-toggle-button").addEventListener("click", () => {
     if (metronomeRunning) {
