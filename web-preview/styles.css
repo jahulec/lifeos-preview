@@ -280,12 +280,38 @@ button:active {
   transition: width 260ms ease;
 }
 
+.bpm-progress-track {
+  background: rgba(29, 185, 84, 0.16);
+}
+
+.time-progress-track {
+  background: rgba(255, 107, 107, 0.16);
+}
+
+.bpm-progress-fill {
+  background: linear-gradient(90deg, #1db954, #47d97f);
+}
+
+.time-progress-fill {
+  background: linear-gradient(90deg, #ff6b6b, #ff9f43);
+}
+
 .hero-meta-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   margin-top: 10px;
   color: var(--muted);
+}
+
+.compact-progress-row {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.compact-progress-row span,
+.compact-progress-row strong {
+  color: inherit;
 }
 
 .hero-card .hero-meta-row,
@@ -486,6 +512,35 @@ button:active {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.detail-progress-block {
+  margin-top: 14px;
+}
+
+.detail-progress-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.detail-progress-head span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.detail-progress-head strong {
+  justify-self: center;
+  color: white;
+  font-size: 0.96rem;
+  letter-spacing: -0.02em;
+}
+
+.detail-progress-head span:last-child {
+  justify-self: end;
+}
+
 .analytics-history-card .list-item {
   background: #ffffff;
 }
@@ -521,6 +576,26 @@ button:active {
 
 .list-item-block {
   grid-template-columns: 1fr;
+}
+
+.mini-progress-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mini-progress-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.mini-progress-row span,
+.mini-progress-row strong {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--muted);
 }
 
 .list-copy {
@@ -597,17 +672,13 @@ button:active {
 
 .active-stats {
   display: grid;
-  gap: 4px;
+  gap: 10px;
   justify-items: end;
 }
 
-.active-stats span {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.72);
-}
-
 .active-stats strong {
-  font-size: 1rem;
+  font-size: 1.1rem;
+  color: white;
 }
 
 .mini-danger-button {

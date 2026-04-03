@@ -497,6 +497,51 @@ function exerciseSessionStats(exerciseId) {
   return { sessions, topBpm, totalSec, latestBpm };
 }
 
+function currentMetronomeElapsedSec() {
+  return metronomeRunning && metronomeStartedAt ? Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000)) : 0;
+}
+
+function exerciseTodaySec(exerciseId) {
+  const today = todayKey();
+  return state.guitarSessions
+    .filter((entry) => entry.exerciseId === exerciseId && todayKey(new Date(entry.createdAt)) === today)
+    .reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+}
+
+function exerciseFirstRecordedBpm(sessions = []) {
+  if (!sessions.length) return 0;
+  const first = sessions
+    .slice()
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
+  return Number(first?.bpm || 0);
+}
+
+function computeBpmProgress(exercise, sessions, currentBpm) {
+  if (!exercise) return { percent: 0, baseline: 0, target: 0 };
+  const baseline = exerciseFirstRecordedBpm(sessions);
+  const target = Number(exercise.targetBpm || 0);
+  const bpm = Number(currentBpm || 0);
+  if (!baseline) {
+    return { percent: 0, baseline: 0, target };
+  }
+  if (target <= baseline) {
+    return { percent: bpm >= target ? 100 : 0, baseline, target };
+  }
+  const percent = clamp(Math.round(((bpm - baseline) / (target - baseline)) * 100), 0, 100);
+  return { percent, baseline, target };
+}
+
+function computeTimeProgress(targetSec, elapsedSec) {
+  if (!targetSec) return 0;
+  return clamp(Math.round((elapsedSec / targetSec) * 100), 0, 100);
+}
+
+function pendingExerciseSec(exerciseId) {
+  return pendingGuitarSession && pendingGuitarSession.exerciseId === exerciseId
+    ? Number(pendingGuitarSession.durationSec || 0)
+    : 0;
+}
+
 function formatShortDateLabel(value) {
   const date = new Date(value);
   return `${date.getDate()}.${date.getMonth() + 1}`;
@@ -837,14 +882,19 @@ function renderGuitarExercises() {
 
   state.guitarExercises.forEach((exercise) => {
     const stats = exerciseSessionStats(exercise.id);
-    const percent = Math.min(Math.round((stats.topBpm / exercise.targetBpm) * 100), 100);
+    const bpmProgress = computeBpmProgress(exercise, stats.sessions, stats.topBpm);
+    const targetSec = Number(exercise.practiceMinutes || 0) * 60;
+    const todaySec = exerciseTodaySec(exercise.id)
+      + (exercise.id === state.guitarActiveId ? currentMetronomeElapsedSec() : 0)
+      + pendingExerciseSec(exercise.id);
+    const timeProgress = computeTimeProgress(targetSec, todaySec);
     const item = document.createElement("div");
     item.className = `list-item list-item-block${exercise.id === state.guitarInspectId ? " active" : ""}`;
     item.tabIndex = 0;
     item.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(exercise.title)}</strong>
-        <span>Cel ${exercise.targetBpm} BPM - ${exercise.practiceMinutes} min - top ${stats.topBpm || 0} BPM</span>
+        <span>${exercise.targetBpm} BPM · ${exercise.practiceMinutes} min</span>
       </div>
     `;
     item.addEventListener("click", () => inspectGuitarExercise(exercise.id));
@@ -856,12 +906,22 @@ function renderGuitarExercises() {
     });
 
     const progress = document.createElement("div");
-    progress.className = "mini-progress";
+    progress.className = "mini-progress-stack";
     progress.innerHTML = `
-      <div class="progress-track">
-        <div class="progress-fill" style="width:${percent}%"></div>
+      <div class="mini-progress-row">
+        <span>BPM</span>
+        <div class="progress-track bpm-progress-track">
+          <div class="progress-fill bpm-progress-fill" style="width:${bpmProgress.percent}%"></div>
+        </div>
+        <strong>${bpmProgress.percent}%</strong>
       </div>
-      <span>${percent}%</span>
+      <div class="mini-progress-row">
+        <span>Czas</span>
+        <div class="progress-track time-progress-track">
+          <div class="progress-fill time-progress-fill" style="width:${timeProgress}%"></div>
+        </div>
+        <strong>${timeProgress}%</strong>
+      </div>
     `;
 
     const tools = document.createElement("div");
@@ -915,7 +975,7 @@ function renderGuitarSessions() {
 function renderGuitarExerciseDetail() {
   const exercise = inspectedGuitarExercise();
   const sessions = exercise ? exerciseSessionStats(exercise.id) : { sessions: [], topBpm: 0, latestBpm: 0, totalSec: 0 };
-  const percent = exercise ? Math.min(Math.round((sessions.topBpm / exercise.targetBpm) * 100), 100) : 0;
+  const bpmProgress = computeBpmProgress(exercise, sessions.sessions, sessions.topBpm);
   const detailList = document.getElementById("guitar-detail-list");
   const useButton = document.getElementById("guitar-detail-use");
 
@@ -925,8 +985,12 @@ function renderGuitarExerciseDetail() {
   document.getElementById("guitar-detail-top").textContent = `${sessions.topBpm || 0}`;
   document.getElementById("guitar-detail-latest").textContent = `${sessions.latestBpm || 0}`;
   document.getElementById("guitar-detail-time").textContent = formatDuration(sessions.totalSec);
-  document.getElementById("guitar-detail-goal").textContent = `${percent}%`;
+  document.getElementById("guitar-detail-goal").textContent = `${bpmProgress.percent}%`;
   document.getElementById("guitar-detail-history-summary").textContent = `${sessions.sessions.length}`;
+  document.getElementById("guitar-detail-progress-start").textContent = bpmProgress.baseline ? `${bpmProgress.baseline} BPM` : "--";
+  document.getElementById("guitar-detail-progress-value").textContent = `${bpmProgress.percent}%`;
+  document.getElementById("guitar-detail-progress-target").textContent = exercise ? `Cel ${exercise.targetBpm} BPM` : "";
+  document.getElementById("guitar-detail-progress-bar").style.width = `${bpmProgress.percent}%`;
   if (useButton) {
     useButton.disabled = !exercise;
     useButton.textContent = exercise && exercise.id === state.guitarActiveId ? "Off" : "Uzyj";
@@ -956,7 +1020,9 @@ function renderGuitarExerciseDetail() {
 function renderGuitar() {
   const active = activeGuitarExercise();
   const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
-  const percent = active ? Math.min(Math.round((stats.topBpm / active.targetBpm) * 100), 100) : 0;
+  const targetSec = Number(active?.practiceMinutes || 0) * 60;
+  const elapsedSec = active ? exerciseTodaySec(active.id) + currentMetronomeElapsedSec() + pendingExerciseSec(active.id) : 0;
+  const timePercent = active ? computeTimeProgress(targetSec, elapsedSec) : 0;
   const clearButton = document.getElementById("guitar-active-clear");
   const resultCard = document.getElementById("guitar-result-card");
   const mainView = document.getElementById("guitar-main-view");
@@ -969,10 +1035,10 @@ function renderGuitar() {
 
   document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
   document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM - ${active.practiceMinutes} min` : "Dodaj nazwe, cel BPM i czas.";
-  document.getElementById("guitar-active-top").textContent = `${stats.topBpm || 0} BPM`;
-  document.getElementById("guitar-active-time").textContent = formatDuration(stats.totalSec);
-  document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
-  document.getElementById("guitar-active-progress-value").textContent = `${percent}%`;
+  document.getElementById("guitar-active-time").textContent = active ? formatDuration(elapsedSec) : "0 s";
+  document.getElementById("guitar-active-progress-bar").style.width = `${timePercent}%`;
+  document.getElementById("guitar-active-progress-value").textContent = `${timePercent}%`;
+  document.getElementById("guitar-active-progress-copy").textContent = active ? `${formatDuration(elapsedSec)} / ${formatDuration(targetSec)}` : "";
   if (clearButton) {
     clearButton.hidden = !active;
   }
@@ -1421,17 +1487,6 @@ function renderMetronome() {
     const dot = document.createElement("span");
     dot.className = `beat-dot${index === 0 ? " accent" : ""}${metronomeRunning && index === metronomeBeatIndex ? " current" : ""}`;
     dotsNode.appendChild(dot);
-  }
-
-  if (metronomeRunning && metronomeStartedAt) {
-    const elapsed = Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000));
-    document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
-      ? `Sesja trwa ${formatDuration(elapsed)} na aktywnym cwiczeniu.`
-      : `Metronom gra od ${formatDuration(elapsed)}.`;
-  } else {
-    document.getElementById("guitar-session-clock").textContent = activeGuitarExercise()
-      ? "Sesja zapisze sie po zatrzymaniu metronomu."
-      : "Metronom moze dzialac bez cwiczenia.";
   }
 
   if (state.activeTab === "guitar") {

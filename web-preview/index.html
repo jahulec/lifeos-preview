@@ -159,7 +159,6 @@
                     <button type="button" class="dial-step" id="metronome-minus-button" aria-label="Zmniejsz tempo">-</button>
                     <div class="tempo-readout">
                       <strong id="metronome-bpm-display">80</strong>
-                      <span class="metronome-unit">Beats per min</span>
                     </div>
                     <button type="button" class="dial-step" id="metronome-plus-button" aria-label="Zwieksz tempo">+</button>
                   </div>
@@ -204,19 +203,17 @@
                       <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
                     </div>
                     <div class="active-stats">
-                      <span id="guitar-active-top">0 BPM</span>
-                      <strong id="guitar-active-time">0 min</strong>
+                      <strong id="guitar-active-time">0 s</strong>
                       <button type="button" id="guitar-active-clear" class="mini-danger-button">Odznacz</button>
                     </div>
                   </div>
-                  <div class="progress-track">
-                    <div class="progress-fill" id="guitar-active-progress-bar"></div>
+                  <div class="progress-track time-progress-track">
+                    <div class="progress-fill time-progress-fill" id="guitar-active-progress-bar"></div>
                   </div>
-                  <div class="hero-meta-row">
-                    <span>Progres</span>
+                  <div class="hero-meta-row compact-progress-row">
+                    <span id="guitar-active-progress-copy"></span>
                     <strong id="guitar-active-progress-value">0%</strong>
                   </div>
-                  <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
                   <div id="guitar-result-card" class="result-entry-card" hidden>
                     <div class="card-head inline-card-head">
                       <h2>Wynik sesji</h2>
@@ -288,6 +285,16 @@
                     <div class="stat-card analytics-stat-card">
                       <span>Cel</span>
                       <strong id="guitar-detail-goal">0%</strong>
+                    </div>
+                  </div>
+                  <div class="detail-progress-block">
+                    <div class="detail-progress-head">
+                      <span id="guitar-detail-progress-start">0 BPM</span>
+                      <strong id="guitar-detail-progress-value">0%</strong>
+                      <span id="guitar-detail-progress-target">Cel 0 BPM</span>
+                    </div>
+                    <div class="progress-track bpm-progress-track">
+                      <div class="progress-fill bpm-progress-fill" id="guitar-detail-progress-bar"></div>
                     </div>
                   </div>
                   <div class="exercise-chart-card analytics-chart-card">
