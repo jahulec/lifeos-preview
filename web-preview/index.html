@@ -49,7 +49,7 @@
                     <strong id="home-tasks-open">0</strong>
                   </div>
                   <div class="stat-card">
-                    <span>Gitara</span>
+                    <span>Muzyka</span>
                     <strong id="home-guitar-output">0 min</strong>
                   </div>
                   <div class="stat-card">
@@ -60,7 +60,7 @@
               </article>
 
               <div class="story-row">
-                <button class="story-chip" data-switch-tab="guitar">Gitara</button>
+                <button class="story-chip" data-switch-tab="guitar">Muzyka</button>
                 <button class="story-chip" data-switch-tab="gym">Silownia</button>
                 <button class="story-chip" data-switch-tab="finance">Finanse</button>
                 <button class="story-chip" data-switch-tab="me">Ja</button>
@@ -119,7 +119,7 @@
                 <div class="zone-stack">
                   <div class="zone-row">
                     <div>
-                      <strong>Gitara</strong>
+                      <strong>Muzyka</strong>
                       <p id="home-guitar-copy" class="muted-copy"></p>
                     </div>
                     <button class="tool-button" type="button" data-switch-tab="guitar">Open</button>
@@ -152,6 +152,59 @@
           </section>
 
           <section class="tab-page" data-tab="guitar">
+            <div id="music-home-view" class="guitar-view">
+              <div class="section-feed">
+                <article class="card analytics-hero-card music-overview-card">
+                  <p class="analytics-kicker">Muzyka</p>
+                  <div class="card-head">
+                    <h2>Dwa tryby pracy</h2>
+                    <span id="music-overview-summary">0</span>
+                  </div>
+                  <div class="stat-grid analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
+                      <span>Gitara dzis</span>
+                      <strong id="music-guitar-today">0 min</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Rundy dzis</span>
+                      <strong id="music-ear-rounds">0</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Accuracy</span>
+                      <strong id="music-ear-accuracy">0%</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Top BPM</span>
+                      <strong id="music-top-bpm">0</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card">
+                  <div class="module-grid">
+                    <button type="button" id="open-guitar-home" class="module-card module-card-guitar">
+                      <span class="module-card-kicker">Gitara</span>
+                      <strong>Metronom i cwiczenia</strong>
+                      <span id="music-guitar-card-copy">0 cwiczen</span>
+                    </button>
+                    <button type="button" id="open-ear-home" class="module-card module-card-ear">
+                      <span class="module-card-kicker">Trening sluchu</span>
+                      <strong>Rundy i statystyki</strong>
+                      <span id="music-ear-card-copy">0 rund</span>
+                    </button>
+                  </div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Ostatnio</h2>
+                    <span id="music-recent-summary">0</span>
+                  </div>
+                  <div id="music-recent-list" class="stack-list"></div>
+                </article>
+              </div>
+            </div>
+
             <div id="guitar-main-view" class="guitar-view">
               <div class="section-feed">
                 <article class="card metronome-card">
@@ -330,6 +383,243 @@
                     </div>
                     <button type="submit" id="guitar-form-submit" class="primary-button full-button">Dodaj cwiczenie</button>
                   </form>
+                </article>
+              </div>
+            </div>
+
+            <div id="ear-home-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="ear-home-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2>Trening sluchu</h2>
+                  <span id="ear-home-summary">0 typow</span>
+                </div>
+                <div class="subview-actions">
+                  <button type="button" id="ear-home-last" class="header-pill-button">Ostatni</button>
+                </div>
+              </div>
+              <div class="section-feed">
+                <article class="card analytics-hero-card music-overview-card">
+                  <p class="analytics-kicker">Trening sluchu</p>
+                  <div class="card-head">
+                    <h2 id="ear-home-last-title">Ostatnia runda</h2>
+                    <span id="ear-home-last-copy">Brak</span>
+                  </div>
+                  <div class="detail-progress-block">
+                    <div class="detail-progress-head">
+                      <span>Cel</span>
+                      <strong id="ear-home-last-accuracy">0%</strong>
+                      <span id="ear-home-last-meta">0 ms</span>
+                    </div>
+                    <div class="progress-track bpm-progress-track">
+                      <div class="progress-fill bpm-progress-fill" id="ear-home-last-progress"></div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Typy cwiczen</h2>
+                    <span id="ear-type-count">0</span>
+                  </div>
+                  <div id="ear-exercise-list" class="stack-list"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Ostatnie wyniki</h2>
+                    <span id="ear-recent-summary">0</span>
+                  </div>
+                  <div id="ear-recent-list" class="stack-list"></div>
+                </article>
+              </div>
+            </div>
+
+            <div id="ear-config-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="ear-config-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2 id="ear-config-title">Interwaly</h2>
+                  <span id="ear-config-subtitle">Ustaw runde</span>
+                </div>
+                <div></div>
+              </div>
+              <div class="section-feed">
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Poziom</h2>
+                    <span id="ear-config-level-copy">Core</span>
+                  </div>
+                  <div id="ear-level-grid" class="preset-row"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Runda</h2>
+                    <span id="ear-count-copy">10</span>
+                  </div>
+                  <div id="ear-count-grid" class="preset-row"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2 id="ear-items-title">Material</h2>
+                    <span id="ear-items-copy">0</span>
+                  </div>
+                  <div id="ear-item-grid" class="ear-chip-grid"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Tryb</h2>
+                    <span id="ear-mode-copy">Mix</span>
+                  </div>
+                  <div id="ear-mode-grid" class="preset-row"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Sluchawki</h2>
+                    <span>On</span>
+                  </div>
+                  <button type="button" id="ear-start-round" class="primary-button full-button">Start rundy</button>
+                </article>
+              </div>
+            </div>
+
+            <div id="ear-round-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="ear-round-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2 id="ear-round-title">Interwaly</h2>
+                  <span id="ear-round-summary">1 / 10</span>
+                </div>
+                <div class="subview-actions">
+                  <button type="button" id="ear-round-replay" class="header-pill-button">Play</button>
+                </div>
+              </div>
+              <div class="section-feed">
+                <article class="card analytics-hero-card ear-round-card">
+                  <div class="card-head">
+                    <h2 id="ear-round-prompt">Melodyczny</h2>
+                    <span id="ear-round-live-score">0%</span>
+                  </div>
+                  <button type="button" id="ear-round-play" class="ear-play-button">Play</button>
+                  <div id="ear-answer-grid" class="ear-answer-grid"></div>
+                </article>
+              </div>
+            </div>
+
+            <div id="ear-summary-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="ear-summary-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2 id="ear-summary-title">Wynik rundy</h2>
+                  <span id="ear-summary-copy">0 / 0</span>
+                </div>
+                <div></div>
+              </div>
+              <div class="section-feed">
+                <article class="card analytics-hero-card">
+                  <p class="analytics-kicker">Podsumowanie</p>
+                  <div class="stat-grid analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
+                      <span>Accuracy</span>
+                      <strong id="ear-summary-accuracy">0%</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Sredni czas</span>
+                      <strong id="ear-summary-response">0 ms</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Streak</span>
+                      <strong id="ear-summary-streak">0</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Typ</span>
+                      <strong id="ear-summary-type">-</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card">
+                  <div class="button-grid ear-summary-actions">
+                    <button type="button" id="ear-summary-repeat" class="secondary-button">Powtorz</button>
+                    <button type="button" id="ear-summary-stats" class="secondary-button">Statystyki</button>
+                    <button type="button" id="ear-summary-home" class="primary-button">Dalej</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div id="ear-detail-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="ear-detail-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2 id="ear-detail-nav-title">Interwaly</h2>
+                  <span id="ear-detail-summary">0 rund</span>
+                </div>
+                <div class="subview-actions">
+                  <button type="button" id="ear-detail-start" class="header-pill-button">Start</button>
+                </div>
+              </div>
+              <div class="section-feed">
+                <article class="card analytics-hero-card">
+                  <p class="analytics-kicker">Analytics</p>
+                  <div class="card-head">
+                    <h2 id="ear-detail-title">Interwaly</h2>
+                    <span id="ear-detail-last-used">Brak</span>
+                  </div>
+                  <div class="stat-grid analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
+                      <span>Accuracy</span>
+                      <strong id="ear-detail-accuracy">0%</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Best</span>
+                      <strong id="ear-detail-best">0%</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Szybkosc</span>
+                      <strong id="ear-detail-response">0 ms</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Rundy</span>
+                      <strong id="ear-detail-rounds">0</strong>
+                    </div>
+                  </div>
+                  <div class="detail-progress-block">
+                    <div class="detail-progress-head">
+                      <span>Start</span>
+                      <strong id="ear-detail-progress-value">0%</strong>
+                      <span id="ear-detail-progress-target">Cel 90%</span>
+                    </div>
+                    <div class="progress-track bpm-progress-track">
+                      <div class="progress-fill bpm-progress-fill" id="ear-detail-progress-bar"></div>
+                    </div>
+                  </div>
+                  <div class="exercise-chart-card analytics-chart-card">
+                    <svg id="ear-detail-accuracy-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
+                  </div>
+                  <div class="exercise-chart-card analytics-chart-card">
+                    <svg id="ear-detail-speed-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
+                  </div>
+                </article>
+
+                <article class="card analytics-history-card">
+                  <div class="card-head">
+                    <h2>Najczestsze bledy</h2>
+                    <span id="ear-detail-weak-summary">0</span>
+                  </div>
+                  <div id="ear-detail-weak-list" class="stack-list compact-stack"></div>
+                </article>
+
+                <article class="card analytics-history-card">
+                  <div class="card-head">
+                    <h2>Ostatnie rundy</h2>
+                    <span id="ear-detail-history-summary">0</span>
+                  </div>
+                  <div id="ear-detail-history-list" class="stack-list compact-stack"></div>
                 </article>
               </div>
             </div>
@@ -682,7 +972,7 @@
             </button>
             <button class="tabbar-item" data-tab-button="guitar">
               <span class="tabbar-icon">02</span>
-              <span>Gitara</span>
+              <span>Muzyka</span>
             </button>
             <button class="tabbar-item" data-tab-button="gym">
               <span class="tabbar-icon">03</span>

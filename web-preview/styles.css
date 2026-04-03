@@ -376,6 +376,57 @@ button:active {
   font-weight: 700;
 }
 
+.module-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.module-card {
+  text-align: left;
+  border: 0;
+  border-radius: 24px;
+  padding: 18px;
+  min-height: 138px;
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.module-card-kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.72;
+  font-weight: 800;
+}
+
+.module-card strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.module-card span:last-child {
+  font-size: 0.84rem;
+  line-height: 1.4;
+  opacity: 0.82;
+}
+
+.module-card-guitar {
+  background:
+    radial-gradient(circle at top left, rgba(88, 240, 194, 0.18), transparent 34%),
+    linear-gradient(180deg, #131416 0%, #1b1c20 42%, #22252a 100%);
+}
+
+.module-card-ear {
+  background:
+    radial-gradient(circle at top left, rgba(124, 92, 255, 0.2), transparent 34%),
+    linear-gradient(180deg, #121216 0%, #171922 42%, #1e2230 100%);
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -545,6 +596,15 @@ button:active {
   background: #ffffff;
 }
 
+.music-overview-card .card-head,
+.ear-round-card .card-head {
+  margin-bottom: 16px;
+}
+
+.music-overview-card .stat-card strong {
+  font-size: 1.4rem;
+}
+
 .stack-list {
   display: grid;
   gap: 10px;
@@ -576,6 +636,106 @@ button:active {
 
 .list-item-block {
   grid-template-columns: 1fr;
+}
+
+.ear-type-card {
+  display: grid;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.ear-type-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ear-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.06);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ear-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ear-chip-button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: #f4f4f6;
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ear-chip-button.active {
+  background: #111111;
+  color: white;
+}
+
+.ear-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.ear-answer-button {
+  min-height: 92px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+.ear-answer-button.correct {
+  background: rgba(29, 185, 84, 0.22);
+  border-color: rgba(29, 185, 84, 0.28);
+}
+
+.ear-answer-button.wrong {
+  background: rgba(255, 90, 95, 0.2);
+  border-color: rgba(255, 90, 95, 0.28);
+}
+
+.ear-answer-button.dimmed {
+  opacity: 0.58;
+}
+
+.ear-play-button {
+  width: 100%;
+  min-height: 78px;
+  border: 0;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.26), transparent 24%),
+    linear-gradient(135deg, rgba(88, 240, 194, 0.92), rgba(124, 92, 255, 0.86));
+  color: #111111;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ear-summary-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .mini-progress-stack {
@@ -1050,6 +1210,10 @@ button:active {
   fill: #101113;
   stroke: #1db954;
   stroke-width: 3;
+}
+
+.chart-bar {
+  fill: rgba(88, 240, 194, 0.78);
 }
 
 .chart-point-label {

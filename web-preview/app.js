@@ -1,5 +1,5 @@
-const STORAGE_KEY = "lifeos-preview-state-v4";
-const LEGACY_KEYS = ["lifeos-preview-state-v3"];
+const STORAGE_KEY = "lifeos-preview-state-v5";
+const LEGACY_KEYS = ["lifeos-preview-state-v4", "lifeos-preview-state-v3"];
 
 function isoDaysAgo(days, hour = 9) {
   const date = new Date();
@@ -95,6 +95,76 @@ const defaultState = {
   ],
   guitarActiveId: "gex-1",
   guitarInspectId: "gex-1",
+  earRounds: [
+    {
+      id: "er-1",
+      type: "intervals",
+      startedAt: isoDaysAgo(3, 19),
+      endedAt: isoDaysAgo(3, 19),
+      accuracy: 80,
+      correct: 4,
+      totalQuestions: 5,
+      averageResponseTimeMs: 1650,
+      config: { type: "intervals", level: "core", questionCount: 5, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true },
+      answers: [
+        { questionId: "q-1", correctAnswer: "m3", selectedAnswer: "m3", isCorrect: true, responseTimeMs: 1200 },
+        { questionId: "q-2", correctAnswer: "P4", selectedAnswer: "P4", isCorrect: true, responseTimeMs: 1880 },
+        { questionId: "q-3", correctAnswer: "M2", selectedAnswer: "m2", isCorrect: false, responseTimeMs: 2050 },
+        { questionId: "q-4", correctAnswer: "P5", selectedAnswer: "P5", isCorrect: true, responseTimeMs: 1410 },
+        { questionId: "q-5", correctAnswer: "M3", selectedAnswer: "M3", isCorrect: true, responseTimeMs: 1710 }
+      ]
+    },
+    {
+      id: "er-2",
+      type: "rhythm",
+      startedAt: isoDaysAgo(2, 18),
+      endedAt: isoDaysAgo(2, 18),
+      accuracy: 60,
+      correct: 3,
+      totalQuestions: 5,
+      averageResponseTimeMs: 2140,
+      config: { type: "rhythm", level: "core", questionCount: 5, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true },
+      answers: [
+        { questionId: "q-1", correctAnswer: "Prosto", selectedAnswer: "Prosto", isCorrect: true, responseTimeMs: 1430 },
+        { questionId: "q-2", correctAnswer: "Synkopa", selectedAnswer: "Pauza", isCorrect: false, responseTimeMs: 2490 },
+        { questionId: "q-3", correctAnswer: "Triola", selectedAnswer: "Triola", isCorrect: true, responseTimeMs: 2200 },
+        { questionId: "q-4", correctAnswer: "Pauza", selectedAnswer: "Pauza", isCorrect: true, responseTimeMs: 1940 },
+        { questionId: "q-5", correctAnswer: "Synkopa", selectedAnswer: "Prosto", isCorrect: false, responseTimeMs: 2640 }
+      ]
+    },
+    {
+      id: "er-3",
+      type: "chords",
+      startedAt: isoDaysAgo(1, 21),
+      endedAt: isoDaysAgo(1, 21),
+      accuracy: 70,
+      correct: 7,
+      totalQuestions: 10,
+      averageResponseTimeMs: 1860,
+      config: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true },
+      answers: [
+        { questionId: "q-1", correctAnswer: "Major", selectedAnswer: "Major", isCorrect: true, responseTimeMs: 1410 },
+        { questionId: "q-2", correctAnswer: "Minor", selectedAnswer: "Minor", isCorrect: true, responseTimeMs: 1510 },
+        { questionId: "q-3", correctAnswer: "Maj7", selectedAnswer: "Dom7", isCorrect: false, responseTimeMs: 2010 },
+        { questionId: "q-4", correctAnswer: "Dom7", selectedAnswer: "Dom7", isCorrect: true, responseTimeMs: 1820 },
+        { questionId: "q-5", correctAnswer: "Major", selectedAnswer: "Major", isCorrect: true, responseTimeMs: 1660 },
+        { questionId: "q-6", correctAnswer: "Minor", selectedAnswer: "Major", isCorrect: false, responseTimeMs: 2230 },
+        { questionId: "q-7", correctAnswer: "Dom7", selectedAnswer: "Dom7", isCorrect: true, responseTimeMs: 1740 },
+        { questionId: "q-8", correctAnswer: "Maj7", selectedAnswer: "Maj7", isCorrect: true, responseTimeMs: 1690 },
+        { questionId: "q-9", correctAnswer: "Minor", selectedAnswer: "Minor", isCorrect: true, responseTimeMs: 1910 },
+        { questionId: "q-10", correctAnswer: "Major", selectedAnswer: "Minor", isCorrect: false, responseTimeMs: 2620 }
+      ]
+    }
+  ],
+  earLastConfigs: {
+    intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true },
+    chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true },
+    scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true },
+    rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true },
+    melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true },
+    pitch: { type: "pitch", level: "core", questionCount: 10, selectedItems: ["C", "D", "E", "F", "G", "A", "B"], playbackMode: "single", headphoneMode: true }
+  },
+  earInspectType: "intervals",
   supplements: [
     { name: "Creatine", dosage: "5 g" },
     { name: "Omega-3", dosage: "2 caps" },
@@ -147,6 +217,189 @@ function clamp(value, min, max) {
 function bpmProgress(bpm) {
   return (clamp(bpm, 30, 240) - 30) / 210;
 }
+
+const EAR_TARGET_ACCURACY = 90;
+const EAR_LEVELS = {
+  focus: "Focus",
+  core: "Core",
+  wide: "Wide"
+};
+
+const EAR_LIBRARY = {
+  intervals: {
+    title: "Interwaly",
+    subtitle: "Melodiczne i harmoniczne",
+    accent: "#7c5cff",
+    selectedLabel: "Material",
+    defaultMode: "both",
+    modeOptions: [
+      { value: "melodic", label: "Mel" },
+      { value: "harmonic", label: "Harm" },
+      { value: "both", label: "Mix" }
+    ],
+    itemsByLevel: {
+      focus: ["m2", "M2", "m3", "M3"],
+      core: ["m2", "M2", "m3", "M3", "P4", "P5"],
+      wide: ["m2", "M2", "m3", "M3", "P4", "TT", "P5", "m6", "M6", "m7", "M7", "8va"]
+    }
+  },
+  chords: {
+    title: "Akordy",
+    subtitle: "Brzmienie i kolor",
+    accent: "#2dd4bf",
+    selectedLabel: "Typy",
+    defaultMode: "stack",
+    modeOptions: [
+      { value: "stack", label: "Stack" },
+      { value: "arp", label: "Arp" }
+    ],
+    itemsByLevel: {
+      focus: ["Major", "Minor", "Dim", "Aug"],
+      core: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"],
+      wide: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4", "Dom7", "Maj7", "Min7"]
+    }
+  },
+  scales: {
+    title: "Skale",
+    subtitle: "Tryby i kolor",
+    accent: "#ff9f43",
+    selectedLabel: "Skale",
+    defaultMode: "phrase",
+    modeOptions: [
+      { value: "phrase", label: "Fraza" },
+      { value: "ascending", label: "Asc" }
+    ],
+    itemsByLevel: {
+      focus: ["Major", "Minor", "Dorian", "Mixolydian"],
+      core: ["Major", "Minor", "Dorian", "Phrygian", "Lydian", "Mixolydian"],
+      wide: ["Major", "Minor", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian"]
+    }
+  },
+  rhythm: {
+    title: "Rytm",
+    subtitle: "Patterny i puls",
+    accent: "#ff5a5f",
+    selectedLabel: "Patterny",
+    defaultMode: "click",
+    modeOptions: [
+      { value: "click", label: "Click" }
+    ],
+    itemsByLevel: {
+      focus: ["Prosto", "Pauza", "Synkopa", "Triola"],
+      core: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push"],
+      wide: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push", "Clave", "Gallop"]
+    }
+  },
+  melody: {
+    title: "Melodie",
+    subtitle: "Krotkie dyktanda",
+    accent: "#58f0c2",
+    selectedLabel: "Frazy",
+    defaultMode: "degrees",
+    modeOptions: [
+      { value: "degrees", label: "Stopnie" }
+    ],
+    itemsByLevel: {
+      focus: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"],
+      core: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5"],
+      wide: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5", "1-6-5-3", "5-b3-2-1"]
+    }
+  },
+  pitch: {
+    title: "Pitch",
+    subtitle: "Pojedynczy dzwiek",
+    accent: "#8b5cf6",
+    selectedLabel: "Dzwieki",
+    defaultMode: "single",
+    modeOptions: [
+      { value: "single", label: "Single" }
+    ],
+    itemsByLevel: {
+      focus: ["C", "D", "E", "G"],
+      core: ["C", "D", "E", "F", "G", "A", "B"],
+      wide: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+    }
+  }
+};
+
+const INTERVAL_SEMITONES = {
+  m2: 1,
+  M2: 2,
+  m3: 3,
+  M3: 4,
+  P4: 5,
+  TT: 6,
+  P5: 7,
+  m6: 8,
+  M6: 9,
+  m7: 10,
+  M7: 11,
+  "8va": 12
+};
+
+const CHORD_INTERVALS = {
+  Major: [0, 4, 7],
+  Minor: [0, 3, 7],
+  Dim: [0, 3, 6],
+  Aug: [0, 4, 8],
+  Sus2: [0, 2, 7],
+  Sus4: [0, 5, 7],
+  Dom7: [0, 4, 7, 10],
+  Maj7: [0, 4, 7, 11],
+  Min7: [0, 3, 7, 10]
+};
+
+const SCALE_INTERVALS = {
+  Major: [0, 2, 4, 5, 7, 9, 11],
+  Minor: [0, 2, 3, 5, 7, 8, 10],
+  Dorian: [0, 2, 3, 5, 7, 9, 10],
+  Phrygian: [0, 1, 3, 5, 7, 8, 10],
+  Lydian: [0, 2, 4, 6, 7, 9, 11],
+  Mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  Locrian: [0, 1, 3, 5, 6, 8, 10]
+};
+
+const RHYTHM_PATTERNS = {
+  Prosto: [0, 0.5, 1, 1.5],
+  Pauza: [0, 1, 1.5],
+  Synkopa: [0, 0.75, 1.5],
+  Triola: [0, 1 / 3, 2 / 3, 1.25],
+  Offbeat: [0.5, 1, 1.5],
+  Push: [0, 0.5, 1.25],
+  Clave: [0, 0.75, 1.25, 2, 2.5],
+  Gallop: [0, 0.25, 0.5, 1, 1.25, 1.5]
+};
+
+const MELODY_PATTERNS = {
+  "1-2-3": [0, 2, 4],
+  "1-b3-4": [0, 3, 5],
+  "1-4-5": [0, 5, 7],
+  "5-4-2": [7, 5, 2],
+  "1-5-6": [0, 7, 9],
+  "1-2-5": [0, 2, 7],
+  "1-6-5-3": [0, 9, 7, 4],
+  "5-b3-2-1": [7, 3, 2, 0]
+};
+
+const NOTE_TO_SEMITONE = {
+  C: 0,
+  "C#": 1,
+  Db: 1,
+  D: 2,
+  Eb: 3,
+  "D#": 3,
+  E: 4,
+  F: 5,
+  "F#": 6,
+  Gb: 6,
+  G: 7,
+  Ab: 8,
+  "G#": 8,
+  A: 9,
+  Bb: 10,
+  "A#": 10,
+  B: 11
+};
 
 const METRONOME_ARC_START = -150;
 const METRONOME_ARC_SPAN = 300;
@@ -289,6 +542,55 @@ function normalizeState(rawState = {}) {
   state.guitarInspectId = state.guitarInspectId && state.guitarExercises.some((exercise) => exercise.id === state.guitarInspectId)
     ? state.guitarInspectId
     : (state.guitarActiveId || state.guitarExercises[0]?.id || null);
+  state.earRounds = normalizeArray(state.earRounds, defaultState.earRounds).map((entry) => ({
+    id: entry.id || uid("er"),
+    type: entry.type || "intervals",
+    startedAt: entry.startedAt || new Date().toISOString(),
+    endedAt: entry.endedAt || entry.startedAt || new Date().toISOString(),
+    accuracy: clamp(Math.round(Number(entry.accuracy || 0)), 0, 100),
+    correct: Math.max(0, Number(entry.correct || 0)),
+    totalQuestions: Math.max(1, Number(entry.totalQuestions || entry.config?.questionCount || 5)),
+    averageResponseTimeMs: Math.max(0, Number(entry.averageResponseTimeMs || 0)),
+    config: entry.config && typeof entry.config === "object" ? {
+      type: entry.config.type || entry.type || "intervals",
+      level: entry.config.level || "core",
+      questionCount: Math.max(1, Number(entry.config.questionCount || entry.totalQuestions || 5)),
+      selectedItems: Array.isArray(entry.config.selectedItems) ? entry.config.selectedItems : [],
+      playbackMode: entry.config.playbackMode || EAR_LIBRARY[entry.type || "intervals"]?.defaultMode || "both",
+      headphoneMode: entry.config.headphoneMode !== false
+    } : cloneState(defaultState.earLastConfigs[entry.type || "intervals"] || defaultState.earLastConfigs.intervals),
+    answers: Array.isArray(entry.answers) ? entry.answers.map((answer) => ({
+      questionId: answer.questionId || uid("ea"),
+      correctAnswer: String(answer.correctAnswer || ""),
+      selectedAnswer: String(answer.selectedAnswer || ""),
+      isCorrect: Boolean(answer.isCorrect),
+      responseTimeMs: Math.max(0, Number(answer.responseTimeMs || 0))
+    })) : []
+  }));
+  state.earLastConfigs = Object.fromEntries(
+    Object.keys(EAR_LIBRARY).map((type) => {
+      const incoming = state.earLastConfigs?.[type];
+      const fallback = defaultState.earLastConfigs[type];
+      const level = incoming?.level && EAR_LEVELS[incoming.level] ? incoming.level : fallback.level;
+      const allowedItems = EAR_LIBRARY[type].itemsByLevel[level] || fallback.selectedItems;
+      const selectedItems = Array.isArray(incoming?.selectedItems) && incoming.selectedItems.length
+        ? incoming.selectedItems.filter((item) => allowedItems.includes(item))
+        : fallback.selectedItems.slice();
+      return [type, {
+        type,
+        level,
+        questionCount: [5, 10, 20].includes(Number(incoming?.questionCount)) ? Number(incoming.questionCount) : fallback.questionCount,
+        selectedItems: selectedItems.length ? selectedItems : fallback.selectedItems.slice(),
+        playbackMode: EAR_LIBRARY[type].modeOptions.some((option) => option.value === incoming?.playbackMode)
+          ? incoming.playbackMode
+          : fallback.playbackMode,
+        headphoneMode: incoming?.headphoneMode !== false
+      }];
+    })
+  );
+  state.earInspectType = state.earInspectType && EAR_LIBRARY[state.earInspectType]
+    ? state.earInspectType
+    : "intervals";
   state.supplements = normalizeArray(state.supplements, defaultState.supplements);
   state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
@@ -334,10 +636,12 @@ let metronomeSliderActive = false;
 let feedbackHideTimer = null;
 let pendingGuitarSession = null;
 let lockedGuitarCardWidth = null;
-let guitarView = "main";
-const guitarScrollMemory = { main: 0, detail: 0, create: 0 };
+let guitarView = "home";
+const guitarScrollMemory = { home: 0, main: 0, detail: 0, create: 0, "ear-home": 0, "ear-config": 0, "ear-round": 0, "ear-summary": 0, "ear-detail": 0 };
 let editingGuitarExerciseId = null;
 let guitarSessionsExpanded = false;
+let earConfigType = state.earInspectType || "intervals";
+let earRoundSession = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -369,8 +673,8 @@ function setTab(tab) {
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
   if (tab === "guitar") {
     requestAnimationFrame(() => {
-      renderMetronome();
-      stabilizeGuitarLayout();
+      renderMusic();
+      if (guitarView === "main") stabilizeGuitarLayout();
       window.scrollTo({ top: guitarScrollMemory[guitarView] || 0, behavior: "auto" });
     });
   }
@@ -381,7 +685,7 @@ function setGuitarView(view, options = {}) {
   const { scrollTop = false } = options;
   guitarScrollMemory[guitarView] = window.scrollY || window.pageYOffset || 0;
   guitarView = view;
-  renderGuitar();
+  renderMusic();
   requestAnimationFrame(() => {
     window.scrollTo({ top: scrollTop ? 0 : (guitarScrollMemory[view] || 0), behavior: "auto" });
   });
@@ -550,6 +854,235 @@ function formatShortDateLabel(value) {
   return `${date.getDate()}.${date.getMonth() + 1}`;
 }
 
+function formatResponseMs(value) {
+  const ms = Math.max(0, Math.round(Number(value || 0)));
+  return ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`;
+}
+
+function shuffle(list) {
+  const copy = [...list];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+}
+
+function sample(list, count, exclude = []) {
+  const excluded = new Set(exclude);
+  return shuffle(list.filter((item) => !excluded.has(item))).slice(0, count);
+}
+
+function musicTodaySummary() {
+  const guitarTodaySec = guitarSessionsToday().reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+  const today = todayKey();
+  const earToday = state.earRounds.filter((round) => todayKey(new Date(round.endedAt || round.startedAt)) === today);
+  return {
+    guitarTodaySec,
+    earRounds: earToday.length,
+    earAccuracy: earToday.length ? Math.round(earToday.reduce((sum, round) => sum + Number(round.accuracy || 0), 0) / earToday.length) : 0
+  };
+}
+
+function earRoundsByType(type) {
+  return state.earRounds
+    .filter((round) => round.type === type)
+    .slice()
+    .sort((a, b) => new Date(a.endedAt || a.startedAt).getTime() - new Date(b.endedAt || b.startedAt).getTime());
+}
+
+function currentEarConfig(type = earConfigType) {
+  return state.earLastConfigs[type] || cloneState(defaultState.earLastConfigs[type] || defaultState.earLastConfigs.intervals);
+}
+
+function setEarConfig(type, patch) {
+  state.earLastConfigs[type] = { ...currentEarConfig(type), ...patch, type };
+  saveState();
+}
+
+function lastEarRound(type = null) {
+  const rounds = (type ? earRoundsByType(type) : state.earRounds.slice())
+    .sort((a, b) => new Date(b.endedAt || b.startedAt).getTime() - new Date(a.endedAt || a.startedAt).getTime());
+  return rounds[0] || null;
+}
+
+function lastEarType() {
+  return lastEarRound()?.type || "intervals";
+}
+
+function earAccuracyTrend(type) {
+  const rounds = earRoundsByType(type);
+  if (!rounds.length) return 0;
+  const recent = rounds.slice(-5);
+  return Math.round(recent.reduce((sum, round) => sum + Number(round.accuracy || 0), 0) / recent.length);
+}
+
+function earBestAccuracy(type) {
+  const rounds = earRoundsByType(type);
+  return rounds.length ? Math.max(...rounds.map((round) => Number(round.accuracy || 0)), 0) : 0;
+}
+
+function earAverageResponse(type) {
+  const rounds = earRoundsByType(type);
+  if (!rounds.length) return 0;
+  return Math.round(rounds.reduce((sum, round) => sum + Number(round.averageResponseTimeMs || 0), 0) / rounds.length);
+}
+
+function earProgressPercent(type) {
+  return clamp(Math.round((earAccuracyTrend(type) / EAR_TARGET_ACCURACY) * 100), 0, 100);
+}
+
+function earStreak(type) {
+  const rounds = earRoundsByType(type).slice().reverse();
+  let streak = 0;
+  for (const round of rounds) {
+    if (Number(round.accuracy || 0) >= 80) {
+      streak += 1;
+      continue;
+    }
+    break;
+  }
+  return streak;
+}
+
+function earWeakSpots(type) {
+  const map = new Map();
+  earRoundsByType(type).forEach((round) => {
+    (round.answers || []).forEach((answer) => {
+      if (answer.isCorrect || !answer.selectedAnswer || !answer.correctAnswer) return;
+      const key = `${answer.selectedAnswer}->${answer.correctAnswer}`;
+      const current = map.get(key) || {
+        id: key,
+        from: answer.selectedAnswer,
+        to: answer.correctAnswer,
+        count: 0
+      };
+      current.count += 1;
+      map.set(key, current);
+    });
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+}
+
+function earExerciseCards() {
+  return Object.entries(EAR_LIBRARY).map(([type, meta]) => ({
+    type,
+    ...meta,
+    rounds: earRoundsByType(type).length,
+    accuracy: earAccuracyTrend(type),
+    best: earBestAccuracy(type),
+    responseMs: earAverageResponse(type),
+    progress: earProgressPercent(type),
+    streak: earStreak(type)
+  }));
+}
+
+function midiToFrequency(midi) {
+  return 440 * (2 ** ((midi - 69) / 12));
+}
+
+function noteNameToMidi(noteName, octave = 4) {
+  return 12 * (octave + 1) + (NOTE_TO_SEMITONE[noteName] ?? 0);
+}
+
+function buildEarQuestion(type, config) {
+  const selected = config.selectedItems?.length ? config.selectedItems : currentEarConfig(type).selectedItems;
+  const rootMidi = 57 + Math.floor(Math.random() * 8);
+
+  if (type === "intervals") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    const semitones = INTERVAL_SEMITONES[correctAnswer] ?? 7;
+    const mode = config.playbackMode === "both"
+      ? (Math.random() > 0.5 ? "melodic" : "harmonic")
+      : config.playbackMode;
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: mode === "harmonic" ? "Harmoniczny" : "Melodyczny",
+      audio: { engine: "interval", rootMidi, semitones, mode }
+    };
+  }
+
+  if (type === "chords") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: config.playbackMode === "arp" ? "Arpeggio" : "Stack",
+      audio: { engine: "chord", rootMidi, intervals: CHORD_INTERVALS[correctAnswer] || [0, 4, 7], mode: config.playbackMode }
+    };
+  }
+
+  if (type === "scales") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: config.playbackMode === "ascending" ? "Asc" : "Fraza",
+      audio: { engine: "scale", rootMidi, intervals: SCALE_INTERVALS[correctAnswer] || SCALE_INTERVALS.Major, mode: config.playbackMode }
+    };
+  }
+
+  if (type === "rhythm") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: "4 beat",
+      audio: { engine: "rhythm", pattern: RHYTHM_PATTERNS[correctAnswer] || RHYTHM_PATTERNS.Prosto }
+    };
+  }
+
+  if (type === "melody") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: "Fraza",
+      audio: { engine: "melody", rootMidi, pattern: MELODY_PATTERNS[correctAnswer] || MELODY_PATTERNS["1-2-3"] }
+    };
+  }
+
+  const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+  return {
+    id: uid("eq"),
+    type,
+    correctAnswer,
+    options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+    prompt: "Single",
+    audio: { engine: "pitch", midi: noteNameToMidi(correctAnswer, 4) }
+  };
+}
+
+function buildEarRound(config) {
+  const normalized = {
+    ...config,
+    selectedItems: config.selectedItems?.length ? config.selectedItems : currentEarConfig(config.type).selectedItems
+  };
+  return {
+    id: uid("round"),
+    type: normalized.type,
+    config: normalized,
+    startedAt: Date.now(),
+    questionIndex: 0,
+    answers: [],
+    questions: Array.from({ length: normalized.questionCount }, () => buildEarQuestion(normalized.type, normalized)),
+    answeringLocked: false,
+    lastFeedback: null,
+    autoplayTimer: null
+  };
+}
+
 function renderGuitarDetailChart(exercise, sessions) {
   const chart = document.getElementById("guitar-detail-chart");
   if (!chart) return;
@@ -601,9 +1134,9 @@ function computeHomeProgress() {
   const doneHabits = state.habits.filter((item) => item.done).length;
   const doneTasks = state.tasks.filter((item) => item.done).length;
   const workoutDone = workoutsToday().length ? 1 : 0;
-  const guitarDone = guitarSessionsToday().length ? 1 : 0;
+  const musicDone = guitarSessionsToday().length || musicTodaySummary().earRounds ? 1 : 0;
   const total = state.habits.length + state.tasks.length + 2;
-  const completed = doneHabits + doneTasks + workoutDone + guitarDone;
+  const completed = doneHabits + doneTasks + workoutDone + musicDone;
   return {
     total,
     completed,
@@ -640,13 +1173,13 @@ function priorityItems() {
     });
   }
 
-  if (!guitarSessionsToday().length && priorities.length < 3) {
+  if (!guitarSessionsToday().length && !musicTodaySummary().earRounds && priorities.length < 3) {
     priorities.push({
       type: "tab",
       tab: "guitar",
-      focus: "guitar-exercise-name-input",
-      title: "Gitara 10 min",
-      detail: "Jedna sesja BPM podtrzymuje progres."
+      focus: "open-guitar-home",
+      title: "Muzyka 10 min",
+      detail: "Gitara albo trening sluchu, byle wejsc w rytm."
     });
   }
 
@@ -850,7 +1383,7 @@ function renderHome() {
   const progress = computeHomeProgress();
   const nutrition = nutritionToday();
   const todayFinance = financeSummary(financeToday());
-  const guitarTodaySec = guitarSessionsToday().reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+  const musicSummary = musicTodaySummary();
   const latest = latestWeight();
 
   document.getElementById("home-progress-value").textContent = `${progress.percent}%`;
@@ -858,12 +1391,12 @@ function renderHome() {
   document.getElementById("home-progress-copy").textContent = `${progress.completed} z ${progress.total} rzeczy domkniete dzisiaj.`;
   document.getElementById("home-weight").textContent = latest ? `${Number(latest.value).toFixed(1)} kg` : "-";
   document.getElementById("home-tasks-open").textContent = `${progress.openTasks}`;
-  document.getElementById("home-guitar-output").textContent = formatDuration(guitarTodaySec);
+  document.getElementById("home-guitar-output").textContent = formatDuration(musicSummary.guitarTodaySec);
   document.getElementById("home-gym-output").textContent = `${workoutsThisWeek().length}/4`;
   document.getElementById("home-kcal").textContent = `${nutrition.calories}`;
   document.getElementById("home-protein").textContent = `${nutrition.protein} g`;
   document.getElementById("home-balance").textContent = formatZl(todayFinance.income - todayFinance.expense);
-  document.getElementById("home-guitar-copy").textContent = `${state.guitarExercises.length} cwiczen, top ${guitarOverview().topBpm} BPM.`;
+  document.getElementById("home-guitar-copy").textContent = `${state.guitarExercises.length} cwiczen, ${musicSummary.earRounds} rund sluchu, top ${guitarOverview().topBpm} BPM.`;
   document.getElementById("home-gym-copy").textContent = `${totalTrainingMinutes()} min lacznie, ${state.exerciseSets.length} serii w bazie.`;
   document.getElementById("home-finance-copy").textContent = `${formatZl(plannedTotal())} planowanych wydatkow.`;
   document.getElementById("home-note").textContent = state.note;
@@ -1076,6 +1609,424 @@ function renderGuitar() {
   if (guitarView === "main") {
     stabilizeGuitarLayout();
   }
+}
+
+function renderSimpleLineChart(nodeId, points, options = {}) {
+  const chart = document.getElementById(nodeId);
+  if (!chart) return;
+  if (!points.length) {
+    chart.innerHTML = `<text x="160" y="92" text-anchor="middle" class="chart-axis-label">Brak danych.</text>`;
+    return;
+  }
+
+  const values = points.map((point) => Number(point.value || 0));
+  const maxValue = Math.max(options.max ?? 0, ...values, 1);
+  const left = 24;
+  const right = 296;
+  const top = 18;
+  const bottom = 122;
+  const stepX = points.length === 1 ? 0 : (right - left) / (points.length - 1);
+  const path = points.map((point, index) => {
+    const x = points.length === 1 ? (left + right) / 2 : left + stepX * index;
+    const ratio = maxValue <= 0 ? 0 : Number(point.value || 0) / maxValue;
+    const y = bottom - ratio * (bottom - top);
+    return { x, y, point };
+  });
+  const lineD = path.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
+
+  chart.innerHTML = `
+    <line x1="${left}" y1="${bottom}" x2="${right}" y2="${bottom}" class="chart-grid-line"></line>
+    <line x1="${left}" y1="${top}" x2="${right}" y2="${top}" class="chart-grid-line"></line>
+    <text x="${left}" y="${top - 4}" class="chart-axis-label">${options.topLabel || maxValue}</text>
+    <path d="${lineD}" class="chart-line"></path>
+    ${path.map((entry) => `
+      <circle cx="${entry.x.toFixed(2)}" cy="${entry.y.toFixed(2)}" r="5" class="chart-point"></circle>
+      <text x="${entry.x.toFixed(2)}" y="${(entry.y - 10).toFixed(2)}" text-anchor="middle" class="chart-point-label">${entry.point.label || entry.point.value}</text>
+      <text x="${entry.x.toFixed(2)}" y="${(bottom + 18).toFixed(2)}" text-anchor="middle" class="chart-axis-label">${entry.point.bottom || ""}</text>
+    `).join("")}
+  `;
+}
+
+function renderBarChart(nodeId, points, options = {}) {
+  const chart = document.getElementById(nodeId);
+  if (!chart) return;
+  if (!points.length) {
+    chart.innerHTML = `<text x="160" y="92" text-anchor="middle" class="chart-axis-label">Brak danych.</text>`;
+    return;
+  }
+  const maxValue = Math.max(options.max ?? 0, ...points.map((point) => Number(point.value || 0)), 1);
+  const left = 28;
+  const right = 292;
+  const top = 18;
+  const bottom = 128;
+  const width = Math.max(18, (right - left) / Math.max(points.length, 1) - 12);
+
+  chart.innerHTML = `
+    <line x1="${left}" y1="${bottom}" x2="${right}" y2="${bottom}" class="chart-grid-line"></line>
+    <text x="${left}" y="${top - 4}" class="chart-axis-label">${options.topLabel || maxValue}</text>
+    ${points.map((point, index) => {
+      const ratio = Number(point.value || 0) / maxValue;
+      const height = Math.max(6, ratio * (bottom - top));
+      const x = left + index * ((right - left) / Math.max(points.length, 1));
+      const y = bottom - height;
+      return `
+        <rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${width.toFixed(2)}" height="${height.toFixed(2)}" rx="10" class="chart-bar"></rect>
+        <text x="${(x + width / 2).toFixed(2)}" y="${(y - 8).toFixed(2)}" text-anchor="middle" class="chart-point-label">${point.label || point.value}</text>
+        <text x="${(x + width / 2).toFixed(2)}" y="${(bottom + 18).toFixed(2)}" text-anchor="middle" class="chart-axis-label">${point.bottom || ""}</text>
+      `;
+    }).join("")}
+  `;
+}
+
+function renderMusicHome() {
+  const summary = musicTodaySummary();
+  const lastRound = lastEarRound();
+  const recentNode = document.getElementById("music-recent-list");
+  document.getElementById("music-overview-summary").textContent = `${state.guitarExercises.length + Object.keys(EAR_LIBRARY).length}`;
+  document.getElementById("music-guitar-today").textContent = formatDuration(summary.guitarTodaySec);
+  document.getElementById("music-ear-rounds").textContent = `${summary.earRounds}`;
+  document.getElementById("music-ear-accuracy").textContent = `${summary.earAccuracy}%`;
+  document.getElementById("music-top-bpm").textContent = `${guitarOverview().topBpm}`;
+  document.getElementById("music-guitar-card-copy").textContent = `${state.guitarExercises.length} cwiczen, top ${guitarOverview().topBpm} BPM`;
+  document.getElementById("music-ear-card-copy").textContent = state.earRounds.length
+    ? `${state.earRounds.length} rund, ostatnio ${EAR_LIBRARY[lastEarType()].title}`
+    : "0 rund, gotowe do startu";
+  document.getElementById("music-recent-summary").textContent = `${Math.min(state.guitarSessions.length + state.earRounds.length, 6)}`;
+  recentNode.innerHTML = "";
+
+  const combined = [
+    ...state.guitarSessions.slice(-3).map((session) => ({
+      kind: "guitar",
+      title: session.exerciseTitle,
+      meta: `${session.bpm} BPM · ${formatDuration(session.durationSec)}`,
+      createdAt: session.createdAt
+    })),
+    ...state.earRounds.slice(-3).map((round) => ({
+      kind: "ear",
+      title: EAR_LIBRARY[round.type]?.title || round.type,
+      meta: `${round.accuracy}% · ${formatResponseMs(round.averageResponseTimeMs)}`,
+      createdAt: round.endedAt || round.startedAt
+    }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6);
+
+  if (!combined.length) {
+    recentNode.appendChild(emptyNode("Brak sesji w muzyce."));
+    return;
+  }
+
+  combined.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${escapeHtml(entry.meta)} - ${formatShortDateLabel(entry.createdAt)}</span>
+      </div>
+    `;
+    recentNode.appendChild(row);
+  });
+}
+
+function renderEarHome() {
+  const cards = earExerciseCards();
+  const listNode = document.getElementById("ear-exercise-list");
+  const recentNode = document.getElementById("ear-recent-list");
+  const lastRoundEntry = lastEarRound();
+  document.getElementById("ear-home-summary").textContent = `${cards.length} typow`;
+  document.getElementById("ear-type-count").textContent = `${cards.length}`;
+  document.getElementById("ear-recent-summary").textContent = `${Math.min(state.earRounds.length, 6)}`;
+  document.getElementById("ear-home-last-title").textContent = lastRoundEntry ? (EAR_LIBRARY[lastRoundEntry.type]?.title || "Runda") : "Ostatnia runda";
+  document.getElementById("ear-home-last-copy").textContent = lastRoundEntry ? formatShortDateLabel(lastRoundEntry.endedAt || lastRoundEntry.startedAt) : "Brak";
+  document.getElementById("ear-home-last-accuracy").textContent = `${lastRoundEntry?.accuracy || 0}%`;
+  document.getElementById("ear-home-last-meta").textContent = formatResponseMs(lastRoundEntry?.averageResponseTimeMs || 0);
+  document.getElementById("ear-home-last-progress").style.width = `${lastRoundEntry ? clamp(Math.round((lastRoundEntry.accuracy / EAR_TARGET_ACCURACY) * 100), 0, 100) : 0}%`;
+
+  listNode.innerHTML = "";
+  cards.forEach((card) => {
+    const row = document.createElement("div");
+    row.className = `list-item list-item-block ear-type-card${state.earInspectType === card.type ? " active" : ""}`;
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(card.title)}</strong>
+        <span>${escapeHtml(card.subtitle)}</span>
+      </div>
+    `;
+    row.addEventListener("click", () => openEarConfigView(card.type));
+
+    const meta = document.createElement("div");
+    meta.className = "ear-type-meta";
+    meta.innerHTML = `
+      <span class="ear-type-badge">${card.rounds} rund</span>
+      <span class="ear-type-badge">${card.accuracy}% acc</span>
+      <span class="ear-type-badge">${formatResponseMs(card.responseMs)}</span>
+    `;
+
+    const progress = document.createElement("div");
+    progress.className = "mini-progress-stack";
+    progress.innerHTML = `
+      <div class="mini-progress-row">
+        <span>Cel</span>
+        <div class="progress-track bpm-progress-track">
+          <div class="progress-fill bpm-progress-fill" style="width:${card.progress}%"></div>
+        </div>
+        <strong>${card.progress}%</strong>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Start", () => openEarConfigView(card.type)),
+      makeToolButton("Stats", () => openEarDetailView(card.type))
+    );
+
+    row.append(meta, progress, tools);
+    listNode.appendChild(row);
+  });
+
+  recentNode.innerHTML = "";
+  if (!state.earRounds.length) {
+    recentNode.appendChild(emptyNode("Brak rund sluchowych."));
+    return;
+  }
+
+  state.earRounds.slice().reverse().slice(0, 6).forEach((round) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(EAR_LIBRARY[round.type]?.title || round.type)}</strong>
+        <span>${round.accuracy}% - ${formatResponseMs(round.averageResponseTimeMs)} - ${formatShortDateLabel(round.endedAt || round.startedAt)}</span>
+      </div>
+    `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(makeToolButton("Stats", () => openEarDetailView(round.type)));
+    row.appendChild(tools);
+    recentNode.appendChild(row);
+  });
+}
+
+function renderEarConfig() {
+  const meta = EAR_LIBRARY[earConfigType];
+  const config = currentEarConfig(earConfigType);
+  document.getElementById("ear-config-title").textContent = meta.title;
+  document.getElementById("ear-config-subtitle").textContent = meta.subtitle;
+  document.getElementById("ear-config-level-copy").textContent = EAR_LEVELS[config.level];
+  document.getElementById("ear-count-copy").textContent = `${config.questionCount}`;
+  document.getElementById("ear-items-title").textContent = meta.selectedLabel;
+  document.getElementById("ear-items-copy").textContent = `${config.selectedItems.length}`;
+  document.getElementById("ear-mode-copy").textContent = meta.modeOptions.find((item) => item.value === config.playbackMode)?.label || meta.modeOptions[0].label;
+
+  const levelGrid = document.getElementById("ear-level-grid");
+  levelGrid.innerHTML = "";
+  Object.entries(EAR_LEVELS).forEach(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.level === value ? " active" : ""}`;
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      const selectedItems = EAR_LIBRARY[earConfigType].itemsByLevel[value].slice();
+      setEarConfig(earConfigType, { level: value, selectedItems });
+      renderEarConfig();
+    });
+    levelGrid.appendChild(button);
+  });
+
+  const countGrid = document.getElementById("ear-count-grid");
+  countGrid.innerHTML = "";
+  [5, 10, 20].forEach((count) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.questionCount === count ? " active" : ""}`;
+    button.textContent = `${count}`;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { questionCount: count });
+      renderEarConfig();
+    });
+    countGrid.appendChild(button);
+  });
+
+  const itemGrid = document.getElementById("ear-item-grid");
+  itemGrid.innerHTML = "";
+  (EAR_LIBRARY[earConfigType].itemsByLevel[config.level] || []).forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${config.selectedItems.includes(item) ? " active" : ""}`;
+    button.textContent = item;
+    button.addEventListener("click", () => {
+      const selected = config.selectedItems.includes(item)
+        ? config.selectedItems.filter((entry) => entry !== item)
+        : [...config.selectedItems, item];
+      const next = selected.length ? selected : [item];
+      setEarConfig(earConfigType, { selectedItems: next });
+      renderEarConfig();
+    });
+    itemGrid.appendChild(button);
+  });
+
+  const modeGrid = document.getElementById("ear-mode-grid");
+  modeGrid.innerHTML = "";
+  meta.modeOptions.forEach((mode) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.playbackMode === mode.value ? " active" : ""}`;
+    button.textContent = mode.label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { playbackMode: mode.value });
+      renderEarConfig();
+    });
+    modeGrid.appendChild(button);
+  });
+}
+
+function renderEarRound() {
+  const session = earRoundSession;
+  const question = session?.questions?.[session.questionIndex] || null;
+  const answerGrid = document.getElementById("ear-answer-grid");
+  document.getElementById("ear-round-title").textContent = session ? EAR_LIBRARY[session.type].title : "Trening sluchu";
+  document.getElementById("ear-round-summary").textContent = session ? `${session.questionIndex + 1} / ${session.questions.length}` : "0 / 0";
+  document.getElementById("ear-round-prompt").textContent = question?.prompt || "Play";
+  document.getElementById("ear-round-live-score").textContent = session?.answers?.length
+    ? `${Math.round((session.answers.filter((answer) => answer.isCorrect).length / session.answers.length) * 100)}%`
+    : "0%";
+  answerGrid.innerHTML = "";
+  if (!question) {
+    answerGrid.appendChild(emptyNode("Brak pytania."));
+    return;
+  }
+
+  question.options.forEach((option) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ear-answer-button";
+    button.textContent = option;
+    button.addEventListener("click", () => submitEarAnswer(option));
+    if (session.lastFeedback) {
+      const chosen = session.lastFeedback.selected === option;
+      const correct = question.correctAnswer === option;
+      if (correct) button.classList.add("correct");
+      else if (chosen) button.classList.add("wrong");
+      else button.classList.add("dimmed");
+      button.disabled = true;
+    }
+    answerGrid.appendChild(button);
+  });
+}
+
+function renderEarSummary() {
+  const last = lastEarRound(earConfigType) || lastEarRound();
+  document.getElementById("ear-summary-title").textContent = last ? (EAR_LIBRARY[last.type]?.title || "Wynik") : "Wynik rundy";
+  document.getElementById("ear-summary-copy").textContent = last ? `${last.correct} / ${last.totalQuestions}` : "0 / 0";
+  document.getElementById("ear-summary-accuracy").textContent = `${last?.accuracy || 0}%`;
+  document.getElementById("ear-summary-response").textContent = formatResponseMs(last?.averageResponseTimeMs || 0);
+  document.getElementById("ear-summary-streak").textContent = `${last ? earStreak(last.type) : 0}`;
+  document.getElementById("ear-summary-type").textContent = last ? (EAR_LIBRARY[last.type]?.title || last.type) : "-";
+}
+
+function renderEarDetail() {
+  const type = state.earInspectType;
+  const meta = EAR_LIBRARY[type];
+  const rounds = earRoundsByType(type);
+  const last = lastEarRound(type);
+  const weakNode = document.getElementById("ear-detail-weak-list");
+  const historyNode = document.getElementById("ear-detail-history-list");
+  const progress = earProgressPercent(type);
+
+  document.getElementById("ear-detail-nav-title").textContent = meta.title;
+  document.getElementById("ear-detail-title").textContent = meta.title;
+  document.getElementById("ear-detail-summary").textContent = `${rounds.length} rund`;
+  document.getElementById("ear-detail-last-used").textContent = last ? formatShortDateLabel(last.endedAt || last.startedAt) : "Brak";
+  document.getElementById("ear-detail-accuracy").textContent = `${earAccuracyTrend(type)}%`;
+  document.getElementById("ear-detail-best").textContent = `${earBestAccuracy(type)}%`;
+  document.getElementById("ear-detail-response").textContent = formatResponseMs(earAverageResponse(type));
+  document.getElementById("ear-detail-rounds").textContent = `${rounds.length}`;
+  document.getElementById("ear-detail-progress-value").textContent = `${progress}%`;
+  document.getElementById("ear-detail-progress-bar").style.width = `${progress}%`;
+  document.getElementById("ear-detail-history-summary").textContent = `${rounds.length}`;
+
+  renderSimpleLineChart(
+    "ear-detail-accuracy-chart",
+    rounds.slice(-6).map((round) => ({
+      value: round.accuracy,
+      label: `${round.accuracy}%`,
+      bottom: formatShortDateLabel(round.endedAt || round.startedAt)
+    })),
+    { max: 100, topLabel: "100%" }
+  );
+  renderBarChart(
+    "ear-detail-speed-chart",
+    rounds.slice(-6).map((round) => ({
+      value: Math.max(100, round.averageResponseTimeMs || 0),
+      label: `${Math.round((round.averageResponseTimeMs || 0) / 100) / 10}s`,
+      bottom: formatShortDateLabel(round.endedAt || round.startedAt)
+    })),
+    { topLabel: "szybkosc" }
+  );
+
+  const weakSpots = earWeakSpots(type);
+  document.getElementById("ear-detail-weak-summary").textContent = `${weakSpots.length}`;
+  weakNode.innerHTML = "";
+  if (!weakSpots.length) {
+    weakNode.appendChild(emptyNode("Brak mocnych wzorcow bledu."));
+  } else {
+    weakSpots.forEach((spot) => {
+      const row = document.createElement("div");
+      row.className = "list-item";
+      row.innerHTML = `
+        <div class="list-copy">
+          <strong>${escapeHtml(spot.from)} -> ${escapeHtml(spot.to)}</strong>
+          <span>${spot.count} razy</span>
+        </div>
+      `;
+      weakNode.appendChild(row);
+    });
+  }
+
+  historyNode.innerHTML = "";
+  if (!rounds.length) {
+    historyNode.appendChild(emptyNode("Uruchom pierwsza runde."));
+  } else {
+    rounds.slice().reverse().slice(0, 6).forEach((round) => {
+      const row = document.createElement("div");
+      row.className = "list-item";
+      row.innerHTML = `
+        <div class="list-copy">
+          <strong>${round.accuracy}% accuracy</strong>
+          <span>${formatResponseMs(round.averageResponseTimeMs)} - ${round.correct}/${round.totalQuestions}</span>
+        </div>
+      `;
+      historyNode.appendChild(row);
+    });
+  }
+}
+
+function renderMusic() {
+  const viewIds = ["music-home-view", "guitar-main-view", "guitar-detail-view", "guitar-create-view", "ear-home-view", "ear-config-view", "ear-round-view", "ear-summary-view", "ear-detail-view"];
+  const visible = {
+    home: "music-home-view",
+    main: "guitar-main-view",
+    detail: "guitar-detail-view",
+    create: "guitar-create-view",
+    "ear-home": "ear-home-view",
+    "ear-config": "ear-config-view",
+    "ear-round": "ear-round-view",
+    "ear-summary": "ear-summary-view",
+    "ear-detail": "ear-detail-view"
+  }[guitarView] || "music-home-view";
+
+  viewIds.forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) node.hidden = id !== visible;
+  });
+
+  renderMusicHome();
+  renderGuitar();
+  renderEarHome();
+  renderEarConfig();
+  renderEarRound();
+  renderEarSummary();
+  renderEarDetail();
 }
 
 function renderWorkoutTemplates() {
@@ -1421,6 +2372,87 @@ function playMetronomeClick() {
   }
 }
 
+function scheduleTone(context, frequency, startAt, duration, { type = "triangle", gainValue = 0.06 } = {}) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.linearRampToValueAtTime(gainValue, startAt + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + 0.02);
+}
+
+function playEarAudio(spec) {
+  try {
+    ensureMetronomeAudio();
+    const ctx = metronomeAudioContext;
+    const start = ctx.currentTime + 0.02;
+
+    if (spec.engine === "interval") {
+      const root = midiToFrequency(spec.rootMidi);
+      const top = midiToFrequency(spec.rootMidi + spec.semitones);
+      if (spec.mode === "harmonic") {
+        scheduleTone(ctx, root, start, 0.42, { type: "triangle", gainValue: 0.05 });
+        scheduleTone(ctx, top, start, 0.42, { type: "triangle", gainValue: 0.05 });
+      } else {
+        scheduleTone(ctx, root, start, 0.24, { type: "triangle", gainValue: 0.06 });
+        scheduleTone(ctx, top, start + 0.34, 0.24, { type: "triangle", gainValue: 0.06 });
+      }
+      return;
+    }
+
+    if (spec.engine === "chord") {
+      const notes = (spec.intervals || [0, 4, 7]).map((step) => midiToFrequency(spec.rootMidi + step));
+      if (spec.mode === "arp") {
+        notes.forEach((frequency, index) => {
+          scheduleTone(ctx, frequency, start + index * 0.16, 0.28, { type: "triangle", gainValue: 0.055 });
+        });
+      } else {
+        notes.forEach((frequency) => {
+          scheduleTone(ctx, frequency, start, 0.56, { type: "triangle", gainValue: 0.045 });
+        });
+      }
+      return;
+    }
+
+    if (spec.engine === "scale") {
+      const phrase = spec.mode === "ascending"
+        ? (spec.intervals || [0, 2, 4, 5, 7]).slice(0, 5)
+        : [0, spec.intervals[1] ?? 2, spec.intervals[2] ?? 4, spec.intervals[4] ?? 7, spec.intervals[6] ?? 11, 12];
+      phrase.forEach((step, index) => {
+        scheduleTone(ctx, midiToFrequency(spec.rootMidi + step), start + index * 0.16, 0.22, { type: "triangle", gainValue: 0.05 });
+      });
+      return;
+    }
+
+    if (spec.engine === "melody") {
+      (spec.pattern || [0, 2, 4]).forEach((step, index) => {
+        scheduleTone(ctx, midiToFrequency(spec.rootMidi + step), start + index * 0.22, 0.24, { type: "triangle", gainValue: 0.055 });
+      });
+      return;
+    }
+
+    if (spec.engine === "pitch") {
+      scheduleTone(ctx, midiToFrequency(spec.midi), start, 0.52, { type: "triangle", gainValue: 0.06 });
+      return;
+    }
+
+    if (spec.engine === "rhythm") {
+      const beatLength = 0.42;
+      (spec.pattern || []).forEach((point, index) => {
+        const clickAt = start + point * beatLength;
+        scheduleTone(ctx, 1120 + index * 20, clickAt, 0.06, { type: "square", gainValue: 0.045 });
+      });
+    }
+  } catch {
+    // Silent fallback.
+  }
+}
+
 function renderMetronome() {
   const arcTrack = document.getElementById("metronome-arc-track");
   const arcProgress = document.getElementById("metronome-arc-progress");
@@ -1694,6 +2726,136 @@ function clearActiveGuitarExercise() {
   saveState();
   renderAll();
   setFeedback("Odznaczono aktywne cwiczenie.");
+}
+
+function openMusicHome() {
+  setGuitarView("home");
+}
+
+function openGuitarHome() {
+  setGuitarView("main", { scrollTop: true });
+}
+
+function openEarHome() {
+  setGuitarView("ear-home", { scrollTop: true });
+}
+
+function openEarConfigView(type) {
+  if (!EAR_LIBRARY[type]) return;
+  state.earInspectType = type;
+  earConfigType = type;
+  saveState();
+  setGuitarView("ear-config", { scrollTop: true });
+}
+
+function openEarDetailView(type) {
+  if (!EAR_LIBRARY[type]) return;
+  state.earInspectType = type;
+  earConfigType = type;
+  saveState();
+  setGuitarView("ear-detail", { scrollTop: true });
+}
+
+function queueEarQuestionPlayback() {
+  if (!earRoundSession) return;
+  clearTimeout(earRoundSession.autoplayTimer);
+  const question = earRoundSession.questions[earRoundSession.questionIndex];
+  if (!question) return;
+  earRoundSession.questionStartedAt = Date.now();
+  earRoundSession.autoplayTimer = setTimeout(() => {
+    playEarAudio(question.audio);
+  }, 140);
+}
+
+function playCurrentEarQuestion() {
+  const question = earRoundSession?.questions?.[earRoundSession.questionIndex];
+  if (!question) return;
+  playEarAudio(question.audio);
+}
+
+function startEarRoundFromCurrentConfig() {
+  const config = currentEarConfig(earConfigType);
+  if (!config.selectedItems.length) {
+    setFeedback("Wybierz przynajmniej jeden element.");
+    return;
+  }
+  state.earInspectType = earConfigType;
+  saveState();
+  earRoundSession = buildEarRound(config);
+  setGuitarView("ear-round", { scrollTop: true });
+  renderAll();
+  queueEarQuestionPlayback();
+}
+
+function finishEarRound() {
+  if (!earRoundSession) return;
+  const answers = earRoundSession.answers.slice();
+  const correct = answers.filter((answer) => answer.isCorrect).length;
+  const totalQuestions = Math.max(earRoundSession.questions.length, 1);
+  const accuracy = Math.round((correct / totalQuestions) * 100);
+  const averageResponseTimeMs = answers.length
+    ? Math.round(answers.reduce((sum, answer) => sum + Number(answer.responseTimeMs || 0), 0) / answers.length)
+    : 0;
+  state.earInspectType = earRoundSession.type;
+  state.earRounds.push({
+    id: uid("er"),
+    type: earRoundSession.type,
+    startedAt: new Date(earRoundSession.startedAt).toISOString(),
+    endedAt: new Date().toISOString(),
+    accuracy,
+    correct,
+    totalQuestions,
+    averageResponseTimeMs,
+    config: { ...earRoundSession.config, selectedItems: [...earRoundSession.config.selectedItems] },
+    answers
+  });
+  saveState();
+  earRoundSession = null;
+  setGuitarView("ear-summary", { scrollTop: true });
+  renderAll();
+}
+
+function submitEarAnswer(selectedAnswer) {
+  const session = earRoundSession;
+  const question = session?.questions?.[session.questionIndex];
+  if (!session || !question || session.answeringLocked) return;
+
+  session.answeringLocked = true;
+  const isCorrect = question.correctAnswer === selectedAnswer;
+  const responseTimeMs = Math.max(120, Date.now() - (session.questionStartedAt || Date.now()));
+  session.answers.push({
+    questionId: question.id,
+    correctAnswer: question.correctAnswer,
+    selectedAnswer,
+    isCorrect,
+    responseTimeMs
+  });
+  session.lastFeedback = { selected: selectedAnswer, correct: question.correctAnswer };
+  renderEarRound();
+
+  setTimeout(() => {
+    if (!earRoundSession) return;
+    earRoundSession.answeringLocked = false;
+    earRoundSession.lastFeedback = null;
+    earRoundSession.questionIndex += 1;
+    if (earRoundSession.questionIndex >= earRoundSession.questions.length) {
+      finishEarRound();
+      return;
+    }
+    renderEarRound();
+    queueEarQuestionPlayback();
+  }, 620);
+}
+
+function cancelEarRound() {
+  if (!earRoundSession) {
+    setGuitarView("ear-config");
+    return;
+  }
+  if (!confirm("Wyjsc z rundy?")) return;
+  clearTimeout(earRoundSession.autoplayTimer);
+  earRoundSession = null;
+  setGuitarView("ear-config");
 }
 
 function bindPressAction(node, handler) {
@@ -2101,6 +3263,9 @@ function importState(file) {
       if (!confirm("Nadpisac obecne dane importem?")) return;
       state = normalizeState(parsed);
       editingGuitarExerciseId = null;
+      earConfigType = state.earInspectType || "intervals";
+      earRoundSession = null;
+      guitarView = "home";
       resetRestTimer();
       stopMetronome(true);
       metronomeBpm = 80;
@@ -2118,6 +3283,9 @@ function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
   editingGuitarExerciseId = null;
+  earConfigType = state.earInspectType || "intervals";
+  earRoundSession = null;
+  guitarView = "home";
   resetRestTimer();
   stopMetronome(true);
   metronomeBpm = 80;
@@ -2382,11 +3550,21 @@ function bindForms() {
 
 function bindTabs() {
   tabButtons.forEach((button) => {
-    button.addEventListener("click", () => setTab(button.dataset.tabButton));
+    button.addEventListener("click", () => {
+      if (button.dataset.tabButton === "guitar") {
+        guitarView = "home";
+      }
+      setTab(button.dataset.tabButton);
+    });
   });
 
   switchButtons.forEach((button) => {
-    button.addEventListener("click", () => setTab(button.dataset.switchTab));
+    button.addEventListener("click", () => {
+      if (button.dataset.switchTab === "guitar") {
+        guitarView = "home";
+      }
+      setTab(button.dataset.switchTab);
+    });
   });
 }
 
@@ -2488,6 +3666,8 @@ function bindTools() {
   });
   bindPressAction(document.getElementById("metronome-tap-button"), registerTapTempo);
   bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
+  bindPressAction(document.getElementById("open-guitar-home"), () => setGuitarView("main", { scrollTop: true }));
+  bindPressAction(document.getElementById("open-ear-home"), () => setGuitarView("ear-home", { scrollTop: true }));
   bindPressAction(document.getElementById("guitar-open-create"), openGuitarCreateView);
   bindPressAction(document.getElementById("guitar-session-toggle"), () => {
     guitarSessionsExpanded = !guitarSessionsExpanded;
@@ -2509,6 +3689,22 @@ function bindTools() {
   });
   bindPressAction(document.getElementById("guitar-result-save"), savePendingGuitarSession);
   bindPressAction(document.getElementById("guitar-result-cancel"), cancelPendingGuitarSession);
+  bindPressAction(document.getElementById("ear-home-back"), openMusicHome);
+  bindPressAction(document.getElementById("ear-home-last"), () => openEarConfigView(lastEarType()));
+  bindPressAction(document.getElementById("ear-config-back"), openEarHome);
+  bindPressAction(document.getElementById("ear-start-round"), startEarRoundFromCurrentConfig);
+  bindPressAction(document.getElementById("ear-round-back"), cancelEarRound);
+  bindPressAction(document.getElementById("ear-round-play"), playCurrentEarQuestion);
+  bindPressAction(document.getElementById("ear-round-replay"), playCurrentEarQuestion);
+  bindPressAction(document.getElementById("ear-summary-back"), openEarHome);
+  bindPressAction(document.getElementById("ear-summary-repeat"), () => {
+    earConfigType = lastEarType();
+    startEarRoundFromCurrentConfig();
+  });
+  bindPressAction(document.getElementById("ear-summary-stats"), () => openEarDetailView(lastEarType()));
+  bindPressAction(document.getElementById("ear-summary-home"), openEarHome);
+  bindPressAction(document.getElementById("ear-detail-back"), openEarHome);
+  bindPressAction(document.getElementById("ear-detail-start"), () => openEarConfigView(state.earInspectType));
   document.getElementById("guitar-result-bpm-input").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -2530,7 +3726,7 @@ function bindTools() {
 
 function renderAll() {
   renderHome();
-  renderGuitar();
+  renderMusic();
   renderGym();
   renderFinance();
   renderMe();
