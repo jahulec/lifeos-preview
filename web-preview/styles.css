@@ -381,17 +381,23 @@ button:active {
   gap: 12px;
 }
 
+.module-grid-music {
+  gap: 14px;
+}
+
 .module-card {
   text-align: left;
   border: 0;
-  border-radius: 24px;
-  padding: 18px;
-  min-height: 138px;
+  border-radius: 28px;
+  padding: 22px;
+  min-height: 176px;
   display: grid;
   align-content: space-between;
-  gap: 8px;
+  gap: 10px;
   color: white;
   cursor: pointer;
+  box-shadow: 0 24px 54px rgba(10, 10, 10, 0.2);
+  overflow: hidden;
 }
 
 .module-card-kicker {
@@ -404,26 +410,28 @@ button:active {
 
 .module-card strong {
   font-family: var(--font-display);
-  font-size: 1.25rem;
-  line-height: 1;
+  font-size: 1.52rem;
+  line-height: 0.98;
   letter-spacing: -0.04em;
 }
 
 .module-card span:last-child {
-  font-size: 0.84rem;
-  line-height: 1.4;
-  opacity: 0.82;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 0.84;
 }
 
 .module-card-guitar {
   background:
-    radial-gradient(circle at top left, rgba(88, 240, 194, 0.18), transparent 34%),
+    radial-gradient(circle at 18% 14%, rgba(88, 240, 194, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.12), transparent 24%),
     linear-gradient(180deg, #131416 0%, #1b1c20 42%, #22252a 100%);
 }
 
 .module-card-ear {
   background:
-    radial-gradient(circle at top left, rgba(124, 92, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 18% 14%, rgba(124, 92, 255, 0.22), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent 24%),
     linear-gradient(180deg, #121216 0%, #171922 42%, #1e2230 100%);
 }
 
@@ -1231,6 +1239,18 @@ button:active {
 .metronome-option-button.active {
   background: rgba(255, 255, 255, 0.92);
   color: #111111;
+}
+
+.card:not(.metronome-card):not(.analytics-hero-card) .metronome-option-button {
+  background: #f4f4f6;
+  color: #111111;
+  border-color: #e3e5ea;
+}
+
+.card:not(.metronome-card):not(.analytics-hero-card) .metronome-option-button.active {
+  background: #111111;
+  color: white;
+  border-color: #111111;
 }
 
 .button-row,

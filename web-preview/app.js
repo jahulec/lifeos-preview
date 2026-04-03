@@ -1679,20 +1679,11 @@ function renderBarChart(nodeId, points, options = {}) {
 }
 
 function renderMusicHome() {
-  const summary = musicTodaySummary();
-  const lastRound = lastEarRound();
-  const recentNode = document.getElementById("music-recent-list");
-  document.getElementById("music-overview-summary").textContent = `${state.guitarExercises.length + Object.keys(EAR_LIBRARY).length}`;
-  document.getElementById("music-guitar-today").textContent = formatDuration(summary.guitarTodaySec);
-  document.getElementById("music-ear-rounds").textContent = `${summary.earRounds}`;
-  document.getElementById("music-ear-accuracy").textContent = `${summary.earAccuracy}%`;
-  document.getElementById("music-top-bpm").textContent = `${guitarOverview().topBpm}`;
   document.getElementById("music-guitar-card-copy").textContent = `${state.guitarExercises.length} cwiczen, top ${guitarOverview().topBpm} BPM`;
   document.getElementById("music-ear-card-copy").textContent = state.earRounds.length
     ? `${state.earRounds.length} rund, ostatnio ${EAR_LIBRARY[lastEarType()].title}`
     : "0 rund, gotowe do startu";
-  document.getElementById("music-recent-summary").textContent = `${Math.min(state.guitarSessions.length + state.earRounds.length, 6)}`;
-  recentNode.innerHTML = "";
+  return;
 
   const combined = [
     ...state.guitarSessions.slice(-3).map((session) => ({
