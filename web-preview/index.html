@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LifeOS</title>
-  <meta name="theme-color" content="#3f8a75">
+  <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="LifeOS">
@@ -16,297 +16,271 @@
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
-  <main class="layout">
-    <aside class="project-panel glass">
-      <p class="eyebrow">LifeOS</p>
-      <h1>Jeden czytelny panel do dnia, treningu i planu.</h1>
-
-      <div class="meta-grid">
-        <div class="meta-card">
-          <span>Format</span>
-          <strong>PWA</strong>
-        </div>
-        <div class="meta-card">
-          <span>Dane</span>
-          <strong>localStorage</strong>
-        </div>
-        <div class="meta-card">
-          <span>Zakres</span>
-          <strong>Fitness + Tasks + Gitara</strong>
-        </div>
-        <div class="meta-card">
-          <span>Cel</span>
-          <strong>Daily utility</strong>
-        </div>
-      </div>
-
-      <div class="notes glass-inner">
-        <p class="notes-title">Co tu juz dziala</p>
-        <ul>
-          <li>Today z prawdziwym stanem dnia</li>
-          <li>Dodawanie, odhaczanie, edycja i usuwanie</li>
-          <li>Waga, treningi, taski, finanse i gitara</li>
-          <li>Instalacja na iPhonie z Safari</li>
-        </ul>
-      </div>
-    </aside>
-
+  <main class="app-shell">
     <section class="phone-shell">
       <div class="device-frame">
         <div class="device-notch"></div>
+
         <div class="app-screen">
-          <header class="topbar">
-            <div>
-              <p class="eyebrow">LifeOS</p>
-              <h2 id="screen-title">Today</h2>
-            </div>
-            <div class="topbar-meta">
-              <div class="date-pill" id="today-date"></div>
-              <div class="compact-pill" id="top-progress-chip">0%</div>
-            </div>
-          </header>
-
-          <section class="tab-page active" data-tab="today">
-            <div class="hero glass">
-              <div class="hero-top">
-                <div class="hero-copy">
-                  <p class="eyebrow">Dzien</p>
-                  <h3 id="hero-title">Spokojny momentum</h3>
-                  <p id="hero-subtitle">Najpierw kilka kluczowych rzeczy.</p>
+          <section class="tab-page active" data-tab="home">
+            <div class="section-feed">
+              <article class="card hero-card">
+                <div class="hero-kicker">
+                  <span class="eyebrow">Panel</span>
+                  <span id="home-date" class="mini-pill"></span>
                 </div>
-                <div class="hero-value">
-                  <span id="main-progress-value">0%</span>
+                <div class="hero-main">
+                  <div>
+                    <h1 class="hero-title">Dzien pod kontrola.</h1>
+                    <p id="home-progress-copy" class="hero-copy"></p>
+                  </div>
+                  <div class="hero-progress-number" id="home-progress-value">0%</div>
                 </div>
-              </div>
-
-              <div class="progress-track">
-                <div class="progress-fill" id="main-progress-bar"></div>
-              </div>
-
-              <div class="hero-meta">
-                <span id="hero-meta-left">0 z 0</span>
-                <span id="hero-meta-right">Reset daily</span>
-              </div>
-
-              <div class="metric-row metric-row-four">
-                <div class="metric">
-                  <span>Waga</span>
-                  <strong id="latest-weight">-</strong>
+                <div class="progress-track hero-progress-track">
+                  <div class="progress-fill" id="home-progress-bar"></div>
                 </div>
-                <div class="metric">
-                  <span>Taski</span>
-                  <strong id="open-task-count">0</strong>
-                </div>
-                <div class="metric">
-                  <span>Habity</span>
-                  <strong id="habit-done-count">0</strong>
-                </div>
-                <div class="metric">
-                  <span>Treningi</span>
-                  <strong id="week-workout-count">0</strong>
-                </div>
-              </div>
-            </div>
-
-            <div class="quick-actions quick-actions-three">
-              <button class="action-button" data-switch-tab="capture" data-focus="weight-input">Waga</button>
-              <button class="action-button secondary" data-switch-tab="capture" data-focus="task-input">Task</button>
-              <button class="action-button subtle" data-switch-tab="capture" data-focus="workout-title-input">Trening</button>
-            </div>
-
-            <div class="card-grid">
-              <article class="glass card" id="onboarding-card">
-                <div class="card-head">
-                  <h3>Start</h3>
-                  <span id="onboarding-summary">0/3</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" id="onboarding-progress-bar"></div>
-                </div>
-                <div id="onboarding-list" class="stack-list compact-stack"></div>
-                <div class="tool-actions">
-                  <button id="onboarding-open-capture" class="secondary-tool-button">Dodaj dane</button>
-                  <button id="onboarding-dismiss-button" class="danger-tool-button">Ukryj</button>
+                <div class="stat-grid stat-grid-four">
+                  <div class="stat-card">
+                    <span>Waga</span>
+                    <strong id="home-weight">-</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Taski</span>
+                    <strong id="home-tasks-open">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Gitara</span>
+                    <strong id="home-guitar-output">0 min</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Silownia</span>
+                    <strong id="home-gym-output">0</strong>
+                  </div>
                 </div>
               </article>
 
-              <article class="glass card">
+              <div class="story-row">
+                <button class="story-chip" data-switch-tab="guitar">Gitara</button>
+                <button class="story-chip" data-switch-tab="gym">Silownia</button>
+                <button class="story-chip" data-switch-tab="finance">Finanse</button>
+                <button class="story-chip" data-switch-tab="me">Ja</button>
+              </div>
+
+              <article class="card">
                 <div class="card-head">
-                  <h3>Priorytety</h3>
-                  <span id="priority-summary">0 aktywne</span>
+                  <h2>Priorytety</h2>
+                  <span id="priority-count">0</span>
                 </div>
                 <div id="priority-list" class="stack-list"></div>
               </article>
 
-              <article class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Habity</h3>
-                  <span id="habit-summary">0/0</span>
+                  <h2>Na dzisiaj</h2>
+                  <span>Snapshot</span>
                 </div>
-                <div id="habit-list" class="stack-list"></div>
-              </article>
-
-              <article class="glass card">
-                <div class="card-head">
-                  <h3>Zadania</h3>
-                  <span id="task-summary">0 open</span>
-                </div>
-                <div id="task-list" class="stack-list"></div>
-              </article>
-
-              <article class="glass card">
-                <div class="card-head">
-                  <h3>Trening</h3>
-                  <span id="workout-summary">0 min</span>
-                </div>
-                <div id="workout-list" class="stack-list"></div>
-              </article>
-
-              <article class="glass card">
-                <div class="card-head">
-                  <h3>Szablony</h3>
-                  <span id="template-summary">0</span>
-                </div>
-                <div id="template-list" class="template-list"></div>
-              </article>
-
-              <article class="glass card">
-                <div class="card-head">
-                  <h3>Jedzenie</h3>
-                  <span id="meal-summary">0 kcal</span>
-                </div>
-                <div class="metric-row">
-                  <div class="metric">
-                    <span>Kcal</span>
-                    <strong id="today-kcal">0</strong>
+                <div class="stat-grid">
+                  <div class="stat-card">
+                    <span>Kalorie</span>
+                    <strong id="home-kcal">0</strong>
                   </div>
-                  <div class="metric">
+                  <div class="stat-card">
                     <span>Bialko</span>
-                    <strong id="today-protein">0 g</strong>
+                    <strong id="home-protein">0 g</strong>
                   </div>
-                  <div class="metric">
-                    <span>Makra</span>
-                    <strong id="today-macros">0/0</strong>
+                  <div class="stat-card">
+                    <span>Bilans</span>
+                    <strong id="home-balance">0 zl</strong>
                   </div>
                 </div>
-                <div id="meal-list" class="stack-list"></div>
               </article>
 
-              <article class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Finanse</h3>
-                  <span id="finance-balance">0 zl</span>
+                  <h2>Zadania</h2>
+                  <span id="home-task-summary">0 open</span>
                 </div>
-                <div class="metric-row">
-                  <div class="metric">
-                    <span>Przychod</span>
-                    <strong id="today-income">0 zl</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Wydatek</span>
-                    <strong id="today-expense">0 zl</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Planowane</span>
-                    <strong id="today-planned">0 zl</strong>
-                  </div>
-                </div>
-                <div id="finance-list" class="stack-list"></div>
+                <div id="home-task-list" class="stack-list"></div>
               </article>
 
-              <article class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Gitara</h3>
-                  <span id="guitar-summary">0 sesji</span>
+                  <h2>Rytm</h2>
+                  <span id="home-habit-summary">0/0</span>
                 </div>
-                <div class="metric-row">
-                  <div class="metric">
-                    <span>Sesje</span>
-                    <strong id="guitar-session-count">0</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Top BPM</span>
-                    <strong id="guitar-top-bpm">0</strong>
-                  </div>
-                  <div class="metric">
-                    <span>Cwiczenia</span>
-                    <strong id="guitar-exercise-count">0</strong>
-                  </div>
-                </div>
-                <div id="guitar-list" class="stack-list"></div>
+                <div id="home-habit-list" class="stack-list"></div>
               </article>
 
-              <article class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Ostatnie serie</h3>
-                  <span id="set-summary">0 wpisow</span>
+                  <h2>Strefy</h2>
+                  <span>Live</span>
                 </div>
-                <div id="set-list" class="stack-list"></div>
+                <div class="zone-stack">
+                  <div class="zone-row">
+                    <div>
+                      <strong>Gitara</strong>
+                      <p id="home-guitar-copy" class="muted-copy"></p>
+                    </div>
+                    <button class="tool-button" type="button" data-switch-tab="guitar">Open</button>
+                  </div>
+                  <div class="zone-row">
+                    <div>
+                      <strong>Silownia</strong>
+                      <p id="home-gym-copy" class="muted-copy"></p>
+                    </div>
+                    <button class="tool-button" type="button" data-switch-tab="gym">Open</button>
+                  </div>
+                  <div class="zone-row">
+                    <div>
+                      <strong>Finanse</strong>
+                      <p id="home-finance-copy" class="muted-copy"></p>
+                    </div>
+                    <button class="tool-button" type="button" data-switch-tab="finance">Open</button>
+                  </div>
+                </div>
               </article>
 
-              <article class="glass card note-card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Notatka</h3>
+                  <h2>Notatka</h2>
                   <span>Today</span>
                 </div>
-                <p id="today-note" class="review-copy"></p>
+                <p id="home-note" class="muted-copy"></p>
               </article>
             </div>
           </section>
 
-          <section class="tab-page" data-tab="zones">
-            <div class="stack-list" id="zones-list"></div>
+          <section class="tab-page" data-tab="guitar">
+            <div class="section-feed">
+              <article class="card metronome-card">
+                <div class="hero-kicker">
+                  <span class="eyebrow">Gitara</span>
+                  <span id="metronome-status" class="mini-pill">Ready</span>
+                </div>
+                <div class="active-exercise-card">
+                  <div>
+                    <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
+                    <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
+                  </div>
+                  <div class="active-stats">
+                    <span id="guitar-active-top">0 BPM</span>
+                    <strong id="guitar-active-time">0 min</strong>
+                  </div>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="guitar-active-progress-bar"></div>
+                </div>
+                <div class="hero-meta-row">
+                  <span>Progres</span>
+                  <strong id="guitar-active-progress-value">0%</strong>
+                </div>
+
+                <div class="metronome-dial-wrap">
+                  <button type="button" class="dial-step" id="metronome-minus-button">-</button>
+                  <div class="metronome-dial">
+                    <span class="metronome-label">Tempo</span>
+                    <strong id="metronome-bpm-display">80</strong>
+                    <span class="metronome-unit">BPM</span>
+                  </div>
+                  <button type="button" class="dial-step" id="metronome-plus-button">+</button>
+                </div>
+
+                <div class="preset-row">
+                  <button type="button" class="preset-button" data-metronome-preset="60">60</button>
+                  <button type="button" class="preset-button" data-metronome-preset="80">80</button>
+                  <button type="button" class="preset-button" data-metronome-preset="100">100</button>
+                  <button type="button" class="preset-button" data-metronome-preset="120">120</button>
+                </div>
+
+                <div class="button-row">
+                  <button type="button" id="metronome-start-button" class="primary-button">Start</button>
+                  <button type="button" id="metronome-stop-button" class="secondary-button">Stop</button>
+                </div>
+                <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Nowe cwiczenie</h2>
+                  <span>Cel BPM</span>
+                </div>
+                <form id="guitar-exercise-form" class="form-block">
+                  <input id="guitar-exercise-name-input" type="text" placeholder="Np. alternate picking">
+                  <input id="guitar-exercise-target-input" type="number" step="1" placeholder="Cel BPM">
+                  <button type="submit" class="primary-button full-button">Dodaj cwiczenie</button>
+                </form>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Cwiczenia</h2>
+                  <span id="guitar-exercise-count">0</span>
+                </div>
+                <div id="guitar-exercise-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Ostatnie sesje</h2>
+                  <span id="guitar-session-summary">0</span>
+                </div>
+                <div id="guitar-session-list" class="stack-list"></div>
+              </article>
+            </div>
           </section>
 
-          <section class="tab-page" data-tab="capture">
-            <div class="capture-grid">
-              <div class="glass card">
+          <section class="tab-page" data-tab="gym">
+            <div class="section-feed">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Waga</h3>
+                  <h2>Silownia</h2>
+                  <span id="gym-summary">0 min</span>
+                </div>
+                <div class="stat-grid stat-grid-four">
+                  <div class="stat-card">
+                    <span>Waga</span>
+                    <strong id="gym-weight-metric">-</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Treningi</span>
+                    <strong id="gym-workout-week-metric">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Serie</span>
+                    <strong id="gym-set-metric">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Kcal</span>
+                    <strong id="gym-kcal-metric">0</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Waga</h2>
                   <span>kg</span>
                 </div>
                 <form id="weight-form" class="form-block">
                   <div class="inline-form">
                     <input id="weight-input" type="number" step="0.1" placeholder="80.4">
-                    <button type="submit">Zapisz</button>
+                    <button type="submit" class="primary-button">Zapisz</button>
                   </div>
                 </form>
-              </div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Task</h3>
-                  <span>Inbox</span>
+                  <h2>Szablony</h2>
+                  <span id="template-summary">0</span>
                 </div>
-                <form id="task-form" class="form-block">
-                  <input id="task-input" type="text" placeholder="Nowe zadanie">
-                  <div class="inline-form inline-form-two">
-                    <input id="task-detail-input" type="text" placeholder="Krotki opis">
-                    <select id="task-priority-input">
-                      <option value="high">High</option>
-                      <option value="medium" selected>Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <button type="submit" class="full-button">Dodaj task</button>
-                </form>
-              </div>
+                <div id="gym-template-list" class="template-list"></div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Habit</h3>
-                  <span>Daily</span>
-                </div>
-                <form id="habit-form" class="form-block">
-                  <input id="habit-input" type="text" placeholder="Nowy habit">
-                  <input id="habit-detail-input" type="text" placeholder="Minimum version lub opis">
-                  <button type="submit" class="full-button">Dodaj habit</button>
-                </form>
-              </div>
-
-              <div class="glass card">
-                <div class="card-head">
-                  <h3>Trening</h3>
+                  <h2>Trening</h2>
                   <span>Log</span>
                 </div>
                 <form id="workout-form" class="form-block">
@@ -315,14 +289,14 @@
                     <input id="workout-duration-input" type="number" step="1" placeholder="Min">
                     <input id="workout-focus-input" type="text" placeholder="Focus">
                   </div>
-                  <button type="submit" class="full-button">Dodaj trening</button>
+                  <button type="submit" class="primary-button full-button">Dodaj trening</button>
                 </form>
-              </div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Seria</h3>
-                  <span>Load</span>
+                  <h2>Serie</h2>
+                  <span id="set-summary">0</span>
                 </div>
                 <form id="set-form" class="form-block">
                   <input id="set-exercise-input" type="text" placeholder="Cwiczenie">
@@ -331,17 +305,37 @@
                     <input id="set-weight-input" type="number" step="0.5" placeholder="Kg">
                     <input id="set-rest-input" type="number" step="5" placeholder="Rest s">
                   </div>
-                  <button type="submit" class="full-button">Dodaj serie</button>
+                  <button type="submit" class="primary-button full-button">Dodaj serie</button>
                 </form>
-              </div>
+                <div id="gym-set-list" class="stack-list"></div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Posilek</h3>
-                  <span>Macros</span>
+                  <h2>Timer przerw</h2>
+                  <span id="rest-timer-status">Ready</span>
+                </div>
+                <div class="rest-timer">
+                  <div class="timer-value" id="rest-timer-value">90</div>
+                  <div class="preset-row">
+                    <button type="button" class="preset-button" data-rest-preset="60">60s</button>
+                    <button type="button" class="preset-button" data-rest-preset="90">90s</button>
+                    <button type="button" class="preset-button" data-rest-preset="120">120s</button>
+                  </div>
+                  <div class="button-row">
+                    <button type="button" id="rest-start-button" class="primary-button">Start</button>
+                    <button type="button" id="rest-reset-button" class="secondary-button">Reset</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Jedzenie</h2>
+                  <span id="meal-summary">0 kcal</span>
                 </div>
                 <form id="meal-form" class="form-block">
-                  <input id="meal-title-input" type="text" placeholder="Np. bowl z kurczakiem">
+                  <input id="meal-title-input" type="text" placeholder="Posilek">
                   <div class="inline-form inline-form-two">
                     <input id="meal-kcal-input" type="number" step="1" placeholder="Kcal">
                     <input id="meal-protein-input" type="number" step="1" placeholder="Bialko g">
@@ -350,21 +344,51 @@
                     <input id="meal-carbs-input" type="number" step="1" placeholder="Wegle g">
                     <input id="meal-fats-input" type="number" step="1" placeholder="Tluscze g">
                   </div>
-                  <button type="submit" class="full-button">Dodaj posilek</button>
+                  <button type="submit" class="primary-button full-button">Dodaj posilek</button>
                 </form>
-              </div>
+                <div id="gym-meal-list" class="stack-list"></div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Szablony jedzenia</h3>
-                  <span id="meal-template-summary">0</span>
+                  <h2>Ostatnie treningi</h2>
+                  <span id="gym-workout-count">0</span>
                 </div>
-                <div id="meal-template-list" class="template-list"></div>
-              </div>
+                <div id="gym-workout-list" class="stack-list"></div>
+              </article>
+            </div>
+          </section>
 
-              <div class="glass card">
+          <section class="tab-page" data-tab="finance">
+            <div class="section-feed">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Finanse</h3>
+                  <h2>Finanse</h2>
+                  <span id="finance-summary-label">This month</span>
+                </div>
+                <div class="stat-grid">
+                  <div class="stat-card">
+                    <span>Bilans</span>
+                    <strong id="finance-balance">0 zl</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Przychod</span>
+                    <strong id="finance-income">0 zl</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Wydatek</span>
+                    <strong id="finance-expense">0 zl</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Planowane</span>
+                    <strong id="finance-planned">0 zl</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Nowy wpis</h2>
                   <span>Cashflow</span>
                 </div>
                 <form id="finance-form" class="form-block">
@@ -372,33 +396,34 @@
                     <option value="expense" selected>Wydatek</option>
                     <option value="income">Przychod</option>
                   </select>
-                  <input id="finance-title-input" type="text" placeholder="Np. silownia / projekt / zakupy">
+                  <input id="finance-title-input" type="text" placeholder="Tytul">
                   <div class="inline-form inline-form-two">
                     <input id="finance-amount-input" type="number" step="0.01" placeholder="Kwota zl">
                     <input id="finance-category-input" type="text" placeholder="Kategoria">
                   </div>
-                  <button type="submit" class="full-button">Dodaj wpis</button>
+                  <button type="submit" class="primary-button full-button">Dodaj wpis</button>
                 </form>
-              </div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Planowany wydatek</h3>
+                  <h2>Planowany wydatek</h2>
                   <span>Later</span>
                 </div>
                 <form id="planned-form" class="form-block">
-                  <input id="planned-title-input" type="text" placeholder="Np. sluchawki / kurs">
+                  <input id="planned-title-input" type="text" placeholder="Co planujesz">
                   <div class="inline-form inline-form-two">
                     <input id="planned-amount-input" type="number" step="0.01" placeholder="Kwota zl">
-                    <input id="planned-date-input" type="text" placeholder="Np. ten tydzien">
+                    <input id="planned-date-input" type="text" placeholder="Kiedy">
                   </div>
-                  <button type="submit" class="full-button">Dodaj plan</button>
+                  <button type="submit" class="primary-button full-button">Dodaj plan</button>
                 </form>
-              </div>
+                <div id="planned-list" class="stack-list"></div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Ocena zakupu</h3>
+                  <h2>Ocena zakupu</h2>
                   <span>Quick</span>
                 </div>
                 <form id="evaluator-form" class="form-block">
@@ -410,280 +435,162 @@
                     <input id="eval-value-input" type="number" step="1" min="1" max="10" placeholder="Wartosc 1-10">
                     <input id="eval-goal-input" type="number" step="1" min="1" max="10" placeholder="Wplyw 1-10">
                   </div>
-                  <button type="submit" class="full-button">Policz</button>
+                  <button type="submit" class="primary-button full-button">Policz</button>
                 </form>
-                <div class="metric-row evaluator-output">
-                  <div class="metric">
+                <div class="stat-grid">
+                  <div class="stat-card">
                     <span>Score</span>
                     <strong id="evaluator-score">-</strong>
                   </div>
-                  <div class="metric">
+                  <div class="stat-card">
                     <span>Komentarz</span>
                     <strong id="evaluator-label">-</strong>
                   </div>
-                  <div class="metric">
+                  <div class="stat-card">
                     <span>Koszt/uzycie</span>
                     <strong id="evaluator-cpu">-</strong>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              <div class="glass card">
+              <article class="card">
                 <div class="card-head">
-                  <h3>Timer przerw</h3>
-                  <span id="rest-timer-status">Ready</span>
+                  <h2>Historia</h2>
+                  <span id="finance-entry-count">0</span>
                 </div>
-                <div class="rest-timer">
-                  <div class="timer-value" id="rest-timer-value">90</div>
-                  <div class="timer-presets">
-                    <button type="button" class="timer-preset" data-rest-preset="60">60s</button>
-                    <button type="button" class="timer-preset" data-rest-preset="90">90s</button>
-                    <button type="button" class="timer-preset" data-rest-preset="120">120s</button>
-                  </div>
-                  <div class="timer-actions">
-                    <button type="button" id="rest-start-button" class="action-button">Start</button>
-                    <button type="button" id="rest-reset-button" class="action-button subtle">Reset</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="glass card">
-                <div class="card-head">
-                  <h3>Gitara</h3>
-                  <span>BPM</span>
-                </div>
-                <form id="guitar-form" class="form-block">
-                  <input id="guitar-title-input" type="text" placeholder="Np. alternate picking">
-                  <div class="inline-form inline-form-two">
-                    <input id="guitar-bpm-input" type="number" step="1" placeholder="BPM">
-                    <input id="guitar-note-input" type="text" placeholder="Krótka notatka">
-                  </div>
-                  <button type="submit" class="full-button">Dodaj cwiczenie</button>
-                </form>
-              </div>
-
-              <div class="glass card">
-                <div class="card-head">
-                  <h3>Metronom</h3>
-                  <span id="metronome-status">Ready</span>
-                </div>
-                <div class="rest-timer">
-                  <div class="timer-value" id="metronome-bpm-value">80 BPM</div>
-                  <div class="timer-presets">
-                    <button type="button" class="timer-preset" data-metronome-preset="60">60</button>
-                    <button type="button" class="timer-preset" data-metronome-preset="80">80</button>
-                    <button type="button" class="timer-preset" data-metronome-preset="100">100</button>
-                  </div>
-                  <div class="timer-actions">
-                    <button type="button" id="metronome-start-button" class="action-button">Start</button>
-                    <button type="button" id="metronome-stop-button" class="action-button subtle">Stop</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="glass card capture-wide">
-                <div class="card-head">
-                  <h3>Notatka dnia</h3>
-                  <span>Quick</span>
-                </div>
-                <form id="note-form" class="form-block">
-                  <textarea id="note-input" rows="4" placeholder="Jedno zdanie o dniu"></textarea>
-                  <button type="submit" class="full-button">Zapisz</button>
-                </form>
-              </div>
-
-              <div class="glass card capture-wide">
-                <div class="card-head">
-                  <h3>Ostatnia akcja</h3>
-                  <span>Live</span>
-                </div>
-                <p id="capture-feedback" class="feedback">Gotowe do pracy.</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="tab-page" data-tab="insights">
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Trend wagi</h3>
-                <span>7 wpisow</span>
-              </div>
-              <div id="weight-chart" class="chart chart-line"></div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Output tygodnia</h3>
-                <span>Minuty</span>
-              </div>
-              <div id="training-chart" class="chart chart-bars"></div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Snapshot</h3>
-                <span>This week</span>
-              </div>
-              <div class="metric-row">
-                <div class="metric">
-                  <span>Srednia waga</span>
-                  <strong id="average-weight">-</strong>
-                </div>
-                <div class="metric">
-                  <span>Lacznie min</span>
-                  <strong id="total-training-minutes">0</strong>
-                </div>
-                <div class="metric">
-                  <span>Skutecznosc</span>
-                  <strong id="insight-progress">0%</strong>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Nutrition</h3>
-                <span>Today</span>
-              </div>
-              <div class="metric-row">
-                <div class="metric">
-                  <span>Kcal</span>
-                  <strong id="insight-kcal">0</strong>
-                </div>
-                <div class="metric">
-                  <span>Bialko</span>
-                  <strong id="insight-protein">0 g</strong>
-                </div>
-                <div class="metric">
-                  <span>W/T</span>
-                  <strong id="insight-carb-fat">0/0</strong>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Finance</h3>
-                <span>This month</span>
-              </div>
-              <div class="metric-row">
-                <div class="metric">
-                  <span>Balance</span>
-                  <strong id="insight-balance">0 zl</strong>
-                </div>
-                <div class="metric">
-                  <span>Savings rate</span>
-                  <strong id="insight-savings-rate">0%</strong>
-                </div>
-                <div class="metric">
-                  <span>Planned</span>
-                  <strong id="insight-planned">0 zl</strong>
-                </div>
-              </div>
-              <div id="finance-chart" class="chart chart-bars"></div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Top cwiczenia</h3>
-                <span>Sets</span>
-              </div>
-              <div id="exercise-summary-list" class="stack-list"></div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Gitara</h3>
-                <span>This week</span>
-              </div>
-              <div class="metric-row">
-                <div class="metric">
-                  <span>Top</span>
-                  <strong id="insight-guitar-top">0 BPM</strong>
-                </div>
-                <div class="metric">
-                  <span>Sesje</span>
-                  <strong id="insight-guitar-sessions">0</strong>
-                </div>
-                <div class="metric">
-                  <span>Srednia</span>
-                  <strong id="insight-guitar-average">0 BPM</strong>
-                </div>
-              </div>
-              <div id="guitar-chart" class="chart chart-bars"></div>
-            </div>
-
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Review</h3>
-                <span>Short</span>
-              </div>
-              <p id="review-copy" class="review-copy"></p>
+                <div id="finance-list" class="stack-list"></div>
+              </article>
             </div>
           </section>
 
           <section class="tab-page" data-tab="me">
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Profil</h3>
-                <span>Single user</span>
-              </div>
-              <div class="metric-row">
-                <div class="metric">
-                  <span>Tryb</span>
-                  <strong>Local-first</strong>
+            <div class="section-feed">
+              <article class="card">
+                <div class="card-head">
+                  <h2>Ja</h2>
+                  <span>System</span>
                 </div>
-                <div class="metric">
-                  <span>Device</span>
-                  <strong>iPhone</strong>
+                <div class="stat-grid">
+                  <div class="stat-card">
+                    <span>Habity</span>
+                    <strong id="me-habit-count">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Taski</span>
+                    <strong id="me-task-count">0</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Backup</span>
+                    <strong>JSON</strong>
+                  </div>
                 </div>
-                <div class="metric">
-                  <span>Backup</span>
-                  <strong>JSON</strong>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Nowy task</h2>
+                  <span>Inbox</span>
                 </div>
-              </div>
-            </div>
+                <form id="task-form" class="form-block">
+                  <input id="task-input" type="text" placeholder="Nowe zadanie">
+                  <div class="inline-form inline-form-two">
+                    <input id="task-detail-input" type="text" placeholder="Opis">
+                    <select id="task-priority-input">
+                      <option value="high">Wysoki</option>
+                      <option value="medium" selected>Sredni</option>
+                      <option value="low">Niski</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="primary-button full-button">Dodaj task</button>
+                </form>
+              </article>
 
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Suplementy</h3>
-                <span>Daily</span>
-              </div>
-              <div class="stack-list" id="supplement-list"></div>
-            </div>
+              <article class="card">
+                <div class="card-head">
+                  <h2>Nowy habit</h2>
+                  <span>Daily</span>
+                </div>
+                <form id="habit-form" class="form-block">
+                  <input id="habit-input" type="text" placeholder="Nowy habit">
+                  <input id="habit-detail-input" type="text" placeholder="Minimum lub opis">
+                  <button type="submit" class="primary-button full-button">Dodaj habit</button>
+                </form>
+              </article>
 
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Start</h3>
-                <span id="me-onboarding-status">In progress</span>
-              </div>
-              <p id="me-onboarding-copy" class="review-copy"></p>
-              <div class="tool-actions">
-                <button id="show-onboarding-button" class="secondary-tool-button">Pokaz start</button>
-                <button id="complete-onboarding-button" class="action-button">Zakoncz start</button>
-              </div>
-            </div>
+              <article class="card">
+                <div class="card-head">
+                  <h2>Taski</h2>
+                  <span id="task-summary">0 open</span>
+                </div>
+                <div id="task-list" class="stack-list"></div>
+              </article>
 
-            <div class="glass card">
-              <div class="card-head">
-                <h3>Narzedzia</h3>
-                <span>Data</span>
-              </div>
-              <div class="tool-actions">
-                <button id="import-button" class="secondary-tool-button">Import JSON</button>
-                <button id="export-button" class="secondary-tool-button">Export JSON</button>
-                <button id="reset-button" class="danger-tool-button">Reset demo</button>
-              </div>
-              <input id="import-input" type="file" accept="application/json" hidden>
+              <article class="card">
+                <div class="card-head">
+                  <h2>Habity</h2>
+                  <span id="habit-summary">0/0</span>
+                </div>
+                <div id="habit-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Notatka dnia</h2>
+                  <span>Quick</span>
+                </div>
+                <form id="note-form" class="form-block">
+                  <textarea id="note-input" rows="4" placeholder="Jedno zdanie o dniu"></textarea>
+                  <button type="submit" class="primary-button full-button">Zapisz</button>
+                </form>
+                <p id="today-note" class="muted-copy"></p>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Suplementy</h2>
+                  <span>Daily</span>
+                </div>
+                <div id="supplement-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Narzedzia</h2>
+                  <span>Data</span>
+                </div>
+                <div class="button-grid">
+                  <button id="import-button" class="secondary-button" type="button">Import JSON</button>
+                  <button id="export-button" class="secondary-button" type="button">Export JSON</button>
+                  <button id="reset-button" class="danger-button" type="button">Reset demo</button>
+                </div>
+                <input id="import-input" type="file" accept="application/json" hidden>
+              </article>
             </div>
           </section>
 
+          <div class="floating-feedback" id="feedback-pill">Gotowe do pracy.</div>
+
           <nav class="tabbar">
-            <button class="tabbar-item active" data-tab-button="today">Today</button>
-            <button class="tabbar-item" data-tab-button="zones">Strefy</button>
-            <button class="tabbar-item accent" data-tab-button="capture">Capture</button>
-            <button class="tabbar-item" data-tab-button="insights">Insights</button>
-            <button class="tabbar-item" data-tab-button="me">Ja</button>
+            <button class="tabbar-item active" data-tab-button="home">
+              <span class="tabbar-icon">01</span>
+              <span>Panel</span>
+            </button>
+            <button class="tabbar-item" data-tab-button="guitar">
+              <span class="tabbar-icon">02</span>
+              <span>Gitara</span>
+            </button>
+            <button class="tabbar-item" data-tab-button="gym">
+              <span class="tabbar-icon">03</span>
+              <span>Silownia</span>
+            </button>
+            <button class="tabbar-item" data-tab-button="finance">
+              <span class="tabbar-icon">04</span>
+              <span>Finanse</span>
+            </button>
+            <button class="tabbar-item" data-tab-button="me">
+              <span class="tabbar-icon">05</span>
+              <span>Ja</span>
+            </button>
           </nav>
         </div>
       </div>

@@ -1,4 +1,5 @@
-const STORAGE_KEY = "lifeos-preview-state-v3";
+const STORAGE_KEY = "lifeos-preview-state-v4";
+const LEGACY_KEYS = ["lifeos-preview-state-v3"];
 
 function isoDaysAgo(days, hour = 9) {
   const date = new Date();
@@ -19,20 +20,20 @@ function weekKey(date = new Date()) {
   return `${target.getFullYear()}-${target.getMonth() + 1}-${target.getDate()}`;
 }
 
+function monthKey(date = new Date()) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}`;
+}
+
 const defaultState = {
-  activeTab: "today",
+  activeTab: "home",
   meta: {
     lastDailyReset: todayKey(),
     lastWeeklyReset: weekKey()
   },
-  onboarding: {
-    dismissed: false,
-    completed: false
-  },
-  note: "Zamknij najpierw rzeczy o wysokim zwrocie: trening, 2-3 taski i prosty rytm dnia.",
+  note: "Panel ma byc szybki. Zostaw tylko rzeczy, ktore faktycznie pomagaja w dniu.",
   habits: [
     { id: "habit-1", title: "Morning mobility", detail: "2 min minimum", done: true },
-    { id: "habit-2", title: "Deep work", detail: "90 min bez rozproszen", done: true },
+    { id: "habit-2", title: "Deep work", detail: "90 min bez rozproszen", done: false },
     { id: "habit-3", title: "Evening walk", detail: "10 min minimum", done: false }
   ],
   tasks: [
@@ -41,25 +42,23 @@ const defaultState = {
     { id: "task-3", title: "Plan na jutro", detail: "top 3 przed 21:30", done: false, priority: "medium" }
   ],
   workouts: [
-    { id: "workout-1", title: "Upper A", duration: 68, focus: "strength", dateLabel: "Mon", createdAt: isoDaysAgo(5, 18) },
-    { id: "workout-2", title: "Lower A", duration: 74, focus: "legs", dateLabel: "Wed", createdAt: isoDaysAgo(3, 18) },
-    { id: "workout-3", title: "Pull", duration: 42, focus: "back", dateLabel: "Thu", createdAt: isoDaysAgo(2, 18) },
-    { id: "workout-4", title: "Push", duration: 55, focus: "chest", dateLabel: "Sat", createdAt: isoDaysAgo(0, 12) }
+    { id: "workout-1", title: "Upper A", duration: 68, focus: "strength", createdAt: isoDaysAgo(3, 18) },
+    { id: "workout-2", title: "Lower A", duration: 74, focus: "legs", createdAt: isoDaysAgo(1, 18) },
+    { id: "workout-3", title: "Push", duration: 55, focus: "chest", createdAt: isoDaysAgo(0, 12) }
   ],
   workoutTemplates: [
     { id: "tpl-1", title: "Upper A", focus: "strength", rest: 90, exercises: ["Bench Press", "Chest Row", "Overhead Press"] },
     { id: "tpl-2", title: "Lower A", focus: "legs", rest: 120, exercises: ["Split Squat", "RDL", "Leg Curl"] },
     { id: "tpl-3", title: "Pull", focus: "back", rest: 75, exercises: ["Pull-up", "Row", "Curl"] }
   ],
+  exerciseSets: [
+    { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, createdAt: isoDaysAgo(0, 12) },
+    { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, createdAt: isoDaysAgo(0, 12) },
+    { id: "set-3", exercise: "Chest Row", reps: 10, weight: 36, rest: 75, createdAt: isoDaysAgo(0, 12) }
+  ],
   meals: [
     { id: "meal-1", title: "High protein breakfast", calories: 640, protein: 42, carbs: 51, fats: 24, createdAt: isoDaysAgo(0, 8) },
-    { id: "meal-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19, createdAt: isoDaysAgo(0, 15) },
-    { id: "meal-3", title: "Dinner", calories: 620, protein: 38, carbs: 46, fats: 22, createdAt: isoDaysAgo(0, 19) }
-  ],
-  mealTemplates: [
-    { id: "meal-tpl-1", title: "Breakfast", calories: 640, protein: 42, carbs: 51, fats: 24 },
-    { id: "meal-tpl-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19 },
-    { id: "meal-tpl-3", title: "Light dinner", calories: 520, protein: 35, carbs: 34, fats: 21 }
+    { id: "meal-2", title: "Post workout bowl", calories: 780, protein: 53, carbs: 84, fats: 19, createdAt: isoDaysAgo(0, 15) }
   ],
   financeEntries: [
     { id: "fin-1", type: "income", title: "Projekt", amount: 3200, category: "Praca", createdAt: isoDaysAgo(6, 11) },
@@ -71,29 +70,30 @@ const defaultState = {
     { id: "plan-1", title: "Sluchawki", amount: 499, dueLabel: "ten tydzien" },
     { id: "plan-2", title: "Kurs", amount: 299, dueLabel: "ten miesiac" }
   ],
-  guitarLogs: [
-    { id: "guitar-1", title: "Alternate picking", bpm: 92, note: "czysto przy 16tkach", createdAt: isoDaysAgo(2, 20) },
-    { id: "guitar-2", title: "Spider 1234", bpm: 88, note: "lewa reka rowniej", createdAt: isoDaysAgo(1, 20) },
-    { id: "guitar-3", title: "Pentatonic sequence", bpm: 104, note: "krótki burst", createdAt: isoDaysAgo(0, 21) }
-  ],
   evaluator: {
     score: null,
     label: "-",
     costPerUse: null
   },
-  exerciseSets: [
-    { id: "set-1", exercise: "Bench Press", reps: 8, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
-    { id: "set-2", exercise: "Bench Press", reps: 7, weight: 72.5, rest: 90, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) },
-    { id: "set-3", exercise: "Chest Row", reps: 10, weight: 36, rest: 75, dateLabel: "Today", createdAt: isoDaysAgo(0, 12) }
-  ],
   weightHistory: [
-    { dateLabel: "D1", value: 81.2, createdAt: isoDaysAgo(5, 8) },
-    { dateLabel: "D2", value: 80.9, createdAt: isoDaysAgo(4, 8) },
-    { dateLabel: "D3", value: 80.8, createdAt: isoDaysAgo(3, 8) },
-    { dateLabel: "D4", value: 80.6, createdAt: isoDaysAgo(2, 8) },
-    { dateLabel: "D5", value: 80.5, createdAt: isoDaysAgo(1, 8) },
-    { dateLabel: "D6", value: 80.4, createdAt: isoDaysAgo(0, 8) }
+    { id: "weight-1", value: 81.2, createdAt: isoDaysAgo(5, 8) },
+    { id: "weight-2", value: 80.9, createdAt: isoDaysAgo(4, 8) },
+    { id: "weight-3", value: 80.8, createdAt: isoDaysAgo(3, 8) },
+    { id: "weight-4", value: 80.6, createdAt: isoDaysAgo(2, 8) },
+    { id: "weight-5", value: 80.5, createdAt: isoDaysAgo(1, 8) },
+    { id: "weight-6", value: 80.4, createdAt: isoDaysAgo(0, 8) }
   ],
+  guitarExercises: [
+    { id: "gex-1", title: "Alternate picking", targetBpm: 120 },
+    { id: "gex-2", title: "Spider 1234", targetBpm: 110 },
+    { id: "gex-3", title: "Pentatonic sequence", targetBpm: 140 }
+  ],
+  guitarSessions: [
+    { id: "gs-1", exerciseId: "gex-1", exerciseTitle: "Alternate picking", bpm: 92, durationSec: 480, createdAt: isoDaysAgo(2, 20) },
+    { id: "gs-2", exerciseId: "gex-2", exerciseTitle: "Spider 1234", bpm: 88, durationSec: 420, createdAt: isoDaysAgo(1, 20) },
+    { id: "gs-3", exerciseId: "gex-3", exerciseTitle: "Pentatonic sequence", bpm: 104, durationSec: 540, createdAt: isoDaysAgo(0, 21) }
+  ],
+  guitarActiveId: "gex-1",
   supplements: [
     { name: "Creatine", dosage: "5 g" },
     { name: "Omega-3", dosage: "2 caps" },
@@ -105,43 +105,159 @@ function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function normalizeState(rawState) {
-  const state = { ...cloneState(defaultState), ...rawState };
-  state.meta = state.meta && typeof state.meta === "object" ? state.meta : cloneState(defaultState.meta);
-  state.onboarding = state.onboarding && typeof state.onboarding === "object" ? { ...cloneState(defaultState.onboarding), ...state.onboarding } : cloneState(defaultState.onboarding);
-  state.habits = Array.isArray(state.habits) ? state.habits : cloneState(defaultState.habits);
-  state.tasks = Array.isArray(state.tasks) ? state.tasks : cloneState(defaultState.tasks);
-  state.workouts = Array.isArray(state.workouts) ? state.workouts : cloneState(defaultState.workouts);
-  state.workoutTemplates = Array.isArray(state.workoutTemplates) ? state.workoutTemplates : cloneState(defaultState.workoutTemplates);
-  state.meals = Array.isArray(state.meals) ? state.meals : cloneState(defaultState.meals);
-  state.mealTemplates = Array.isArray(state.mealTemplates) ? state.mealTemplates : cloneState(defaultState.mealTemplates);
-  state.financeEntries = Array.isArray(state.financeEntries) ? state.financeEntries : cloneState(defaultState.financeEntries);
-  state.plannedExpenses = Array.isArray(state.plannedExpenses) ? state.plannedExpenses : cloneState(defaultState.plannedExpenses);
-  state.guitarLogs = Array.isArray(state.guitarLogs) ? state.guitarLogs : cloneState(defaultState.guitarLogs);
-  state.evaluator = state.evaluator && typeof state.evaluator === "object" ? state.evaluator : cloneState(defaultState.evaluator);
-  state.exerciseSets = Array.isArray(state.exerciseSets) ? state.exerciseSets : cloneState(defaultState.exerciseSets);
-  state.weightHistory = Array.isArray(state.weightHistory) ? state.weightHistory : cloneState(defaultState.weightHistory);
-  state.supplements = Array.isArray(state.supplements) ? state.supplements : cloneState(defaultState.supplements);
+function uid(prefix) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatZl(value) {
+  return `${Math.round(Number(value || 0))} zl`;
+}
+
+function minutesFromSeconds(value) {
+  return `${Math.max(1, Math.round(Number(value || 0) / 60))} min`;
+}
+
+function priorityLabel(priority) {
+  return { high: "Wysoki", medium: "Sredni", low: "Niski" }[priority] || "Sredni";
+}
+
+function normalizeArray(value, fallback) {
+  return Array.isArray(value) ? value : cloneState(fallback);
+}
+
+function normalizeCreatedAt(entry, fallback) {
+  return { ...entry, createdAt: entry.createdAt || fallback };
+}
+
+function migrateActiveTab(value) {
+  const map = {
+    today: "home",
+    zones: "guitar",
+    capture: "gym",
+    insights: "finance",
+    me: "me"
+  };
+  return map[value] || value || "home";
+}
+
+function migrateGuitarData(rawState) {
+  const logs = Array.isArray(rawState.guitarLogs) ? rawState.guitarLogs : [];
+  if (!logs.length) {
+    return {
+      guitarExercises: cloneState(defaultState.guitarExercises),
+      guitarSessions: cloneState(defaultState.guitarSessions),
+      guitarActiveId: defaultState.guitarActiveId
+    };
+  }
+
+  const byTitle = new Map();
+  logs.forEach((log) => {
+    const title = log.title || "Cwiczenie";
+    const current = byTitle.get(title) || { top: 0, id: uid("gex") };
+    current.top = Math.max(current.top, Number(log.bpm || 0));
+    byTitle.set(title, current);
+  });
+
+  const guitarExercises = [...byTitle.entries()].map(([title, data]) => ({
+    id: data.id,
+    title,
+    targetBpm: Math.max(60, data.top + 12)
+  }));
+
+  const titleToId = new Map(guitarExercises.map((exercise) => [exercise.title, exercise.id]));
+  const guitarSessions = logs.map((log) => ({
+    id: uid("gs"),
+    exerciseId: titleToId.get(log.title) || guitarExercises[0].id,
+    exerciseTitle: log.title || "Cwiczenie",
+    bpm: Number(log.bpm || 0),
+    durationSec: Number(log.durationSec || 480),
+    createdAt: log.createdAt || new Date().toISOString()
+  }));
+
+  return {
+    guitarExercises,
+    guitarSessions,
+    guitarActiveId: guitarExercises[0]?.id || null
+  };
+}
+
+function normalizeState(rawState = {}) {
+  const migratedGuitar = rawState.guitarExercises || rawState.guitarSessions
+    ? {
+        guitarExercises: normalizeArray(rawState.guitarExercises, defaultState.guitarExercises),
+        guitarSessions: normalizeArray(rawState.guitarSessions, defaultState.guitarSessions),
+        guitarActiveId: rawState.guitarActiveId || rawState.guitarExercises?.[0]?.id || defaultState.guitarActiveId
+      }
+    : migrateGuitarData(rawState);
+
+  const state = {
+    ...cloneState(defaultState),
+    ...rawState,
+    ...migratedGuitar
+  };
+
+  state.activeTab = migrateActiveTab(state.activeTab);
+  state.meta = state.meta && typeof state.meta === "object" ? { ...cloneState(defaultState.meta), ...state.meta } : cloneState(defaultState.meta);
   state.note = typeof state.note === "string" ? state.note : defaultState.note;
-  state.activeTab = typeof state.activeTab === "string" ? state.activeTab : "today";
+  state.habits = normalizeArray(state.habits, defaultState.habits);
+  state.tasks = normalizeArray(state.tasks, defaultState.tasks);
+  state.workouts = normalizeArray(state.workouts, defaultState.workouts).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 18)));
+  state.workoutTemplates = normalizeArray(state.workoutTemplates, defaultState.workoutTemplates);
+  state.exerciseSets = normalizeArray(state.exerciseSets, defaultState.exerciseSets).map((entry) => normalizeCreatedAt(entry, isoDaysAgo(0, 12)));
+  state.meals = normalizeArray(state.meals, defaultState.meals).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 12)));
+  state.financeEntries = normalizeArray(state.financeEntries, defaultState.financeEntries).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 12)));
+  state.plannedExpenses = normalizeArray(state.plannedExpenses, defaultState.plannedExpenses);
+  state.evaluator = state.evaluator && typeof state.evaluator === "object" ? { ...cloneState(defaultState.evaluator), ...state.evaluator } : cloneState(defaultState.evaluator);
+  state.weightHistory = normalizeArray(state.weightHistory, defaultState.weightHistory).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 8)));
+  state.guitarExercises = normalizeArray(state.guitarExercises, defaultState.guitarExercises).map((entry) => ({
+    id: entry.id || uid("gex"),
+    title: entry.title || "Cwiczenie",
+    targetBpm: Math.max(40, Number(entry.targetBpm || 80))
+  }));
+  state.guitarSessions = normalizeArray(state.guitarSessions, defaultState.guitarSessions).map((entry) => ({
+    id: entry.id || uid("gs"),
+    exerciseId: entry.exerciseId || state.guitarExercises[0]?.id || null,
+    exerciseTitle: entry.exerciseTitle || "Cwiczenie",
+    bpm: Math.max(30, Number(entry.bpm || 60)),
+    durationSec: Math.max(5, Number(entry.durationSec || 300)),
+    createdAt: entry.createdAt || new Date().toISOString()
+  }));
+  state.guitarActiveId = state.guitarExercises.some((exercise) => exercise.id === state.guitarActiveId)
+    ? state.guitarActiveId
+    : state.guitarExercises[0]?.id || null;
+  state.supplements = normalizeArray(state.supplements, defaultState.supplements);
   state.meta.lastDailyReset = state.meta.lastDailyReset || todayKey();
   state.meta.lastWeeklyReset = state.meta.lastWeeklyReset || weekKey();
-  state.workouts = state.workouts.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.workouts.length - index - 1), 18) }));
-  state.meals = state.meals.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.meals.length - index - 1), 12) }));
-  state.financeEntries = state.financeEntries.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.financeEntries.length - index - 1), 12) }));
-  state.guitarLogs = state.guitarLogs.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.guitarLogs.length - index - 1), 20) }));
-  state.exerciseSets = state.exerciseSets.map((entry) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(0, 12) }));
-  state.weightHistory = state.weightHistory.map((entry, index) => ({ ...entry, createdAt: entry.createdAt || isoDaysAgo(Math.max(0, state.weightHistory.length - index - 1), 8) }));
   return state;
 }
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? normalizeState(JSON.parse(raw)) : cloneState(defaultState);
+    const current = localStorage.getItem(STORAGE_KEY);
+    if (current) {
+      return normalizeState(JSON.parse(current));
+    }
+
+    for (const legacyKey of LEGACY_KEYS) {
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy) {
+        return normalizeState(JSON.parse(legacy));
+      }
+    }
   } catch {
     return cloneState(defaultState);
   }
+
+  return cloneState(defaultState);
 }
 
 let state = loadState();
@@ -151,7 +267,38 @@ let restTimerInterval = null;
 let metronomeBpm = 80;
 let metronomeRunning = false;
 let metronomeInterval = null;
+let metronomeUiInterval = null;
+let metronomeStartedAt = null;
 let metronomeAudioContext = null;
+
+const tabPages = [...document.querySelectorAll(".tab-page")];
+const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
+const switchButtons = [...document.querySelectorAll("[data-switch-tab]")];
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function setFeedback(message) {
+  const node = document.getElementById("feedback-pill");
+  if (node) {
+    node.textContent = message;
+  }
+}
+
+function setTab(tab) {
+  state.activeTab = tab;
+  tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
+  tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
+  saveState();
+}
+
+function focusField(id) {
+  const target = document.getElementById(id);
+  if (target) {
+    setTimeout(() => target.focus(), 120);
+  }
+}
 
 function applyResets() {
   const today = todayKey();
@@ -170,80 +317,28 @@ function applyResets() {
   saveState();
 }
 
-const tabPages = [...document.querySelectorAll(".tab-page")];
-const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
-const switchButtons = [...document.querySelectorAll("[data-switch-tab]")];
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function uid(prefix) {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-}
-
-function setTab(tab) {
-  state.activeTab = tab;
-  tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
-  tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
-
-  const titles = {
-    today: "Today",
-    zones: "Strefy",
-    capture: "Capture",
-    insights: "Insights",
-    me: "Ja"
-  };
-
-  document.getElementById("screen-title").textContent = titles[tab] || "LifeOS";
-  saveState();
-}
-
-function focusField(id) {
-  const target = document.getElementById(id);
-  if (target) {
-    setTimeout(() => target.focus(), 120);
-  }
-}
-
-function computeProgress() {
-  const doneHabits = state.habits.filter((item) => item.done).length;
-  const doneTasks = state.tasks.filter((item) => item.done).length;
-  const total = state.habits.length + state.tasks.length;
-  const completed = doneHabits + doneTasks;
-
-  return {
-    total,
-    completed,
-    percent: total ? Math.round((completed / total) * 100) : 0,
-    doneHabits,
-    doneTasks,
-    openTasks: state.tasks.filter((item) => !item.done).length
-  };
-}
-
 function latestWeight() {
-  const entry = state.weightHistory.at(-1);
-  return entry ? entry.value : null;
+  return state.weightHistory.at(-1) || null;
 }
 
-function totalTrainingMinutes() {
-  return state.workouts.reduce((sum, workout) => sum + Number(workout.duration || 0), 0);
-}
-
-function workoutsThisWeek() {
-  const currentWeek = weekKey();
-  return state.workouts.filter((workout) => weekKey(new Date(workout.createdAt)) === currentWeek);
+function weightLoggedToday() {
+  const entry = latestWeight();
+  return entry ? todayKey(new Date(entry.createdAt)) === todayKey() : false;
 }
 
 function workoutsToday() {
   const today = todayKey();
-  return state.workouts.filter((workout) => todayKey(new Date(workout.createdAt)) === today);
+  return state.workouts.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
+}
+
+function workoutsThisWeek() {
+  const currentWeek = weekKey();
+  return state.workouts.filter((entry) => weekKey(new Date(entry.createdAt)) === currentWeek);
 }
 
 function mealsToday() {
   const today = todayKey();
-  return state.meals.filter((meal) => todayKey(new Date(meal.createdAt)) === today);
+  return state.meals.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
 }
 
 function nutritionToday() {
@@ -256,18 +351,14 @@ function nutritionToday() {
   }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
 }
 
-function monthKey(date = new Date()) {
-  return `${date.getFullYear()}-${date.getMonth() + 1}`;
+function financeToday() {
+  const today = todayKey();
+  return state.financeEntries.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
 }
 
 function financeThisMonth() {
   const currentMonth = monthKey();
   return state.financeEntries.filter((entry) => monthKey(new Date(entry.createdAt)) === currentMonth);
-}
-
-function financeToday() {
-  const today = todayKey();
-  return state.financeEntries.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
 }
 
 function financeSummary(entries = financeThisMonth()) {
@@ -285,103 +376,59 @@ function plannedTotal() {
   return state.plannedExpenses.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
 }
 
-function formatZl(value) {
-  return `${Math.round(value)} zl`;
-}
-
-function averageWeight() {
-  if (!state.weightHistory.length) return null;
-  const sum = state.weightHistory.reduce((acc, item) => acc + Number(item.value), 0);
-  return sum / state.weightHistory.length;
-}
-
-function exerciseSummary() {
-  const grouped = new Map();
-
-  state.exerciseSets.forEach((entry) => {
-    const current = grouped.get(entry.exercise) ?? { sets: 0, topWeight: 0 };
-    current.sets += 1;
-    current.topWeight = Math.max(current.topWeight, Number(entry.weight || 0));
-    grouped.set(entry.exercise, current);
-  });
-
-  return [...grouped.entries()]
-    .map(([exercise, data]) => ({ exercise, ...data }))
-    .sort((a, b) => b.sets - a.sets)
-    .slice(0, 4);
-}
-
-function guitarLogsThisWeek() {
-  const currentWeek = weekKey();
-  return state.guitarLogs.filter((entry) => weekKey(new Date(entry.createdAt)) === currentWeek);
-}
-
-function guitarSummary(entries = state.guitarLogs) {
-  const safeEntries = Array.isArray(entries) ? entries : [];
-  const sessions = safeEntries.length;
-  const topBpm = sessions ? Math.max(...safeEntries.map((entry) => Number(entry.bpm || 0)), 0) : 0;
-  const averageBpm = sessions
-    ? Math.round(safeEntries.reduce((sum, entry) => sum + Number(entry.bpm || 0), 0) / sessions)
-    : 0;
-  const exerciseCount = new Set(safeEntries.map((entry) => entry.title)).size;
-
-  return {
-    sessions,
-    topBpm,
-    averageBpm,
-    exerciseCount
-  };
-}
-
-function weightLoggedToday() {
-  const latest = state.weightHistory.at(-1);
-  return latest ? todayKey(new Date(latest.createdAt)) === todayKey() : false;
-}
-
-function guitarToday() {
+function guitarSessionsToday() {
   const today = todayKey();
-  return state.guitarLogs.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
+  return state.guitarSessions.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
 }
 
-function onboardingSteps() {
-  return [
-    {
-      id: "weight",
-      title: "Pierwsza waga",
-      detail: "Miej punkt startowy na dzisiaj.",
-      done: weightLoggedToday()
-    },
-    {
-      id: "task",
-      title: "Jedna wazna rzecz",
-      detail: "Dodaj task, ktory realnie przesuwa dzien.",
-      done: state.tasks.length > 0
-    },
-    {
-      id: "practice",
-      title: "Pierwszy output",
-      detail: "Trening albo gitara, by odpalic rytm.",
-      done: state.workouts.length > 0 || state.guitarLogs.length > 0
-    }
-  ];
+function guitarSessionsThisWeek() {
+  const currentWeek = weekKey();
+  return state.guitarSessions.filter((entry) => weekKey(new Date(entry.createdAt)) === currentWeek);
 }
 
-function syncOnboardingState() {
-  const steps = onboardingSteps();
-  state.onboarding.completed = steps.every((step) => step.done);
+function activeGuitarExercise() {
+  return state.guitarExercises.find((exercise) => exercise.id === state.guitarActiveId) || state.guitarExercises[0] || null;
+}
+
+function exerciseSessionStats(exerciseId) {
+  const sessions = state.guitarSessions.filter((entry) => entry.exerciseId === exerciseId);
+  const topBpm = sessions.length ? Math.max(...sessions.map((entry) => Number(entry.bpm || 0)), 0) : 0;
+  const totalSec = sessions.reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+  const latestBpm = sessions.at(-1)?.bpm || 0;
+  return { sessions, topBpm, totalSec, latestBpm };
+}
+
+function guitarOverview() {
+  const totalSec = state.guitarSessions.reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+  const topBpm = state.guitarSessions.length ? Math.max(...state.guitarSessions.map((entry) => Number(entry.bpm || 0)), 0) : 0;
+  return { totalSec, topBpm, sessions: state.guitarSessions.length };
+}
+
+function computeHomeProgress() {
+  const doneHabits = state.habits.filter((item) => item.done).length;
+  const doneTasks = state.tasks.filter((item) => item.done).length;
+  const workoutDone = workoutsToday().length ? 1 : 0;
+  const guitarDone = guitarSessionsToday().length ? 1 : 0;
+  const total = state.habits.length + state.tasks.length + 2;
+  const completed = doneHabits + doneTasks + workoutDone + guitarDone;
+  return {
+    total,
+    completed,
+    percent: total ? Math.round((completed / total) * 100) : 0,
+    openTasks: state.tasks.filter((item) => !item.done).length
+  };
 }
 
 function priorityItems() {
   const priorities = [];
-  const openTasks = state.tasks
+  const sortedTasks = state.tasks
     .filter((task) => !task.done)
     .sort((a, b) => {
-      const weight = { high: 0, medium: 1, low: 2 };
-      return (weight[a.priority] ?? 1) - (weight[b.priority] ?? 1);
+      const order = { high: 0, medium: 1, low: 2 };
+      return (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
     });
-  const undoneHabits = state.habits.filter((habit) => !habit.done);
 
-  openTasks.slice(0, 2).forEach((task) => {
+  sortedTasks.slice(0, 2).forEach((task) => {
     priorities.push({
       type: "task",
       id: task.id,
@@ -390,196 +437,49 @@ function priorityItems() {
     });
   });
 
-  if (undoneHabits.length && priorities.length < 3) {
-    const habit = undoneHabits[0];
+  if (!workoutsToday().length && priorities.length < 3) {
     priorities.push({
-      type: "habit",
-      id: habit.id,
-      title: habit.title,
-      detail: habit.detail || "Minimum"
+      type: "tab",
+      tab: "gym",
+      focus: "workout-title-input",
+      title: "Odpalic trening",
+      detail: "Nawet krotki log ustawia rytm."
+    });
+  }
+
+  if (!guitarSessionsToday().length && priorities.length < 3) {
+    priorities.push({
+      type: "tab",
+      tab: "guitar",
+      focus: "guitar-exercise-name-input",
+      title: "Gitara 10 min",
+      detail: "Jedna sesja BPM podtrzymuje progres."
     });
   }
 
   if (!weightLoggedToday() && priorities.length < 3) {
     priorities.push({
-      type: "capture",
+      type: "tab",
+      tab: "gym",
       focus: "weight-input",
       title: "Zaloguj wage",
-      detail: "15 sekund i masz punkt odniesienia."
-    });
-  }
-
-  if (!workoutsToday().length && priorities.length < 3) {
-    priorities.push({
-      type: "capture",
-      focus: "workout-title-input",
-      title: "Zaplanuj trening",
-      detail: "Nawet krotki wpis ustawia dzien."
-    });
-  }
-
-  if (!guitarToday().length && priorities.length < 3) {
-    priorities.push({
-      type: "capture",
-      focus: "guitar-title-input",
-      title: "10 min gitary",
-      detail: "Jeden wpis BPM podtrzymuje regularnosc."
+      detail: "Szybki punkt odniesienia na dzien."
     });
   }
 
   return priorities.slice(0, 3);
 }
 
-function priorityLabel(priority) {
-  return { high: "Wysoki", medium: "Sredni", low: "Niski" }[priority] || "Sredni";
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function setFeedback(message) {
-  document.getElementById("capture-feedback").textContent = message;
-}
-
-function renderToday() {
-  syncOnboardingState();
-  const progress = computeProgress();
-  const nutrition = nutritionToday();
-  const todayFinance = financeSummary(financeToday());
-  const guitar = guitarSummary(guitarLogsThisWeek());
-  document.getElementById("main-progress-value").textContent = `${progress.percent}%`;
-  document.getElementById("main-progress-bar").style.width = `${progress.percent}%`;
-  document.getElementById("top-progress-chip").textContent = `${progress.percent}%`;
-  document.getElementById("hero-meta-left").textContent = `${progress.completed} z ${progress.total}`;
-  document.getElementById("hero-meta-right").textContent = `${progress.openTasks} open`;
-  document.getElementById("hero-title").textContent = progress.percent >= 70 ? "Spokojny momentum" : "Wracamy do rytmu";
-  document.getElementById("hero-subtitle").textContent =
-    progress.percent >= 70
-      ? "Domknij tylko to, co faktycznie przesuwa dzien."
-      : "Zrob kilka prostych rzeczy i odbuduj flow.";
-
-  const weight = latestWeight();
-  const weekCount = workoutsThisWeek().length;
-  document.getElementById("latest-weight").textContent = weight ? `${weight.toFixed(1)} kg` : "-";
-  document.getElementById("open-task-count").textContent = String(progress.openTasks);
-  document.getElementById("habit-done-count").textContent = `${progress.doneHabits}/${state.habits.length}`;
-  document.getElementById("week-workout-count").textContent = `${weekCount}/4`;
-  document.getElementById("habit-summary").textContent = `${progress.doneHabits}/${state.habits.length}`;
-  document.getElementById("task-summary").textContent = `${progress.openTasks} open`;
-  document.getElementById("workout-summary").textContent = `${totalTrainingMinutes()} min`;
-  document.getElementById("set-summary").textContent = `${state.exerciseSets.length} wpisow`;
-  document.getElementById("template-summary").textContent = `${state.workoutTemplates.length}`;
-  document.getElementById("meal-summary").textContent = `${nutrition.calories} kcal`;
-  document.getElementById("today-kcal").textContent = `${nutrition.calories}`;
-  document.getElementById("today-protein").textContent = `${nutrition.protein} g`;
-  document.getElementById("today-macros").textContent = `${nutrition.carbs}/${nutrition.fats}`;
-  document.getElementById("finance-balance").textContent = formatZl(todayFinance.income - todayFinance.expense);
-  document.getElementById("today-income").textContent = formatZl(todayFinance.income);
-  document.getElementById("today-expense").textContent = formatZl(todayFinance.expense);
-  document.getElementById("today-planned").textContent = formatZl(plannedTotal());
-  document.getElementById("guitar-summary").textContent = `${guitar.sessions} sesji`;
-  document.getElementById("guitar-session-count").textContent = `${guitar.sessions}`;
-  document.getElementById("guitar-top-bpm").textContent = `${guitar.topBpm || 0}`;
-  document.getElementById("guitar-exercise-count").textContent = `${guitar.exerciseCount}`;
-  document.getElementById("today-note").textContent = state.note;
-
-  renderHabitList();
-  renderTaskList();
-  renderWorkoutList();
-  renderTemplateList();
-  renderMealList();
-  renderFinanceList();
-  renderGuitarList();
-  renderSetList();
-  renderPriorityList();
-  renderOnboardingCard();
-}
-
-function renderPriorityList() {
-  const node = document.getElementById("priority-list");
-  const summaryNode = document.getElementById("priority-summary");
-  node.innerHTML = "";
-  const items = priorityItems();
-  summaryNode.textContent = `${items.length} aktywne`;
-
-  if (!items.length) {
-    node.appendChild(emptyNode("Dzien jest czysty. Zostaw tylko podtrzymanie rytmu."));
-    return;
+function renderDate() {
+  const formatter = new Intl.DateTimeFormat("pl-PL", {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  });
+  const node = document.getElementById("home-date");
+  if (node) {
+    node.textContent = formatter.format(new Date());
   }
-
-  items.forEach((item) => {
-    const row = document.createElement("div");
-    row.className = "list-item";
-    row.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(item.title)}</strong>
-        <span>${escapeHtml(item.detail)}</span>
-      </div>
-    `;
-
-    const tools = document.createElement("div");
-    tools.className = "list-tools";
-
-    if (item.type === "task") {
-      tools.appendChild(makeToolButton("Done", () => {
-        state.tasks = state.tasks.map((task) => task.id === item.id ? { ...task, done: true } : task);
-        setFeedback(`Domknieto task: ${item.title}.`);
-        saveState();
-        renderAll();
-      }));
-    } else if (item.type === "habit") {
-      tools.appendChild(makeToolButton("Done", () => {
-        state.habits = state.habits.map((habit) => habit.id === item.id ? { ...habit, done: true } : habit);
-        setFeedback(`Odhaczono habit: ${item.title}.`);
-        saveState();
-        renderAll();
-      }));
-    } else {
-      tools.appendChild(makeToolButton("Open", () => {
-        setTab("capture");
-        focusField(item.focus);
-      }));
-    }
-
-    row.appendChild(tools);
-    node.appendChild(row);
-  });
-}
-
-function renderOnboardingCard() {
-  const card = document.getElementById("onboarding-card");
-  const listNode = document.getElementById("onboarding-list");
-  const summaryNode = document.getElementById("onboarding-summary");
-  const progressNode = document.getElementById("onboarding-progress-bar");
-  if (!card || !listNode || !summaryNode || !progressNode) return;
-
-  const steps = onboardingSteps();
-  const done = steps.filter((step) => step.done).length;
-  const percent = Math.round((done / steps.length) * 100);
-
-  card.hidden = state.onboarding.dismissed || state.onboarding.completed;
-  summaryNode.textContent = `${done}/${steps.length}`;
-  progressNode.style.width = `${percent}%`;
-  listNode.innerHTML = "";
-
-  steps.forEach((step) => {
-    const item = document.createElement("div");
-    item.className = `list-item${step.done ? " done" : ""}`;
-    item.innerHTML = `
-      <div class="list-toggle" aria-hidden="true"></div>
-      <div class="list-copy">
-        <strong>${escapeHtml(step.title)}</strong>
-        <span>${escapeHtml(step.detail)}</span>
-      </div>
-    `;
-    listNode.appendChild(item);
-  });
 }
 
 function emptyNode(label) {
@@ -598,99 +498,263 @@ function makeToolButton(label, onClick, danger = false) {
   return button;
 }
 
-function renderListItem(item, type) {
-  const wrapper = document.createElement("div");
-  wrapper.className = `list-item ${item.done ? "done" : ""}`;
+function renderTaskRow(task, options = {}) {
+  const { withToggle = true } = options;
+  const row = document.createElement("div");
+  row.className = `list-item list-item-toggle${task.done ? " done" : ""}`;
 
-  const toggle = document.createElement("button");
-  toggle.className = "list-toggle";
-  toggle.type = "button";
-  toggle.setAttribute("aria-label", item.done ? "Undo" : "Done");
-  toggle.addEventListener("click", () => {
-    if (type === "habit") {
-      state.habits = state.habits.map((habit) => habit.id === item.id ? { ...habit, done: !habit.done } : habit);
-      setFeedback(`Habit: ${item.title}`);
-    } else {
-      state.tasks = state.tasks.map((task) => task.id === item.id ? { ...task, done: !task.done } : task);
-      setFeedback(`Task: ${item.title}`);
-    }
-    saveState();
-    renderAll();
-  });
+  if (withToggle) {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "list-toggle";
+    toggle.setAttribute("aria-label", task.done ? "Undo" : "Done");
+    toggle.addEventListener("click", () => toggleTask(task.id));
+    row.appendChild(toggle);
+  }
 
   const copy = document.createElement("div");
   copy.className = "list-copy";
-  const detail = type === "task" ? `${item.detail || "Bez opisu"} - ${priorityLabel(item.priority)}` : (item.detail || "Minimum");
-  copy.innerHTML = `<strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(detail)}</span>`;
+  copy.innerHTML = `
+    <strong>${escapeHtml(task.title)}</strong>
+    <span>${escapeHtml(task.detail || "Bez opisu")} - ${escapeHtml(priorityLabel(task.priority))}</span>
+  `;
 
   const tools = document.createElement("div");
   tools.className = "list-tools";
   tools.append(
-    makeToolButton("Edit", () => type === "habit" ? editHabit(item.id) : editTask(item.id)),
-    makeToolButton("Del", () => type === "habit" ? deleteHabit(item.id) : deleteTask(item.id), true)
+    makeToolButton("Edit", () => editTask(task.id)),
+    makeToolButton("Del", () => deleteTask(task.id), true)
   );
 
-  wrapper.append(toggle, copy, tools);
-  return wrapper;
+  row.append(copy, tools);
+  return row;
 }
 
-function renderHabitList() {
-  const node = document.getElementById("habit-list");
+function renderHabitRow(habit, options = {}) {
+  const { withToggle = true } = options;
+  const row = document.createElement("div");
+  row.className = `list-item list-item-toggle${habit.done ? " done" : ""}`;
+
+  if (withToggle) {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "list-toggle";
+    toggle.setAttribute("aria-label", habit.done ? "Undo" : "Done");
+    toggle.addEventListener("click", () => toggleHabit(habit.id));
+    row.appendChild(toggle);
+  }
+
+  const copy = document.createElement("div");
+  copy.className = "list-copy";
+  copy.innerHTML = `
+    <strong>${escapeHtml(habit.title)}</strong>
+    <span>${escapeHtml(habit.detail || "Minimum")}</span>
+  `;
+
+  const tools = document.createElement("div");
+  tools.className = "list-tools";
+  tools.append(
+    makeToolButton("Edit", () => editHabit(habit.id)),
+    makeToolButton("Del", () => deleteHabit(habit.id), true)
+  );
+
+  row.append(copy, tools);
+  return row;
+}
+
+function renderPriorityList() {
+  const node = document.getElementById("priority-list");
+  const summary = document.getElementById("priority-count");
+  const items = priorityItems();
   node.innerHTML = "";
+  summary.textContent = `${items.length}`;
+
+  if (!items.length) {
+    node.appendChild(emptyNode("Dzien jest juz ogarniety. Zostaw tylko rytm."));
+    return;
+  }
+
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    const copy = document.createElement("div");
+    copy.className = "list-copy";
+    copy.innerHTML = `
+      <strong>${escapeHtml(item.title)}</strong>
+      <span>${escapeHtml(item.detail)}</span>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    if (item.type === "task") {
+      tools.appendChild(makeToolButton("Done", () => toggleTask(item.id, true)));
+    } else {
+      tools.appendChild(makeToolButton("Open", () => {
+        setTab(item.tab);
+        focusField(item.focus);
+      }));
+    }
+
+    row.append(copy, tools);
+    node.appendChild(row);
+  });
+}
+
+function renderHomeTasks() {
+  const node = document.getElementById("home-task-list");
+  const summary = document.getElementById("home-task-summary");
+  node.innerHTML = "";
+  const items = state.tasks.filter((task) => !task.done).slice(0, 3);
+  summary.textContent = `${state.tasks.filter((task) => !task.done).length} open`;
+
+  if (!items.length) {
+    node.appendChild(emptyNode("Brak otwartych taskow."));
+    return;
+  }
+
+  items.forEach((task) => node.appendChild(renderTaskRow(task, { withToggle: false })));
+}
+
+function renderHomeHabits() {
+  const node = document.getElementById("home-habit-list");
+  const summary = document.getElementById("home-habit-summary");
+  node.innerHTML = "";
+  summary.textContent = `${state.habits.filter((habit) => habit.done).length}/${state.habits.length}`;
+
   if (!state.habits.length) {
     node.appendChild(emptyNode("Brak habitow."));
     return;
   }
-  state.habits.forEach((habit) => node.appendChild(renderListItem(habit, "habit")));
+
+  state.habits.slice(0, 3).forEach((habit) => node.appendChild(renderHabitRow(habit, { withToggle: false })));
 }
 
-function renderTaskList() {
-  const node = document.getElementById("task-list");
+function totalTrainingMinutes() {
+  return state.workouts.reduce((sum, workout) => sum + Number(workout.duration || 0), 0);
+}
+
+function renderHome() {
+  renderDate();
+  const progress = computeHomeProgress();
+  const nutrition = nutritionToday();
+  const todayFinance = financeSummary(financeToday());
+  const guitarTodaySec = guitarSessionsToday().reduce((sum, entry) => sum + Number(entry.durationSec || 0), 0);
+  const latest = latestWeight();
+
+  document.getElementById("home-progress-value").textContent = `${progress.percent}%`;
+  document.getElementById("home-progress-bar").style.width = `${progress.percent}%`;
+  document.getElementById("home-progress-copy").textContent = `${progress.completed} z ${progress.total} rzeczy domkniete dzisiaj.`;
+  document.getElementById("home-weight").textContent = latest ? `${Number(latest.value).toFixed(1)} kg` : "-";
+  document.getElementById("home-tasks-open").textContent = `${progress.openTasks}`;
+  document.getElementById("home-guitar-output").textContent = minutesFromSeconds(guitarTodaySec);
+  document.getElementById("home-gym-output").textContent = `${workoutsThisWeek().length}/4`;
+  document.getElementById("home-kcal").textContent = `${nutrition.calories}`;
+  document.getElementById("home-protein").textContent = `${nutrition.protein} g`;
+  document.getElementById("home-balance").textContent = formatZl(todayFinance.income - todayFinance.expense);
+  document.getElementById("home-guitar-copy").textContent = `${state.guitarExercises.length} cwiczen, top ${guitarOverview().topBpm} BPM.`;
+  document.getElementById("home-gym-copy").textContent = `${totalTrainingMinutes()} min lacznie, ${state.exerciseSets.length} serii w bazie.`;
+  document.getElementById("home-finance-copy").textContent = `${formatZl(plannedTotal())} planowanych wydatkow.`;
+  document.getElementById("home-note").textContent = state.note;
+
+  renderPriorityList();
+  renderHomeTasks();
+  renderHomeHabits();
+}
+
+function renderGuitarExercises() {
+  const node = document.getElementById("guitar-exercise-list");
   node.innerHTML = "";
-  if (!state.tasks.length) {
-    node.appendChild(emptyNode("Brak taskow."));
+  document.getElementById("guitar-exercise-count").textContent = `${state.guitarExercises.length}`;
+
+  if (!state.guitarExercises.length) {
+    node.appendChild(emptyNode("Dodaj pierwsze cwiczenie gitarowe."));
     return;
   }
 
-  state.tasks
-    .slice()
-    .sort((a, b) => Number(a.done) - Number(b.done))
-    .forEach((task) => node.appendChild(renderListItem(task, "task")));
-}
-
-function renderWorkoutList() {
-  const node = document.getElementById("workout-list");
-  node.innerHTML = "";
-  if (!state.workouts.length) {
-    node.appendChild(emptyNode("Brak treningow."));
-    return;
-  }
-
-  state.workouts.slice().reverse().slice(0, 4).forEach((workout) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "list-item";
-    wrapper.innerHTML = `
-      <div class="list-toggle" aria-hidden="true"></div>
+  state.guitarExercises.forEach((exercise) => {
+    const stats = exerciseSessionStats(exercise.id);
+    const percent = Math.min(Math.round((stats.topBpm / exercise.targetBpm) * 100), 100);
+    const item = document.createElement("div");
+    item.className = `list-item list-item-block${exercise.id === state.guitarActiveId ? " active" : ""}`;
+    item.innerHTML = `
       <div class="list-copy">
-        <strong>${escapeHtml(workout.title)}</strong>
-        <span>${escapeHtml(workout.focus)} - ${workout.duration} min - ${escapeHtml(workout.dateLabel)}</span>
+        <strong>${escapeHtml(exercise.title)}</strong>
+        <span>Cel ${exercise.targetBpm} BPM - top ${stats.topBpm || 0} BPM - ${minutesFromSeconds(stats.totalSec)}</span>
       </div>
+    `;
+
+    const progress = document.createElement("div");
+    progress.className = "mini-progress";
+    progress.innerHTML = `
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${percent}%"></div>
+      </div>
+      <span>${percent}%</span>
     `;
 
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editWorkout(workout.id)),
-      makeToolButton("Del", () => deleteWorkout(workout.id), true)
+      makeToolButton("Uzyj", () => selectGuitarExercise(exercise.id)),
+      makeToolButton("Edit", () => editGuitarExercise(exercise.id)),
+      makeToolButton("Del", () => deleteGuitarExercise(exercise.id), true)
     );
-    wrapper.appendChild(tools);
-    node.appendChild(wrapper);
+
+    item.append(progress, tools);
+    node.appendChild(item);
   });
 }
 
-function renderTemplateList() {
-  const node = document.getElementById("template-list");
+function renderGuitarSessions() {
+  const node = document.getElementById("guitar-session-list");
+  const summaryNode = document.getElementById("guitar-session-summary");
   node.innerHTML = "";
+  summaryNode.textContent = `${state.guitarSessions.length}`;
+
+  if (!state.guitarSessions.length) {
+    node.appendChild(emptyNode("Zatrzymaj metronom, zeby zapisac pierwsza sesje."));
+    return;
+  }
+
+  state.guitarSessions.slice().reverse().slice(0, 6).forEach((session) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(session.exerciseTitle)}</strong>
+        <span>${session.bpm} BPM - ${minutesFromSeconds(session.durationSec)}</span>
+      </div>
+    `;
+
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(makeToolButton("Del", () => deleteGuitarSession(session.id), true));
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+}
+
+function renderGuitar() {
+  const active = activeGuitarExercise();
+  const stats = active ? exerciseSessionStats(active.id) : { topBpm: 0, totalSec: 0 };
+  const percent = active ? Math.min(Math.round((stats.topBpm / active.targetBpm) * 100), 100) : 0;
+
+  document.getElementById("guitar-active-name").textContent = active ? active.title : "Wybierz cwiczenie";
+  document.getElementById("guitar-active-target").textContent = active ? `Cel ${active.targetBpm} BPM` : "Dodaj nazwe i cel BPM.";
+  document.getElementById("guitar-active-top").textContent = `${stats.topBpm || 0} BPM`;
+  document.getElementById("guitar-active-time").textContent = minutesFromSeconds(stats.totalSec);
+  document.getElementById("guitar-active-progress-bar").style.width = `${percent}%`;
+  document.getElementById("guitar-active-progress-value").textContent = `${percent}%`;
+
+  renderGuitarExercises();
+  renderGuitarSessions();
+  renderMetronome();
+}
+
+function renderWorkoutTemplates() {
+  const node = document.getElementById("gym-template-list");
+  node.innerHTML = "";
+  document.getElementById("template-summary").textContent = `${state.workoutTemplates.length}`;
 
   if (!state.workoutTemplates.length) {
     node.appendChild(emptyNode("Brak szablonow."));
@@ -701,412 +765,270 @@ function renderTemplateList() {
     const item = document.createElement("div");
     item.className = "template-item";
     item.innerHTML = `
-      <div class="template-top">
-        <div class="list-copy">
-          <strong>${escapeHtml(template.title)}</strong>
-          <span>${escapeHtml(template.focus)} - rest ${template.rest}s</span>
-        </div>
+      <div class="list-copy">
+        <strong>${escapeHtml(template.title)}</strong>
+        <span>${escapeHtml(template.focus)} - rest ${template.rest}s</span>
       </div>
       <div class="template-meta">${escapeHtml(template.exercises.join(", "))}</div>
     `;
-
-    const actions = document.createElement("div");
-    actions.className = "template-actions";
-    const start = document.createElement("button");
-    start.type = "button";
-    start.className = "template-start";
-    start.textContent = "Uzyj";
-    start.addEventListener("click", () => applyWorkoutTemplate(template.id));
-    actions.appendChild(start);
-    actions.appendChild(makeToolButton("Edit", () => editTemplate(template.id)));
-    item.appendChild(actions);
-    node.appendChild(item);
-  });
-}
-
-function renderMealList() {
-  const node = document.getElementById("meal-list");
-  node.innerHTML = "";
-  const meals = mealsToday().slice().reverse();
-
-  if (!meals.length) {
-    node.appendChild(emptyNode("Brak posilkow dzisiaj."));
-    return;
-  }
-
-  meals.slice(0, 4).forEach((meal) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(meal.title)}</strong>
-        <span>${meal.calories} kcal - P ${meal.protein} / W ${meal.carbs} / T ${meal.fats}</span>
-      </div>
-    `;
-
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editMeal(meal.id)),
-      makeToolButton("Del", () => deleteMeal(meal.id), true)
+      makeToolButton("Uzyj", () => applyWorkoutTemplate(template.id)),
+      makeToolButton("Edit", () => editWorkoutTemplate(template.id))
     );
     item.appendChild(tools);
     node.appendChild(item);
   });
 }
 
-function renderMealTemplateList() {
-  const node = document.getElementById("meal-template-list");
+function renderGymWorkouts() {
+  const node = document.getElementById("gym-workout-list");
   node.innerHTML = "";
-  document.getElementById("meal-template-summary").textContent = `${state.mealTemplates.length}`;
+  document.getElementById("gym-workout-count").textContent = `${state.workouts.length}`;
 
-  if (!state.mealTemplates.length) {
-    node.appendChild(emptyNode("Brak szablonow jedzenia."));
+  if (!state.workouts.length) {
+    node.appendChild(emptyNode("Brak treningow."));
     return;
   }
 
-  state.mealTemplates.forEach((template) => {
-    const item = document.createElement("div");
-    item.className = "template-item";
-    item.innerHTML = `
-      <div class="template-top">
-        <div class="list-copy">
-          <strong>${escapeHtml(template.title)}</strong>
-          <span>${template.calories} kcal</span>
-        </div>
-      </div>
-      <div class="template-meta">P ${template.protein} / W ${template.carbs} / T ${template.fats}</div>
-    `;
-
-    const actions = document.createElement("div");
-    actions.className = "template-actions";
-    const start = document.createElement("button");
-    start.type = "button";
-    start.className = "template-start";
-    start.textContent = "Uzyj";
-    start.addEventListener("click", () => applyMealTemplate(template.id));
-    actions.appendChild(start);
-    actions.appendChild(makeToolButton("Edit", () => editMealTemplate(template.id)));
-    item.appendChild(actions);
-    node.appendChild(item);
-  });
-}
-
-function renderFinanceList() {
-  const node = document.getElementById("finance-list");
-  node.innerHTML = "";
-  const entries = financeToday().slice().reverse();
-
-  if (!entries.length) {
-    node.appendChild(emptyNode("Brak finansow dzisiaj."));
-    return;
-  }
-
-  entries.slice(0, 4).forEach((entry) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(entry.title)}</strong>
-        <span>${entry.type === "income" ? "Przychod" : "Wydatek"} - ${formatZl(entry.amount)} - ${escapeHtml(entry.category || "Inne")}</span>
-      </div>
-    `;
-
-    const tools = document.createElement("div");
-    tools.className = "list-tools";
-    tools.append(
-      makeToolButton("Edit", () => editFinanceEntry(entry.id)),
-      makeToolButton("Del", () => deleteFinanceEntry(entry.id), true)
-    );
-    item.appendChild(tools);
-    node.appendChild(item);
-  });
-}
-
-function renderGuitarList() {
-  const node = document.getElementById("guitar-list");
-  node.innerHTML = "";
-
-  if (!state.guitarLogs.length) {
-    node.appendChild(emptyNode("Brak wpisow gitarowych."));
-    return;
-  }
-
-  state.guitarLogs.slice().reverse().slice(0, 4).forEach((entry) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(entry.title)}</strong>
-        <span>${entry.bpm} BPM${entry.note ? ` - ${escapeHtml(entry.note)}` : ""}</span>
-      </div>
-    `;
-
-    const tools = document.createElement("div");
-    tools.className = "list-tools";
-    tools.append(
-      makeToolButton("Edit", () => editGuitarLog(entry.id)),
-      makeToolButton("Del", () => deleteGuitarLog(entry.id), true)
-    );
-    item.appendChild(tools);
-    node.appendChild(item);
-  });
-}
-
-function renderFinanceChart() {
-  const node = document.getElementById("finance-chart");
-  node.innerHTML = "";
-  const entries = financeThisMonth();
-  const maxAmount = Math.max(...entries.map((entry) => entry.amount), 1);
-
-  if (!entries.length) {
-    node.appendChild(emptyNode("Brak wpisow finansowych."));
-    return;
-  }
-
-  entries.slice().reverse().slice(0, 5).forEach((entry) => {
+  state.workouts.slice().reverse().slice(0, 5).forEach((workout) => {
     const row = document.createElement("div");
-    row.className = "bar-row";
+    row.className = "list-item";
     row.innerHTML = `
-      <span>${escapeHtml(entry.title)}</span>
-      <div class="bar-track"><i style="width:${Math.round((entry.amount / maxAmount) * 100)}%"></i></div>
-      <strong>${entry.type === "income" ? "+" : "-"}${Math.round(entry.amount)}</strong>
+      <div class="list-copy">
+        <strong>${escapeHtml(workout.title)}</strong>
+        <span>${escapeHtml(workout.focus)} - ${workout.duration} min</span>
+      </div>
     `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editWorkout(workout.id)),
+      makeToolButton("Del", () => deleteWorkout(workout.id), true)
+    );
+    row.appendChild(tools);
     node.appendChild(row);
   });
 }
 
-function renderSetList() {
-  const node = document.getElementById("set-list");
+function renderGymSets() {
+  const node = document.getElementById("gym-set-list");
   node.innerHTML = "";
+  document.getElementById("set-summary").textContent = `${state.exerciseSets.length}`;
+
   if (!state.exerciseSets.length) {
     node.appendChild(emptyNode("Brak serii."));
     return;
   }
 
-  state.exerciseSets.slice().reverse().slice(0, 4).forEach((set) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
-      <div class="list-toggle" aria-hidden="true"></div>
+  state.exerciseSets.slice().reverse().slice(0, 5).forEach((set) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(set.exercise)}</strong>
         <span>${set.reps} reps - ${set.weight} kg - ${set.rest}s rest</span>
       </div>
     `;
-
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
       makeToolButton("Edit", () => editSet(set.id)),
       makeToolButton("Del", () => deleteSet(set.id), true)
     );
-    item.appendChild(tools);
-    node.appendChild(item);
-  });
-}
-
-function renderZones() {
-  const progress = computeProgress();
-  const fitnessProgress = Math.min(Math.round((state.workouts.length / 5) * 100), 100);
-  const finance = financeSummary();
-  const financeProgress = finance.income > 0 ? Math.max(Math.min(Math.round(((finance.income - finance.expense) / finance.income) * 100), 100), 0) : 0;
-  const guitarWeek = guitarSummary(guitarLogsThisWeek());
-  const guitarProgress = Math.min(Math.round((guitarWeek.sessions / 4) * 100), 100);
-  const zones = [
-    { title: "Fitness", copy: "Trening, waga, output i baza progresu.", percent: fitnessProgress },
-    { title: "Habits", copy: "Codzienny rytm z minimalnym progiem wejscia.", percent: state.habits.length ? Math.round((progress.doneHabits / state.habits.length) * 100) : 0 },
-    { title: "Tasks", copy: "Inbox i egzekucja najwazniejszych rzeczy.", percent: state.tasks.length ? Math.round((progress.doneTasks / state.tasks.length) * 100) : 0 },
-    { title: "Finanse", copy: "Cashflow, planowane wydatki i ocena zakupow.", percent: financeProgress },
-    { title: "Gitara", copy: "BPM, metronom i regularnosc cwiczen.", percent: guitarProgress }
-  ];
-
-  const node = document.getElementById("zones-list");
-  node.innerHTML = "";
-  zones.forEach((zone) => {
-    const item = document.createElement("article");
-    item.className = "glass zone-item";
-    item.innerHTML = `
-      <div class="zone-top">
-        <div>
-          <h3 class="zone-title">${escapeHtml(zone.title)}</h3>
-          <p class="zone-copy">${escapeHtml(zone.copy)}</p>
-        </div>
-        <span class="zone-percent">${zone.percent}%</span>
-      </div>
-      <div class="progress-track"><div class="progress-fill" style="width:${zone.percent}%"></div></div>
-    `;
-    node.appendChild(item);
-  });
-}
-
-function renderWeightChart() {
-  const values = state.weightHistory.map((item) => item.value);
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values, 0);
-  const span = Math.max(max - min, 0.1);
-  const node = document.getElementById("weight-chart");
-  node.innerHTML = "";
-
-  state.weightHistory.forEach((entry) => {
-    const row = document.createElement("div");
-    row.className = "line-row";
-    const percent = Math.round(((entry.value - min) / span) * 100);
-    row.innerHTML = `
-      <span>${escapeHtml(entry.dateLabel)}</span>
-      <div class="line-track"><i style="width:${Math.max(percent, 12)}%"></i></div>
-      <strong>${entry.value.toFixed(1)}</strong>
-    `;
+    row.appendChild(tools);
     node.appendChild(row);
   });
 }
 
-function renderTrainingChart() {
-  const node = document.getElementById("training-chart");
-  node.innerHTML = "";
-  const maxMinutes = Math.max(...state.workouts.map((entry) => entry.duration), 1);
-
-  state.workouts.forEach((entry) => {
-    const row = document.createElement("div");
-    row.className = "bar-row";
-    row.innerHTML = `
-      <span>${escapeHtml(entry.dateLabel)}</span>
-      <div class="bar-track"><i style="width:${Math.round((entry.duration / maxMinutes) * 100)}%"></i></div>
-      <strong>${entry.duration}m</strong>
-    `;
-    node.appendChild(row);
-  });
-}
-
-function renderGuitarChart() {
-  const node = document.getElementById("guitar-chart");
-  node.innerHTML = "";
-  const grouped = new Map();
-
-  state.guitarLogs.forEach((entry) => {
-    const current = grouped.get(entry.title) ?? 0;
-    grouped.set(entry.title, Math.max(current, Number(entry.bpm || 0)));
-  });
-
-  const rows = [...grouped.entries()]
-    .map(([title, bpm]) => ({ title, bpm }))
-    .sort((a, b) => b.bpm - a.bpm)
-    .slice(0, 4);
-
-  if (!rows.length) {
-    node.appendChild(emptyNode("Brak danych gitarowych."));
-    return;
-  }
-
-  const maxBpm = Math.max(...rows.map((entry) => entry.bpm), 1);
-  rows.forEach((entry) => {
-    const row = document.createElement("div");
-    row.className = "bar-row";
-    row.innerHTML = `
-      <span>${escapeHtml(entry.title)}</span>
-      <div class="bar-track"><i style="width:${Math.round((entry.bpm / maxBpm) * 100)}%"></i></div>
-      <strong>${entry.bpm}</strong>
-    `;
-    node.appendChild(row);
-  });
-}
-
-function renderInsights() {
-  renderWeightChart();
-  renderTrainingChart();
-  renderExerciseSummary();
-  renderFinanceChart();
-  renderGuitarChart();
-
-  const average = averageWeight();
+function renderGymMeals() {
+  const node = document.getElementById("gym-meal-list");
   const nutrition = nutritionToday();
-  const finance = financeSummary();
-  const guitar = guitarSummary(guitarLogsThisWeek());
-  const savingsRate = finance.income > 0 ? Math.round(((finance.income - finance.expense) / finance.income) * 100) : 0;
-  document.getElementById("average-weight").textContent = average ? `${average.toFixed(1)} kg` : "-";
-  document.getElementById("total-training-minutes").textContent = `${totalTrainingMinutes()}`;
-  document.getElementById("insight-progress").textContent = `${computeProgress().percent}%`;
-  document.getElementById("insight-kcal").textContent = `${nutrition.calories}`;
-  document.getElementById("insight-protein").textContent = `${nutrition.protein} g`;
-  document.getElementById("insight-carb-fat").textContent = `${nutrition.carbs}/${nutrition.fats}`;
-  document.getElementById("insight-balance").textContent = formatZl(finance.income - finance.expense);
-  document.getElementById("insight-savings-rate").textContent = `${savingsRate}%`;
-  document.getElementById("insight-planned").textContent = formatZl(plannedTotal());
-  document.getElementById("insight-guitar-top").textContent = `${guitar.topBpm || 0} BPM`;
-  document.getElementById("insight-guitar-sessions").textContent = `${guitar.sessions}`;
-  document.getElementById("insight-guitar-average").textContent = `${guitar.averageBpm || 0} BPM`;
-  document.getElementById("review-copy").textContent =
-    computeProgress().percent >= 70
-      ? "Dobry tydzien. Najmocniej dziala rytm i regularnosc."
-      : "System potrzebuje prostszego domykania rzeczy. Zacznij od 2-3 pewniakow dziennie.";
-}
-
-function renderExerciseSummary() {
-  const node = document.getElementById("exercise-summary-list");
   node.innerHTML = "";
-  const summary = exerciseSummary();
+  document.getElementById("meal-summary").textContent = `${nutrition.calories} kcal`;
 
-  if (!summary.length) {
-    node.appendChild(emptyNode("Brak cwiczen."));
+  const meals = mealsToday().slice().reverse();
+  if (!meals.length) {
+    node.appendChild(emptyNode("Brak posilkow dzisiaj."));
     return;
   }
 
-  summary.forEach((entry) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
+  meals.slice(0, 4).forEach((meal) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
       <div class="list-copy">
-        <strong>${escapeHtml(entry.exercise)}</strong>
-        <span>${entry.sets} sets - top ${entry.topWeight} kg</span>
+        <strong>${escapeHtml(meal.title)}</strong>
+        <span>${meal.calories} kcal - P ${meal.protein} - W ${meal.carbs} - T ${meal.fats}</span>
       </div>
     `;
-    node.appendChild(item);
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editMeal(meal.id)),
+      makeToolButton("Del", () => deleteMeal(meal.id), true)
+    );
+    row.appendChild(tools);
+    node.appendChild(row);
   });
 }
 
-function renderMe() {
-  syncOnboardingState();
+function renderGym() {
+  const latest = latestWeight();
+  const nutrition = nutritionToday();
+  document.getElementById("gym-summary").textContent = `${totalTrainingMinutes()} min`;
+  document.getElementById("gym-weight-metric").textContent = latest ? `${Number(latest.value).toFixed(1)} kg` : "-";
+  document.getElementById("gym-workout-week-metric").textContent = `${workoutsThisWeek().length}/4`;
+  document.getElementById("gym-set-metric").textContent = `${state.exerciseSets.length}`;
+  document.getElementById("gym-kcal-metric").textContent = `${nutrition.calories}`;
+
+  renderWorkoutTemplates();
+  renderGymWorkouts();
+  renderGymSets();
+  renderGymMeals();
+  renderRestTimer();
+}
+
+function renderFinanceEntries() {
+  const node = document.getElementById("finance-list");
+  node.innerHTML = "";
+  document.getElementById("finance-entry-count").textContent = `${state.financeEntries.length}`;
+
+  if (!state.financeEntries.length) {
+    node.appendChild(emptyNode("Brak wpisow finansowych."));
+    return;
+  }
+
+  state.financeEntries.slice().reverse().slice(0, 6).forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${entry.type === "income" ? "Przychod" : "Wydatek"} - ${formatZl(entry.amount)} - ${escapeHtml(entry.category || "Inne")}</span>
+      </div>
+    `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editFinanceEntry(entry.id)),
+      makeToolButton("Del", () => deleteFinanceEntry(entry.id), true)
+    );
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+}
+
+function renderPlannedExpenses() {
+  const node = document.getElementById("planned-list");
+  node.innerHTML = "";
+
+  if (!state.plannedExpenses.length) {
+    node.appendChild(emptyNode("Brak planowanych wydatkow."));
+    return;
+  }
+
+  state.plannedExpenses.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${formatZl(entry.amount)} - ${escapeHtml(entry.dueLabel || "pozniej")}</span>
+      </div>
+    `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Edit", () => editPlannedExpense(entry.id)),
+      makeToolButton("Del", () => deletePlannedExpense(entry.id), true)
+    );
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+}
+
+function renderFinance() {
+  const finance = financeSummary();
+  document.getElementById("finance-balance").textContent = formatZl(finance.income - finance.expense);
+  document.getElementById("finance-income").textContent = formatZl(finance.income);
+  document.getElementById("finance-expense").textContent = formatZl(finance.expense);
+  document.getElementById("finance-planned").textContent = formatZl(plannedTotal());
+  document.getElementById("evaluator-score").textContent = state.evaluator.score ?? "-";
+  document.getElementById("evaluator-label").textContent = state.evaluator.label ?? "-";
+  document.getElementById("evaluator-cpu").textContent = state.evaluator.costPerUse != null ? `${state.evaluator.costPerUse.toFixed(0)} zl` : "-";
+  renderFinanceEntries();
+  renderPlannedExpenses();
+}
+
+function renderTaskList() {
+  const node = document.getElementById("task-list");
+  node.innerHTML = "";
+  const openCount = state.tasks.filter((task) => !task.done).length;
+  document.getElementById("task-summary").textContent = `${openCount} open`;
+  document.getElementById("me-task-count").textContent = `${state.tasks.length}`;
+
+  if (!state.tasks.length) {
+    node.appendChild(emptyNode("Brak taskow."));
+    return;
+  }
+
+  state.tasks
+    .slice()
+    .sort((a, b) => Number(a.done) - Number(b.done))
+    .forEach((task) => node.appendChild(renderTaskRow(task)));
+}
+
+function renderHabitList() {
+  const node = document.getElementById("habit-list");
+  node.innerHTML = "";
+  document.getElementById("habit-summary").textContent = `${state.habits.filter((habit) => habit.done).length}/${state.habits.length}`;
+  document.getElementById("me-habit-count").textContent = `${state.habits.length}`;
+
+  if (!state.habits.length) {
+    node.appendChild(emptyNode("Brak habitow."));
+    return;
+  }
+
+  state.habits.forEach((habit) => node.appendChild(renderHabitRow(habit)));
+}
+
+function renderSupplements() {
   const node = document.getElementById("supplement-list");
   node.innerHTML = "";
+
+  if (!state.supplements.length) {
+    node.appendChild(emptyNode("Brak suplementow."));
+    return;
+  }
+
   state.supplements.forEach((supplement) => {
-    const item = document.createElement("div");
-    item.className = "list-item";
-    item.innerHTML = `
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(supplement.name)}</strong>
         <span>${escapeHtml(supplement.dosage)}</span>
       </div>
     `;
-    node.appendChild(item);
+    node.appendChild(row);
   });
-
-  document.getElementById("evaluator-score").textContent = state.evaluator.score ?? "-";
-  document.getElementById("evaluator-label").textContent = state.evaluator.label ?? "-";
-  document.getElementById("evaluator-cpu").textContent = state.evaluator.costPerUse != null ? `${state.evaluator.costPerUse.toFixed(0)} zl` : "-";
-  document.getElementById("me-onboarding-status").textContent = state.onboarding.completed ? "Done" : "In progress";
-  document.getElementById("me-onboarding-copy").textContent = state.onboarding.completed
-    ? "Start jest domkniety. Teraz najwazniejsze jest tylko utrzymanie prostego rytmu i backupu."
-    : `${onboardingSteps().filter((step) => step.done).length}/3 krokow gotowe. Uzupelnij podstawy, a panel zacznie byc naprawde osobisty.`;
 }
 
-function renderDate() {
-  const formatter = new Intl.DateTimeFormat("pl-PL", {
-    weekday: "short",
-    day: "numeric",
-    month: "short"
-  });
-  document.getElementById("today-date").textContent = formatter.format(new Date());
+function renderMe() {
+  renderTaskList();
+  renderHabitList();
+  renderSupplements();
+  document.getElementById("today-note").textContent = state.note;
 }
 
 function renderRestTimer() {
   const valueNode = document.getElementById("rest-timer-value");
   const statusNode = document.getElementById("rest-timer-status");
-  const startButton = document.getElementById("rest-start-button");
-  if (!valueNode || !statusNode || !startButton) return;
-
+  if (!valueNode || !statusNode) return;
   valueNode.textContent = String(restTimerValue);
   statusNode.textContent = restTimerRunning ? "Running" : "Ready";
-  startButton.textContent = restTimerRunning ? "Pause" : "Start";
 }
 
 function toggleRestTimer() {
@@ -1131,7 +1053,7 @@ function toggleRestTimer() {
     clearInterval(restTimerInterval);
     restTimerInterval = null;
     renderRestTimer();
-    notifyTimerComplete();
+    notifyPulse();
     setFeedback("Koniec przerwy.");
   }, 1000);
 }
@@ -1142,39 +1064,6 @@ function resetRestTimer() {
   restTimerInterval = null;
   restTimerValue = 90;
   renderRestTimer();
-}
-
-function notifyTimerComplete() {
-  if (navigator.vibrate) {
-    navigator.vibrate([120, 80, 120]);
-  }
-
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.value = 880;
-    gain.gain.value = 0.05;
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.18);
-    oscillator.onended = () => audioContext.close();
-  } catch {
-    // Silent fallback for unsupported browsers.
-  }
-}
-
-function renderMetronome() {
-  const valueNode = document.getElementById("metronome-bpm-value");
-  const statusNode = document.getElementById("metronome-status");
-  const startButton = document.getElementById("metronome-start-button");
-  if (!valueNode || !statusNode || !startButton) return;
-
-  valueNode.textContent = `${metronomeBpm} BPM`;
-  statusNode.textContent = metronomeRunning ? "Running" : "Ready";
-  startButton.textContent = metronomeRunning ? "Running" : "Start";
 }
 
 function ensureMetronomeAudio() {
@@ -1190,8 +1079,6 @@ function ensureMetronomeAudio() {
 function playMetronomeClick() {
   try {
     ensureMetronomeAudio();
-    if (!metronomeAudioContext) return;
-
     const oscillator = metronomeAudioContext.createOscillator();
     const gain = metronomeAudioContext.createGain();
     oscillator.type = "square";
@@ -1202,74 +1089,183 @@ function playMetronomeClick() {
     oscillator.start();
     oscillator.stop(metronomeAudioContext.currentTime + 0.04);
   } catch {
-    // Silent fallback for unsupported browsers.
+    // Silent fallback.
   }
 }
 
-function stopMetronome() {
-  metronomeRunning = false;
-  clearInterval(metronomeInterval);
-  metronomeInterval = null;
-  renderMetronome();
+function renderMetronome() {
+  document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
+  document.getElementById("metronome-status").textContent = metronomeRunning ? "Running" : "Ready";
+
+  if (metronomeRunning && metronomeStartedAt) {
+    const elapsed = Math.max(0, Math.floor((Date.now() - metronomeStartedAt) / 1000));
+    document.getElementById("guitar-session-clock").textContent = `Sesja trwa ${elapsed}s na aktywnym cwiczeniu.`;
+  } else {
+    document.getElementById("guitar-session-clock").textContent = "Sesja zapisze sie po zatrzymaniu metronomu.";
+  }
+}
+
+function selectGuitarExercise(id) {
+  state.guitarActiveId = id;
+  const active = activeGuitarExercise();
+  const stats = active ? exerciseSessionStats(active.id) : null;
+  metronomeBpm = stats?.latestBpm || active?.targetBpm || 80;
+  saveState();
+  renderAll();
+  setFeedback(`Aktywne cwiczenie: ${active?.title || "brak"}.`);
 }
 
 function startMetronome() {
-  if (metronomeRunning) {
+  if (metronomeRunning) return;
+  const active = activeGuitarExercise();
+  if (!active) {
+    setFeedback("Najpierw dodaj lub wybierz cwiczenie gitarowe.");
+    focusField("guitar-exercise-name-input");
     return;
   }
 
   metronomeRunning = true;
-  renderMetronome();
+  metronomeStartedAt = Date.now();
   playMetronomeClick();
-  metronomeInterval = setInterval(playMetronomeClick, Math.max(120, Math.round(60000 / metronomeBpm)));
+  renderMetronome();
+  metronomeInterval = setInterval(playMetronomeClick, Math.max(140, Math.round(60000 / metronomeBpm)));
+  metronomeUiInterval = setInterval(renderMetronome, 1000);
 }
 
-function editHabit(id) {
-  const habit = state.habits.find((item) => item.id === id);
-  if (!habit) return;
-  const title = prompt("Habit", habit.title);
-  if (title === null) return;
-  const detail = prompt("Opis", habit.detail);
-  if (detail === null) return;
-  state.habits = state.habits.map((item) => item.id === id ? { ...item, title: title.trim() || item.title, detail: detail.trim() || "Minimum" } : item);
-  setFeedback(`Zmieniono habit: ${title.trim() || habit.title}.`);
+function stopMetronome(skipSave = false) {
+  if (!metronomeRunning && !metronomeStartedAt) {
+    renderMetronome();
+    return;
+  }
+
+  clearInterval(metronomeInterval);
+  clearInterval(metronomeUiInterval);
+  metronomeInterval = null;
+  metronomeUiInterval = null;
+
+  const durationSec = metronomeStartedAt ? Math.max(5, Math.floor((Date.now() - metronomeStartedAt) / 1000)) : 0;
+  const active = activeGuitarExercise();
+
+  metronomeRunning = false;
+  metronomeStartedAt = null;
+
+  if (!skipSave && active && durationSec > 0) {
+    state.guitarSessions.push({
+      id: uid("gs"),
+      exerciseId: active.id,
+      exerciseTitle: active.title,
+      bpm: metronomeBpm,
+      durationSec,
+      createdAt: new Date().toISOString()
+    });
+    saveState();
+    renderAll();
+    setFeedback(`Zapisano sesje ${active.title}: ${metronomeBpm} BPM, ${minutesFromSeconds(durationSec)}.`);
+    return;
+  }
+
+  renderMetronome();
+}
+
+function notifyPulse() {
+  if (navigator.vibrate) {
+    navigator.vibrate([120, 80, 120]);
+  }
+}
+
+function computeEvaluator(cost, uses, value, goalImpact) {
+  const costPerUse = uses > 0 ? cost / uses : cost;
+  const scoreRaw = (value * 4 + goalImpact * 4) - Math.min(costPerUse / 10, 20);
+  const score = Math.max(Math.min(Math.round(scoreRaw), 99), 0);
+  let label = "Srednio";
+  if (score >= 65) label = "Ma sens";
+  if (score < 40) label = "Raczej nie";
+  return { score, label, costPerUse };
+}
+
+function toggleTask(id, forceDone = null) {
+  state.tasks = state.tasks.map((task) => task.id === id ? { ...task, done: forceDone ?? !task.done } : task);
+  saveState();
+  renderAll();
+}
+
+function toggleHabit(id, forceDone = null) {
+  state.habits = state.habits.map((habit) => habit.id === id ? { ...habit, done: forceDone ?? !habit.done } : habit);
   saveState();
   renderAll();
 }
 
 function editTask(id) {
-  const task = state.tasks.find((item) => item.id === id);
+  const task = state.tasks.find((entry) => entry.id === id);
   if (!task) return;
   const title = prompt("Task", task.title);
   if (title === null) return;
-  const detail = prompt("Opis", task.detail);
+  const detail = prompt("Opis", task.detail || "");
   if (detail === null) return;
-  state.tasks = state.tasks.map((item) => item.id === id ? { ...item, title: title.trim() || item.title, detail: detail.trim() || "Bez opisu" } : item);
-  setFeedback(`Zmieniono task: ${title.trim() || task.title}.`);
+  state.tasks = state.tasks.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    detail: detail.trim() || entry.detail
+  } : entry);
+  saveState();
+  renderAll();
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter((entry) => entry.id !== id);
+  saveState();
+  renderAll();
+}
+
+function editHabit(id) {
+  const habit = state.habits.find((entry) => entry.id === id);
+  if (!habit) return;
+  const title = prompt("Habit", habit.title);
+  if (title === null) return;
+  const detail = prompt("Opis", habit.detail || "");
+  if (detail === null) return;
+  state.habits = state.habits.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    detail: detail.trim() || entry.detail
+  } : entry);
+  saveState();
+  renderAll();
+}
+
+function deleteHabit(id) {
+  state.habits = state.habits.filter((entry) => entry.id !== id);
   saveState();
   renderAll();
 }
 
 function editWorkout(id) {
-  const workout = state.workouts.find((item) => item.id === id);
+  const workout = state.workouts.find((entry) => entry.id === id);
   if (!workout) return;
   const title = prompt("Trening", workout.title);
   if (title === null) return;
   const duration = prompt("Minuty", String(workout.duration));
   if (duration === null) return;
-  const numeric = Number(duration);
-  state.workouts = state.workouts.map((item) => item.id === id ? {
-    ...item,
-    title: title.trim() || item.title,
-    duration: Number.isFinite(numeric) && numeric > 0 ? numeric : item.duration
-  } : item);
-  setFeedback(`Zmieniono trening: ${title.trim() || workout.title}.`);
+  const focus = prompt("Focus", workout.focus || "");
+  if (focus === null) return;
+  state.workouts = state.workouts.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    duration: Number.isFinite(Number(duration)) && Number(duration) > 0 ? Number(duration) : entry.duration,
+    focus: focus.trim() || entry.focus
+  } : entry);
   saveState();
   renderAll();
 }
 
-function editTemplate(id) {
-  const template = state.workoutTemplates.find((item) => item.id === id);
+function deleteWorkout(id) {
+  state.workouts = state.workouts.filter((entry) => entry.id !== id);
+  saveState();
+  renderAll();
+}
+
+function editWorkoutTemplate(id) {
+  const template = state.workoutTemplates.find((entry) => entry.id === id);
   if (!template) return;
   const title = prompt("Szablon", template.title);
   if (title === null) return;
@@ -1277,42 +1273,59 @@ function editTemplate(id) {
   if (focus === null) return;
   const rest = prompt("Rest s", String(template.rest));
   if (rest === null) return;
-
-  state.workoutTemplates = state.workoutTemplates.map((item) => item.id === id ? {
-    ...item,
-    title: title.trim() || item.title,
-    focus: focus.trim() || item.focus,
-    rest: Number.isFinite(Number(rest)) && Number(rest) > 0 ? Number(rest) : item.rest
-  } : item);
-
-  setFeedback(`Zmieniono szablon: ${title.trim() || template.title}.`);
+  state.workoutTemplates = state.workoutTemplates.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    focus: focus.trim() || entry.focus,
+    rest: Number.isFinite(Number(rest)) ? Number(rest) : entry.rest
+  } : entry);
   saveState();
   renderAll();
 }
 
 function applyWorkoutTemplate(id) {
-  const template = state.workoutTemplates.find((item) => item.id === id);
+  const template = state.workoutTemplates.find((entry) => entry.id === id);
   if (!template) return;
-
-  const dayLabel = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date());
   state.workouts.push({
     id: uid("workout"),
     title: template.title,
     duration: template.exercises.length * 18,
     focus: template.focus,
-    dateLabel: dayLabel,
     createdAt: new Date().toISOString()
   });
-
   restTimerValue = template.rest;
-  renderRestTimer();
+  saveState();
+  renderAll();
   setFeedback(`Dodano trening z szablonu: ${template.title}.`);
+}
+
+function editSet(id) {
+  const set = state.exerciseSets.find((entry) => entry.id === id);
+  if (!set) return;
+  const exercise = prompt("Cwiczenie", set.exercise);
+  if (exercise === null) return;
+  const reps = prompt("Reps", String(set.reps));
+  if (reps === null) return;
+  const weight = prompt("Kg", String(set.weight));
+  if (weight === null) return;
+  state.exerciseSets = state.exerciseSets.map((entry) => entry.id === id ? {
+    ...entry,
+    exercise: exercise.trim() || entry.exercise,
+    reps: Number.isFinite(Number(reps)) ? Number(reps) : entry.reps,
+    weight: Number.isFinite(Number(weight)) ? Number(weight) : entry.weight
+  } : entry);
+  saveState();
+  renderAll();
+}
+
+function deleteSet(id) {
+  state.exerciseSets = state.exerciseSets.filter((entry) => entry.id !== id);
   saveState();
   renderAll();
 }
 
 function editMeal(id) {
-  const meal = state.meals.find((item) => item.id === id);
+  const meal = state.meals.find((entry) => entry.id === id);
   if (!meal) return;
   const title = prompt("Posilek", meal.title);
   if (title === null) return;
@@ -1320,66 +1333,18 @@ function editMeal(id) {
   if (calories === null) return;
   const protein = prompt("Bialko", String(meal.protein));
   if (protein === null) return;
-  const carbs = prompt("Wegle", String(meal.carbs));
-  if (carbs === null) return;
-  const fats = prompt("Tluscze", String(meal.fats));
-  if (fats === null) return;
-
-  state.meals = state.meals.map((item) => item.id === id ? {
-    ...item,
-    title: title.trim() || item.title,
-    calories: Number.isFinite(Number(calories)) ? Number(calories) : item.calories,
-    protein: Number.isFinite(Number(protein)) ? Number(protein) : item.protein,
-    carbs: Number.isFinite(Number(carbs)) ? Number(carbs) : item.carbs,
-    fats: Number.isFinite(Number(fats)) ? Number(fats) : item.fats
-  } : item);
-
-  setFeedback(`Zmieniono posilek: ${title.trim() || meal.title}.`);
+  state.meals = state.meals.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    calories: Number.isFinite(Number(calories)) ? Number(calories) : entry.calories,
+    protein: Number.isFinite(Number(protein)) ? Number(protein) : entry.protein
+  } : entry);
   saveState();
   renderAll();
 }
 
 function deleteMeal(id) {
-  state.meals = state.meals.filter((item) => item.id !== id);
-  setFeedback("Usunieto posilek.");
-  saveState();
-  renderAll();
-}
-
-function editMealTemplate(id) {
-  const template = state.mealTemplates.find((item) => item.id === id);
-  if (!template) return;
-  const title = prompt("Szablon posilku", template.title);
-  if (title === null) return;
-  const calories = prompt("Kcal", String(template.calories));
-  if (calories === null) return;
-
-  state.mealTemplates = state.mealTemplates.map((item) => item.id === id ? {
-    ...item,
-    title: title.trim() || item.title,
-    calories: Number.isFinite(Number(calories)) ? Number(calories) : item.calories
-  } : item);
-
-  setFeedback(`Zmieniono szablon jedzenia: ${title.trim() || template.title}.`);
-  saveState();
-  renderAll();
-}
-
-function applyMealTemplate(id) {
-  const template = state.mealTemplates.find((item) => item.id === id);
-  if (!template) return;
-
-  state.meals.push({
-    id: uid("meal"),
-    title: template.title,
-    calories: template.calories,
-    protein: template.protein,
-    carbs: template.carbs,
-    fats: template.fats,
-    createdAt: new Date().toISOString()
-  });
-
-  setFeedback(`Dodano posilek z szablonu: ${template.title}.`);
+  state.meals = state.meals.filter((entry) => entry.id !== id);
   saveState();
   renderAll();
 }
@@ -1393,114 +1358,75 @@ function editFinanceEntry(id) {
   if (amount === null) return;
   const category = prompt("Kategoria", entry.category || "");
   if (category === null) return;
-
   state.financeEntries = state.financeEntries.map((item) => item.id === id ? {
     ...item,
     title: title.trim() || item.title,
     amount: Number.isFinite(Number(amount)) ? Number(amount) : item.amount,
     category: category.trim() || item.category
   } : item);
-
-  setFeedback(`Zmieniono wpis finansowy: ${title.trim() || entry.title}.`);
   saveState();
   renderAll();
 }
 
 function deleteFinanceEntry(id) {
   state.financeEntries = state.financeEntries.filter((item) => item.id !== id);
-  setFeedback("Usunieto wpis finansowy.");
   saveState();
   renderAll();
 }
 
-function editGuitarLog(id) {
-  const entry = state.guitarLogs.find((item) => item.id === id);
+function editPlannedExpense(id) {
+  const entry = state.plannedExpenses.find((item) => item.id === id);
   if (!entry) return;
-  const title = prompt("Cwiczenie", entry.title);
+  const title = prompt("Plan", entry.title);
   if (title === null) return;
-  const bpm = prompt("BPM", String(entry.bpm));
-  if (bpm === null) return;
-  const note = prompt("Notatka", entry.note || "");
-  if (note === null) return;
-
-  state.guitarLogs = state.guitarLogs.map((item) => item.id === id ? {
+  const amount = prompt("Kwota", String(entry.amount));
+  if (amount === null) return;
+  const due = prompt("Kiedy", entry.dueLabel || "");
+  if (due === null) return;
+  state.plannedExpenses = state.plannedExpenses.map((item) => item.id === id ? {
     ...item,
     title: title.trim() || item.title,
-    bpm: Number.isFinite(Number(bpm)) && Number(bpm) > 0 ? Number(bpm) : item.bpm,
-    note: note.trim()
+    amount: Number.isFinite(Number(amount)) ? Number(amount) : item.amount,
+    dueLabel: due.trim() || item.dueLabel
   } : item);
-
-  setFeedback(`Zmieniono wpis gitarowy: ${title.trim() || entry.title}.`);
   saveState();
   renderAll();
 }
 
-function deleteGuitarLog(id) {
-  state.guitarLogs = state.guitarLogs.filter((item) => item.id !== id);
-  setFeedback("Usunieto wpis gitarowy.");
+function deletePlannedExpense(id) {
+  state.plannedExpenses = state.plannedExpenses.filter((item) => item.id !== id);
   saveState();
   renderAll();
 }
 
-function computeEvaluator(cost, uses, value, goalImpact) {
-  const costPerUse = uses > 0 ? cost / uses : cost;
-  const scoreRaw = (value * 4 + goalImpact * 4) - Math.min(costPerUse / 10, 20);
-  const score = Math.max(Math.min(Math.round(scoreRaw), 99), 0);
-  let label = "Srednio";
-  if (score >= 65) label = "Ma sens";
-  if (score < 40) label = "Raczej nie";
-  return { score, label, costPerUse };
-}
-
-function deleteHabit(id) {
-  state.habits = state.habits.filter((item) => item.id !== id);
-  setFeedback("Usunieto habit.");
+function editGuitarExercise(id) {
+  const exercise = state.guitarExercises.find((entry) => entry.id === id);
+  if (!exercise) return;
+  const title = prompt("Cwiczenie", exercise.title);
+  if (title === null) return;
+  const target = prompt("Cel BPM", String(exercise.targetBpm));
+  if (target === null) return;
+  state.guitarExercises = state.guitarExercises.map((entry) => entry.id === id ? {
+    ...entry,
+    title: title.trim() || entry.title,
+    targetBpm: Number.isFinite(Number(target)) && Number(target) > 0 ? Number(target) : entry.targetBpm
+  } : entry);
   saveState();
   renderAll();
 }
 
-function deleteTask(id) {
-  state.tasks = state.tasks.filter((item) => item.id !== id);
-  setFeedback("Usunieto task.");
+function deleteGuitarExercise(id) {
+  state.guitarExercises = state.guitarExercises.filter((entry) => entry.id !== id);
+  state.guitarSessions = state.guitarSessions.filter((entry) => entry.exerciseId !== id);
+  if (state.guitarActiveId === id) {
+    state.guitarActiveId = state.guitarExercises[0]?.id || null;
+  }
   saveState();
   renderAll();
 }
 
-function deleteWorkout(id) {
-  state.workouts = state.workouts.filter((item) => item.id !== id);
-  setFeedback("Usunieto trening.");
-  saveState();
-  renderAll();
-}
-
-function editSet(id) {
-  const set = state.exerciseSets.find((item) => item.id === id);
-  if (!set) return;
-  const exercise = prompt("Cwiczenie", set.exercise);
-  if (exercise === null) return;
-  const reps = prompt("Reps", String(set.reps));
-  if (reps === null) return;
-  const weight = prompt("Kg", String(set.weight));
-  if (weight === null) return;
-  const rest = prompt("Rest s", String(set.rest));
-  if (rest === null) return;
-
-  state.exerciseSets = state.exerciseSets.map((item) => item.id === id ? {
-    ...item,
-    exercise: exercise.trim() || item.exercise,
-    reps: Number.isFinite(Number(reps)) && Number(reps) > 0 ? Number(reps) : item.reps,
-    weight: Number.isFinite(Number(weight)) && Number(weight) >= 0 ? Number(weight) : item.weight,
-    rest: Number.isFinite(Number(rest)) && Number(rest) >= 0 ? Number(rest) : item.rest
-  } : item);
-
-  setFeedback(`Zmieniono serie: ${exercise.trim() || set.exercise}.`);
-  saveState();
-  renderAll();
-}
-
-function deleteSet(id) {
-  state.exerciseSets = state.exerciseSets.filter((item) => item.id !== id);
-  setFeedback("Usunieto serie.");
+function deleteGuitarSession(id) {
+  state.guitarSessions = state.guitarSessions.filter((entry) => entry.id !== id);
   saveState();
   renderAll();
 }
@@ -1518,17 +1444,14 @@ function exportState() {
 
 function importState(file) {
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const parsed = JSON.parse(String(reader.result || "{}"));
       if (!confirm("Nadpisac obecne dane importem?")) return;
-
       state = normalizeState(parsed);
-      syncOnboardingState();
       resetRestTimer();
-      stopMetronome();
+      stopMetronome(true);
       metronomeBpm = 80;
       saveState();
       renderAll();
@@ -1544,7 +1467,7 @@ function resetState() {
   if (!confirm("Zresetowac demo data?")) return;
   state = cloneState(defaultState);
   resetRestTimer();
-  stopMetronome();
+  stopMetronome(true);
   metronomeBpm = 80;
   saveState();
   renderAll();
@@ -1552,23 +1475,6 @@ function resetState() {
 }
 
 function bindForms() {
-  document.getElementById("weight-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = document.getElementById("weight-input");
-    const value = Number(input.value);
-    if (!Number.isFinite(value) || value <= 0) return;
-
-    state.weightHistory = [...state.weightHistory.slice(-6), {
-      dateLabel: `D${state.weightHistory.length + 1}`,
-      value,
-      createdAt: new Date().toISOString()
-    }];
-    input.value = "";
-    setFeedback(`Zapisano wage ${value.toFixed(1)} kg.`);
-    saveState();
-    renderAll();
-  });
-
   document.getElementById("task-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const titleInput = document.getElementById("task-input");
@@ -1576,21 +1482,19 @@ function bindForms() {
     const priorityInput = document.getElementById("task-priority-input");
     const title = titleInput.value.trim();
     if (!title) return;
-
-    state.tasks.unshift({
+    state.tasks.push({
       id: uid("task"),
       title,
       detail: detailInput.value.trim() || "Bez opisu",
-      priority: priorityInput.value,
-      done: false
+      done: false,
+      priority: priorityInput.value
     });
-
     titleInput.value = "";
     detailInput.value = "";
     priorityInput.value = "medium";
-    setFeedback(`Dodano task: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano task: ${title}.`);
   });
 
   document.getElementById("habit-form").addEventListener("submit", (event) => {
@@ -1599,19 +1503,44 @@ function bindForms() {
     const detailInput = document.getElementById("habit-detail-input");
     const title = titleInput.value.trim();
     if (!title) return;
-
     state.habits.push({
       id: uid("habit"),
       title,
       detail: detailInput.value.trim() || "Minimum",
       done: false
     });
-
     titleInput.value = "";
     detailInput.value = "";
-    setFeedback(`Dodano habit: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano habit: ${title}.`);
+  });
+
+  document.getElementById("note-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("note-input");
+    const note = input.value.trim();
+    if (!note) return;
+    state.note = note;
+    input.value = "";
+    saveState();
+    renderAll();
+    setFeedback("Zapisano notatke.");
+  });
+
+  document.getElementById("weight-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("weight-input");
+    const value = Number(input.value);
+    if (!Number.isFinite(value) || value <= 0) return;
+    state.weightHistory = [
+      ...state.weightHistory.slice(-13),
+      { id: uid("weight"), value, createdAt: new Date().toISOString() }
+    ];
+    input.value = "";
+    saveState();
+    renderAll();
+    setFeedback(`Zapisano wage: ${value.toFixed(1)} kg.`);
   });
 
   document.getElementById("workout-form").addEventListener("submit", (event) => {
@@ -1622,23 +1551,19 @@ function bindForms() {
     const title = titleInput.value.trim();
     const duration = Number(durationInput.value);
     if (!title || !Number.isFinite(duration) || duration <= 0) return;
-
-    const dayLabel = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date());
     state.workouts.push({
       id: uid("workout"),
       title,
       duration,
       focus: focusInput.value.trim() || "general",
-      dateLabel: dayLabel,
       createdAt: new Date().toISOString()
     });
-
     titleInput.value = "";
     durationInput.value = "";
     focusInput.value = "";
-    setFeedback(`Dodano trening: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano trening: ${title}.`);
   });
 
   document.getElementById("set-form").addEventListener("submit", (event) => {
@@ -1651,26 +1576,22 @@ function bindForms() {
     const reps = Number(repsInput.value);
     const weight = Number(weightInput.value);
     const rest = Number(restInput.value || restTimerValue);
-
     if (!exercise || !Number.isFinite(reps) || reps <= 0 || !Number.isFinite(weight) || weight < 0) return;
-
     state.exerciseSets.push({
       id: uid("set"),
       exercise,
       reps,
       weight,
       rest: Number.isFinite(rest) && rest >= 0 ? rest : restTimerValue,
-      dateLabel: "Today",
       createdAt: new Date().toISOString()
     });
-
     exerciseInput.value = "";
     repsInput.value = "";
     weightInput.value = "";
     restInput.value = String(restTimerValue);
-    setFeedback(`Dodano serie: ${exercise}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano serie: ${exercise}.`);
   });
 
   document.getElementById("meal-form").addEventListener("submit", (event) => {
@@ -1682,30 +1603,24 @@ function bindForms() {
     const fatsInput = document.getElementById("meal-fats-input");
     const title = titleInput.value.trim();
     const calories = Number(kcalInput.value);
-    const protein = Number(proteinInput.value);
-    const carbs = Number(carbsInput.value);
-    const fats = Number(fatsInput.value);
-
     if (!title || !Number.isFinite(calories) || calories <= 0) return;
-
     state.meals.push({
       id: uid("meal"),
       title,
       calories,
-      protein: Number.isFinite(protein) ? protein : 0,
-      carbs: Number.isFinite(carbs) ? carbs : 0,
-      fats: Number.isFinite(fats) ? fats : 0,
+      protein: Number(proteinInput.value) || 0,
+      carbs: Number(carbsInput.value) || 0,
+      fats: Number(fatsInput.value) || 0,
       createdAt: new Date().toISOString()
     });
-
     titleInput.value = "";
     kcalInput.value = "";
     proteinInput.value = "";
     carbsInput.value = "";
     fatsInput.value = "";
-    setFeedback(`Dodano posilek: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano posilek: ${title}.`);
   });
 
   document.getElementById("finance-form").addEventListener("submit", (event) => {
@@ -1716,9 +1631,7 @@ function bindForms() {
     const categoryInput = document.getElementById("finance-category-input");
     const title = titleInput.value.trim();
     const amount = Number(amountInput.value);
-
     if (!title || !Number.isFinite(amount) || amount <= 0) return;
-
     state.financeEntries.push({
       id: uid("fin"),
       type: typeInput.value,
@@ -1727,14 +1640,13 @@ function bindForms() {
       category: categoryInput.value.trim() || "Inne",
       createdAt: new Date().toISOString()
     });
-
     titleInput.value = "";
     amountInput.value = "";
     categoryInput.value = "";
     typeInput.value = "expense";
-    setFeedback(`Dodano wpis finansowy: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano wpis finansowy: ${title}.`);
   });
 
   document.getElementById("planned-form").addEventListener("submit", (event) => {
@@ -1744,22 +1656,19 @@ function bindForms() {
     const dateInput = document.getElementById("planned-date-input");
     const title = titleInput.value.trim();
     const amount = Number(amountInput.value);
-
     if (!title || !Number.isFinite(amount) || amount <= 0) return;
-
     state.plannedExpenses.push({
       id: uid("plan"),
       title,
       amount,
       dueLabel: dateInput.value.trim() || "pozniej"
     });
-
     titleInput.value = "";
     amountInput.value = "";
     dateInput.value = "";
-    setFeedback(`Dodano planowany wydatek: ${title}.`);
     saveState();
     renderAll();
+    setFeedback(`Dodano planowany wydatek: ${title}.`);
   });
 
   document.getElementById("evaluator-form").addEventListener("submit", (event) => {
@@ -1768,51 +1677,33 @@ function bindForms() {
     const uses = Number(document.getElementById("eval-uses-input").value);
     const value = Number(document.getElementById("eval-value-input").value);
     const goal = Number(document.getElementById("eval-goal-input").value);
-
     if (![cost, uses, value, goal].every(Number.isFinite)) return;
-
     state.evaluator = computeEvaluator(cost, uses, value, goal);
-    setFeedback(`Policzono ocene zakupu: ${state.evaluator.label}.`);
     saveState();
     renderAll();
+    setFeedback(`Policzono zakup: ${state.evaluator.label}.`);
   });
 
-  document.getElementById("guitar-form").addEventListener("submit", (event) => {
+  document.getElementById("guitar-exercise-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    const titleInput = document.getElementById("guitar-title-input");
-    const bpmInput = document.getElementById("guitar-bpm-input");
-    const noteInput = document.getElementById("guitar-note-input");
-    const title = titleInput.value.trim();
-    const bpm = Number(bpmInput.value);
-
-    if (!title || !Number.isFinite(bpm) || bpm <= 0) return;
-
-    state.guitarLogs.push({
-      id: uid("guitar"),
+    const nameInput = document.getElementById("guitar-exercise-name-input");
+    const targetInput = document.getElementById("guitar-exercise-target-input");
+    const title = nameInput.value.trim();
+    const targetBpm = Number(targetInput.value);
+    if (!title || !Number.isFinite(targetBpm) || targetBpm <= 0) return;
+    const id = uid("gex");
+    state.guitarExercises.push({
+      id,
       title,
-      bpm,
-      note: noteInput.value.trim(),
-      createdAt: new Date().toISOString()
+      targetBpm
     });
-
-    titleInput.value = "";
-    bpmInput.value = "";
-    noteInput.value = "";
-    setFeedback(`Dodano wpis gitarowy: ${title}.`);
+    state.guitarActiveId = id;
+    metronomeBpm = targetBpm;
+    nameInput.value = "";
+    targetInput.value = "";
     saveState();
     renderAll();
-  });
-
-  document.getElementById("note-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = document.getElementById("note-input");
-    const note = input.value.trim();
-    if (!note) return;
-    state.note = note;
-    input.value = "";
-    setFeedback("Zapisano notatke dnia.");
-    saveState();
-    renderAll();
+    setFeedback(`Dodano cwiczenie gitarowe: ${title}.`);
   });
 }
 
@@ -1822,46 +1713,14 @@ function bindTabs() {
   });
 
   switchButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      setTab(button.dataset.switchTab);
-      focusField(button.dataset.focus);
-    });
+    button.addEventListener("click", () => setTab(button.dataset.switchTab));
   });
 }
 
 function bindTools() {
-  const importInput = document.getElementById("import-input");
-  document.getElementById("import-button").addEventListener("click", () => importInput.click());
-  document.getElementById("export-button").addEventListener("click", exportState);
-  document.getElementById("reset-button").addEventListener("click", resetState);
-  document.getElementById("show-onboarding-button").addEventListener("click", () => {
-    state.onboarding.dismissed = false;
-    state.onboarding.completed = false;
-    saveState();
-    renderAll();
-    setTab("today");
-  });
-  document.getElementById("complete-onboarding-button").addEventListener("click", () => {
-    state.onboarding.completed = true;
-    state.onboarding.dismissed = false;
-    saveState();
-    renderAll();
-    setFeedback("Ukryto onboarding.");
-  });
-  document.getElementById("onboarding-open-capture").addEventListener("click", () => {
-    setTab("capture");
-    focusField("weight-input");
-  });
-  document.getElementById("onboarding-dismiss-button").addEventListener("click", () => {
-    state.onboarding.dismissed = true;
-    saveState();
-    renderAll();
-  });
-  importInput.addEventListener("change", (event) => {
-    const file = event.target.files?.[0];
-    importState(file);
-    event.target.value = "";
-  });
+  document.getElementById("rest-start-button").addEventListener("click", toggleRestTimer);
+  document.getElementById("rest-reset-button").addEventListener("click", resetRestTimer);
+
   document.querySelectorAll("[data-rest-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       restTimerValue = Number(button.dataset.restPreset);
@@ -1871,11 +1730,32 @@ function bindTools() {
       renderRestTimer();
     });
   });
+
+  document.getElementById("metronome-minus-button").addEventListener("click", () => {
+    metronomeBpm = Math.max(30, metronomeBpm - 1);
+    if (metronomeRunning) {
+      stopMetronome(true);
+      startMetronome();
+    } else {
+      renderMetronome();
+    }
+  });
+
+  document.getElementById("metronome-plus-button").addEventListener("click", () => {
+    metronomeBpm = Math.min(280, metronomeBpm + 1);
+    if (metronomeRunning) {
+      stopMetronome(true);
+      startMetronome();
+    } else {
+      renderMetronome();
+    }
+  });
+
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       metronomeBpm = Number(button.dataset.metronomePreset);
       if (metronomeRunning) {
-        stopMetronome();
+        stopMetronome(true);
         startMetronome();
       } else {
         renderMetronome();
@@ -1883,21 +1763,27 @@ function bindTools() {
     });
   });
 
-  document.getElementById("rest-start-button").addEventListener("click", toggleRestTimer);
-  document.getElementById("rest-reset-button").addEventListener("click", resetRestTimer);
   document.getElementById("metronome-start-button").addEventListener("click", startMetronome);
-  document.getElementById("metronome-stop-button").addEventListener("click", stopMetronome);
+  document.getElementById("metronome-stop-button").addEventListener("click", () => stopMetronome(false));
+
+  const importInput = document.getElementById("import-input");
+  document.getElementById("import-button").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    importState(file);
+    event.target.value = "";
+  });
+
+  document.getElementById("export-button").addEventListener("click", exportState);
+  document.getElementById("reset-button").addEventListener("click", resetState);
 }
 
 function renderAll() {
-  renderDate();
-  renderToday();
-  renderZones();
-  renderInsights();
+  renderHome();
+  renderGuitar();
+  renderGym();
+  renderFinance();
   renderMe();
-  renderMealTemplateList();
-  renderRestTimer();
-  renderMetronome();
   setTab(state.activeTab);
 }
 
