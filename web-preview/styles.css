@@ -39,6 +39,10 @@ body {
   touch-action: manipulation;
 }
 
+body.metronome-dragging {
+  overflow: hidden;
+}
+
 button,
 input,
 select,
@@ -455,12 +459,16 @@ button:active {
   font-size: 1rem;
 }
 
+.compact-exercise-card {
+  margin-top: 14px;
+}
+
 .tempo-head {
   display: grid;
-  grid-template-columns: 56px 1fr 56px;
-  gap: 14px;
+  grid-template-columns: 40px 1fr 40px;
+  gap: 10px;
   align-items: center;
-  margin: 20px 0 10px;
+  margin: 4px 0 6px;
 }
 
 .tempo-readout {
@@ -484,7 +492,7 @@ button:active {
   position: relative;
   width: min(100%, 330px);
   aspect-ratio: 1 / 1.05;
-  margin: 8px auto 12px;
+  margin: 4px auto 10px;
 }
 
 .metronome-arc {
@@ -543,21 +551,18 @@ button:active {
     translateY(-128px);
 }
 
-.metronome-arc-slider {
+.metronome-arc-hitbox {
   position: absolute;
-  left: 58px;
-  right: 58px;
-  top: 22px;
-  height: 78px;
-  padding: 0;
-  margin: 0;
-  opacity: 0.001;
-  transform: rotate(-6deg);
+  left: 34px;
+  right: 34px;
+  top: 8px;
+  height: 118px;
   border: 0;
   background: transparent;
-  box-shadow: none;
   cursor: pointer;
   touch-action: none;
+  z-index: 4;
+  outline: none;
 }
 
 .arc-label {
@@ -591,9 +596,9 @@ button:active {
   transform: translate(-50%, -58%);
   border: 0;
   border-radius: 999px;
-  min-width: 128px;
-  min-height: 128px;
-  padding: 0 24px;
+  width: 128px;
+  height: 128px;
+  padding: 0;
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 28%),
     linear-gradient(180deg, rgba(88, 240, 194, 0.98), rgba(58, 198, 162, 0.94));
@@ -601,6 +606,8 @@ button:active {
   font-weight: 900;
   letter-spacing: 0.02em;
   cursor: pointer;
+  display: grid;
+  place-items: center;
   box-shadow:
     0 18px 32px rgba(0, 0, 0, 0.26),
     inset 0 -6px 14px rgba(0, 0, 0, 0.14);
@@ -724,12 +731,12 @@ button:active {
 }
 
 .dial-step {
-  width: 56px;
-  height: 56px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.12);
   color: white;
-  font-size: 1.4rem;
+  font-size: 1rem;
 }
 
 .preset-row,
@@ -978,12 +985,8 @@ textarea:focus {
   }
 
   .dial-step {
-    width: 100%;
-    height: 48px;
-  }
-
-  .tempo-head {
-    grid-template-columns: 1fr;
+    width: 40px;
+    height: 40px;
   }
 
   .metronome-wheel {
@@ -991,16 +994,15 @@ textarea:focus {
   }
 
   .metronome-toggle-button {
-    min-width: 116px;
-    min-height: 116px;
-    padding: 0 22px;
+    width: 116px;
+    height: 116px;
   }
 
-  .metronome-arc-slider {
-    left: 54px;
-    right: 54px;
-    top: 20px;
-    height: 72px;
+  .metronome-arc-hitbox {
+    left: 30px;
+    right: 30px;
+    top: 6px;
+    height: 112px;
   }
 
   .floating-feedback {

@@ -138,6 +138,10 @@ function bpmProgress(bpm) {
   return (clamp(bpm, 30, 240) - 30) / 210;
 }
 
+function angleToBpm(angle) {
+  return Math.round(30 + ((clamp(angle, -135, 135) + 135) / 270) * 210);
+}
+
 function normalizeArray(value, fallback) {
   return Array.isArray(value) ? value : cloneState(fallback);
 }
@@ -283,6 +287,7 @@ let metronomeSignature = 4;
 let metronomeSignaturePickerOpen = false;
 let metronomeRefreshTimer = null;
 let metronomeTapTimes = [];
+let metronomeSliderActive = false;
 let feedbackHideTimer = null;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
@@ -1116,6 +1121,7 @@ function playMetronomeClick() {
 function renderMetronome() {
   const arcProgress = document.getElementById("metronome-arc-progress");
   const arcKnob = document.getElementById("metronome-arc-knob");
+  const arcHitbox = document.getElementById("metronome-arc-hitbox");
   const signatureRow = document.getElementById("signature-row");
   const dotsButton = document.getElementById("metronome-dots-button");
   const toggleButton = document.getElementById("metronome-toggle-button");
@@ -1125,13 +1131,16 @@ function renderMetronome() {
 
   document.getElementById("metronome-bpm-display").textContent = `${metronomeBpm}`;
   document.getElementById("metronome-arc-top-label").textContent = `${metronomeBpm}`;
-  document.getElementById("metronome-status").textContent = metronomeRunning ? "Running" : "Ready";
-  document.getElementById("metronome-bpm-slider").value = String(metronomeBpm);
   if (arcProgress) {
     arcProgress.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
   }
   if (arcKnob) {
     arcKnob.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
+  }
+  if (arcHitbox) {
+    arcHitbox.style.setProperty("--arc-degrees", `${arcDegrees}deg`);
+    arcHitbox.setAttribute("aria-valuenow", String(metronomeBpm));
+    arcHitbox.setAttribute("aria-valuetext", `${metronomeBpm} BPM`);
   }
   if (signatureRow) {
     signatureRow.hidden = !metronomeSignaturePickerOpen;
@@ -1204,6 +1213,23 @@ function setMetronomeBpm(nextBpm) {
   metronomeBpm = clamp(Math.round(nextBpm), 30, 240);
   renderMetronome();
   scheduleMetronomeRefresh();
+}
+
+function setMetronomeSliderActive(active) {
+  metronomeSliderActive = active;
+  document.body.classList.toggle("metronome-dragging", active);
+}
+
+function updateMetronomeFromPoint(clientX, clientY) {
+  const wheel = document.getElementById("metronome-wheel");
+  if (!wheel) return;
+
+  const rect = wheel.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const angle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI) + 90;
+  const normalized = angle > 180 ? angle - 360 : angle;
+  setMetronomeBpm(angleToBpm(normalized));
 }
 
 function registerTapTempo() {
@@ -1857,10 +1883,6 @@ function bindTools() {
     setMetronomeBpm(metronomeBpm + 1);
   });
 
-  document.getElementById("metronome-bpm-slider").addEventListener("input", (event) => {
-    setMetronomeBpm(Number(event.target.value));
-  });
-
   document.querySelectorAll("[data-metronome-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       setMetronomeBpm(Number(button.dataset.metronomePreset));
@@ -1884,6 +1906,35 @@ function bindTools() {
   document.getElementById("signature-pill").addEventListener("click", () => {
     metronomeSignaturePickerOpen = !metronomeSignaturePickerOpen;
     renderMetronome();
+  });
+
+  const arcHitbox = document.getElementById("metronome-arc-hitbox");
+  const stopArcDrag = () => {
+    setMetronomeSliderActive(false);
+  };
+  arcHitbox.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    setMetronomeSliderActive(true);
+    arcHitbox.setPointerCapture?.(event.pointerId);
+    updateMetronomeFromPoint(event.clientX, event.clientY);
+  });
+  arcHitbox.addEventListener("pointermove", (event) => {
+    if (!metronomeSliderActive) return;
+    event.preventDefault();
+    updateMetronomeFromPoint(event.clientX, event.clientY);
+  });
+  arcHitbox.addEventListener("pointerup", stopArcDrag);
+  arcHitbox.addEventListener("pointercancel", stopArcDrag);
+  arcHitbox.addEventListener("lostpointercapture", stopArcDrag);
+  arcHitbox.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      setMetronomeBpm(metronomeBpm - 1);
+    }
+    if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      setMetronomeBpm(metronomeBpm + 1);
+    }
   });
 
   document.getElementById("metronome-toggle-button").addEventListener("click", () => {
@@ -1929,6 +1980,19 @@ document.addEventListener("dblclick", (event) => {
 document.addEventListener("gesturestart", (event) => {
   event.preventDefault();
 }, { passive: false });
+
+document.addEventListener("touchmove", (event) => {
+  if (!metronomeSliderActive) return;
+  event.preventDefault();
+}, { passive: false });
+
+document.addEventListener("touchend", () => {
+  setMetronomeSliderActive(false);
+}, { passive: true });
+
+document.addEventListener("touchcancel", () => {
+  setMetronomeSliderActive(false);
+}, { passive: true });
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

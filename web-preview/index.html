@@ -154,28 +154,6 @@
           <section class="tab-page" data-tab="guitar">
             <div class="section-feed">
               <article class="card metronome-card">
-                <div class="hero-kicker">
-                  <span class="eyebrow">Gitara</span>
-                  <span id="metronome-status" class="mini-pill">Ready</span>
-                </div>
-                <div class="active-exercise-card">
-                  <div>
-                    <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
-                    <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
-                  </div>
-                  <div class="active-stats">
-                    <span id="guitar-active-top">0 BPM</span>
-                    <strong id="guitar-active-time">0 min</strong>
-                  </div>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" id="guitar-active-progress-bar"></div>
-                </div>
-                <div class="hero-meta-row">
-                  <span>Progres</span>
-                  <strong id="guitar-active-progress-value">0%</strong>
-                </div>
-
                 <div class="tempo-head">
                   <button type="button" class="dial-step" id="metronome-minus-button" aria-label="Zmniejsz tempo">-</button>
                   <div class="tempo-readout">
@@ -190,7 +168,16 @@
                     <div class="metronome-arc-track"></div>
                     <div class="metronome-arc-progress" id="metronome-arc-progress"></div>
                     <div class="metronome-arc-knob" id="metronome-arc-knob"></div>
-                    <input id="metronome-bpm-slider" class="metronome-arc-slider" type="range" min="30" max="240" step="1" value="80" aria-label="Tempo">
+                    <div
+                      id="metronome-arc-hitbox"
+                      class="metronome-arc-hitbox"
+                      role="slider"
+                      tabindex="0"
+                      aria-label="Tempo"
+                      aria-valuemin="30"
+                      aria-valuemax="240"
+                      aria-valuenow="80"
+                    ></div>
                   </div>
                   <div class="arc-label arc-label-left">30</div>
                   <div class="arc-label arc-label-top" id="metronome-arc-top-label">80</div>
@@ -217,6 +204,23 @@
                   <button type="button" class="preset-button" data-metronome-preset="80">80</button>
                   <button type="button" class="preset-button" data-metronome-preset="100">100</button>
                   <button type="button" class="preset-button" data-metronome-preset="120">120</button>
+                </div>
+                <div class="active-exercise-card compact-exercise-card">
+                  <div>
+                    <h2 id="guitar-active-name">Wybierz cwiczenie</h2>
+                    <p id="guitar-active-target" class="muted-copy">Dodaj nazwe i cel BPM.</p>
+                  </div>
+                  <div class="active-stats">
+                    <span id="guitar-active-top">0 BPM</span>
+                    <strong id="guitar-active-time">0 min</strong>
+                  </div>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="guitar-active-progress-bar"></div>
+                </div>
+                <div class="hero-meta-row">
+                  <span>Progres</span>
+                  <strong id="guitar-active-progress-value">0%</strong>
                 </div>
                 <p id="guitar-session-clock" class="muted-copy">Sesja zapisze sie po zatrzymaniu metronomu.</p>
               </article>
