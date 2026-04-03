@@ -105,7 +105,7 @@ const defaultState = {
       correct: 4,
       totalQuestions: 5,
       averageResponseTimeMs: 1650,
-      config: { type: "intervals", level: "core", questionCount: 5, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true },
+      config: { type: "intervals", level: "core", questionCount: 5, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
       answers: [
         { questionId: "q-1", correctAnswer: "m3", selectedAnswer: "m3", isCorrect: true, responseTimeMs: 1200 },
         { questionId: "q-2", correctAnswer: "P4", selectedAnswer: "P4", isCorrect: true, responseTimeMs: 1880 },
@@ -123,7 +123,7 @@ const defaultState = {
       correct: 3,
       totalQuestions: 5,
       averageResponseTimeMs: 2140,
-      config: { type: "rhythm", level: "core", questionCount: 5, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true },
+      config: { type: "rhythm", level: "core", questionCount: 5, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
       answers: [
         { questionId: "q-1", correctAnswer: "Prosto", selectedAnswer: "Prosto", isCorrect: true, responseTimeMs: 1430 },
         { questionId: "q-2", correctAnswer: "Synkopa", selectedAnswer: "Pauza", isCorrect: false, responseTimeMs: 2490 },
@@ -141,7 +141,7 @@ const defaultState = {
       correct: 7,
       totalQuestions: 10,
       averageResponseTimeMs: 1860,
-      config: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true },
+      config: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
       answers: [
         { questionId: "q-1", correctAnswer: "Major", selectedAnswer: "Major", isCorrect: true, responseTimeMs: 1410 },
         { questionId: "q-2", correctAnswer: "Minor", selectedAnswer: "Minor", isCorrect: true, responseTimeMs: 1510 },
@@ -157,12 +157,12 @@ const defaultState = {
     }
   ],
   earLastConfigs: {
-    intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true },
-    chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true },
-    scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true },
-    rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true },
-    melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true },
-    pitch: { type: "pitch", level: "core", questionCount: 10, selectedItems: ["C", "D", "E", "F", "G", "A", "B"], playbackMode: "single", headphoneMode: true }
+    intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "TT", "P5"], playbackMode: "both", headphoneMode: true, selectedRoots: ["E", "A", "D", "G", "B"], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
+    chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"], playbackMode: "stack", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
+    scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Natural minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "major-minor" },
+    rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza", "Offbeat"], playbackMode: "click", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
+    melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true, selectedRoots: [], register: "mid", direction: "up", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "three-note" },
+    pitch: { type: "pitch", level: "core", questionCount: 10, selectedItems: ["C", "D", "E", "F", "G", "A", "B"], playbackMode: "single", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "natural" }
   },
   earInspectType: "intervals",
   supplements: [
@@ -225,6 +225,62 @@ const EAR_LEVELS = {
   wide: "Wide"
 };
 
+const EAR_REGISTERS = {
+  low: "Low",
+  mid: "Mid",
+  high: "High",
+  wide: "Wide"
+};
+
+const EAR_DIRECTIONS = {
+  up: "Up",
+  down: "Down",
+  both: "Both"
+};
+
+const EAR_SCALE_STARTS = {
+  "1": "1",
+  "2": "2",
+  "3": "3",
+  "4": "4",
+  "5": "5",
+  "6": "6",
+  "7": "7",
+  random: "Rnd"
+};
+
+const EAR_ROOT_OPTIONS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const EAR_INVERSION_OPTIONS = ["root", "1st", "2nd", "3rd"];
+const EAR_PRESET_LIBRARY = {
+  intervals: [
+    { id: "guitar-core", label: "Guitar core", level: "core", selectedItems: ["m2", "M2", "m3", "M3", "P4", "TT", "P5"], direction: "both", playbackMode: "both", register: "mid", selectedRoots: ["E", "A", "D", "G", "B"], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "wide-jumps", label: "Wide jumps", level: "wide", selectedItems: ["P4", "TT", "P5", "m6", "M6", "m7", "M7", "8va"], direction: "both", playbackMode: "melodic", register: "wide", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "harmonic-color", label: "Harm color", level: "core", selectedItems: ["m3", "M3", "P4", "TT", "P5", "m6", "M6"], direction: "both", playbackMode: "harmonic", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" }
+  ],
+  chords: [
+    { id: "triads", label: "Triads", level: "core", selectedItems: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4"], direction: "both", playbackMode: "stack", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" },
+    { id: "sevenths", label: "7th chords", level: "wide", selectedItems: ["Dom7", "Maj7", "Min7", "Half-dim7", "Dim7"], direction: "both", playbackMode: "stack", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st", "2nd", "3rd"], scaleStartDegree: "1" },
+    { id: "arp-color", label: "Arp color", level: "wide", selectedItems: ["Major", "Minor", "Maj7", "Min7", "Dom7", "Add9"], direction: "both", playbackMode: "arp", register: "high", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" }
+  ],
+  scales: [
+    { id: "modes", label: "Modes", level: "wide", selectedItems: ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"], direction: "both", playbackMode: "phrase", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "random" },
+    { id: "major-minor", label: "Major minor", level: "core", selectedItems: ["Major", "Natural minor", "Harmonic minor", "Melodic minor"], direction: "both", playbackMode: "ascending", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "pentatonic", label: "Pentatonic", level: "core", selectedItems: ["Major pent", "Minor pent", "Blues"], direction: "both", playbackMode: "phrase", register: "high", selectedRoots: ["E", "A", "D", "G"], selectedInversions: ["root"], scaleStartDegree: "5" }
+  ],
+  rhythm: [
+    { id: "pulse", label: "Pulse", level: "core", selectedItems: ["Prosto", "Pauza", "Offbeat", "Push"], direction: "both", playbackMode: "click", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "syncopa", label: "Syncopa", level: "wide", selectedItems: ["Synkopa", "Triola", "Gallop", "Clave", "6/8 flow"], direction: "both", playbackMode: "click", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" }
+  ],
+  melody: [
+    { id: "three-note", label: "3 note", level: "focus", selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], direction: "up", playbackMode: "degrees", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "phrase-mix", label: "Phrase mix", level: "wide", selectedItems: ["1-2-5", "1-5-6", "1-6-5-3", "5-b3-2-1", "1-3-5-6", "6-5-3-2"], direction: "both", playbackMode: "degrees", register: "wide", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" }
+  ],
+  pitch: [
+    { id: "natural", label: "Natural", level: "core", selectedItems: ["C", "D", "E", "F", "G", "A", "B"], direction: "both", playbackMode: "single", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "chromatic", label: "Chromatic", level: "wide", selectedItems: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"], direction: "both", playbackMode: "single", register: "wide", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" }
+  ]
+};
+
 const EAR_LIBRARY = {
   intervals: {
     title: "Interwaly",
@@ -232,16 +288,20 @@ const EAR_LIBRARY = {
     accent: "#7c5cff",
     selectedLabel: "Material",
     defaultMode: "both",
+    defaultDirection: "both",
+    supportsInversions: false,
+    supportsScaleStart: false,
     modeOptions: [
       { value: "melodic", label: "Mel" },
       { value: "harmonic", label: "Harm" },
       { value: "both", label: "Mix" }
     ],
     itemsByLevel: {
-      focus: ["m2", "M2", "m3", "M3"],
-      core: ["m2", "M2", "m3", "M3", "P4", "P5"],
-      wide: ["m2", "M2", "m3", "M3", "P4", "TT", "P5", "m6", "M6", "m7", "M7", "8va"]
-    }
+      focus: ["m2", "M2", "m3", "M3", "P4"],
+      core: ["m2", "M2", "m3", "M3", "P4", "TT", "P5", "m6", "M6"],
+      wide: ["m2", "M2", "m3", "M3", "P4", "TT", "P5", "m6", "M6", "m7", "M7", "8va", "m9", "M9", "P11", "P12"]
+    },
+    presets: EAR_PRESET_LIBRARY.intervals
   },
   chords: {
     title: "Akordy",
@@ -249,15 +309,20 @@ const EAR_LIBRARY = {
     accent: "#2dd4bf",
     selectedLabel: "Typy",
     defaultMode: "stack",
+    defaultDirection: "both",
+    supportsInversions: true,
+    supportsScaleStart: false,
     modeOptions: [
       { value: "stack", label: "Stack" },
-      { value: "arp", label: "Arp" }
+      { value: "arp", label: "Arp" },
+      { value: "broken", label: "Spread" }
     ],
     itemsByLevel: {
-      focus: ["Major", "Minor", "Dim", "Aug"],
-      core: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"],
-      wide: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4", "Dom7", "Maj7", "Min7"]
-    }
+      focus: ["Major", "Minor", "Sus2", "Sus4"],
+      core: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4", "Dom7", "Maj7", "Min7", "Add9"],
+      wide: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4", "Dom7", "Maj7", "Min7", "Half-dim7", "Dim7", "MinMaj7", "Add9", "6", "m6"]
+    },
+    presets: EAR_PRESET_LIBRARY.chords
   },
   scales: {
     title: "Skale",
@@ -265,15 +330,20 @@ const EAR_LIBRARY = {
     accent: "#ff9f43",
     selectedLabel: "Skale",
     defaultMode: "phrase",
+    defaultDirection: "both",
+    supportsInversions: false,
+    supportsScaleStart: true,
     modeOptions: [
       { value: "phrase", label: "Fraza" },
-      { value: "ascending", label: "Asc" }
+      { value: "ascending", label: "Asc" },
+      { value: "descending", label: "Desc" }
     ],
     itemsByLevel: {
-      focus: ["Major", "Minor", "Dorian", "Mixolydian"],
-      core: ["Major", "Minor", "Dorian", "Phrygian", "Lydian", "Mixolydian"],
-      wide: ["Major", "Minor", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian"]
-    }
+      focus: ["Major", "Natural minor", "Dorian", "Mixolydian"],
+      core: ["Major", "Natural minor", "Harmonic minor", "Melodic minor", "Dorian", "Phrygian", "Lydian", "Mixolydian"],
+      wide: ["Major", "Natural minor", "Harmonic minor", "Melodic minor", "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian", "Major pent", "Minor pent", "Blues", "Whole tone"]
+    },
+    presets: EAR_PRESET_LIBRARY.scales
   },
   rhythm: {
     title: "Rytm",
@@ -281,14 +351,19 @@ const EAR_LIBRARY = {
     accent: "#ff5a5f",
     selectedLabel: "Patterny",
     defaultMode: "click",
+    defaultDirection: "both",
+    supportsInversions: false,
+    supportsScaleStart: false,
     modeOptions: [
-      { value: "click", label: "Click" }
+      { value: "click", label: "Click" },
+      { value: "accent", label: "Accent" }
     ],
     itemsByLevel: {
       focus: ["Prosto", "Pauza", "Synkopa", "Triola"],
-      core: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push"],
-      wide: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push", "Clave", "Gallop"]
-    }
+      core: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push", "Backbeat"],
+      wide: ["Prosto", "Pauza", "Synkopa", "Triola", "Offbeat", "Push", "Backbeat", "Clave", "Gallop", "6/8 flow", "Shuffle"]
+    },
+    presets: EAR_PRESET_LIBRARY.rhythm
   },
   melody: {
     title: "Melodie",
@@ -296,14 +371,18 @@ const EAR_LIBRARY = {
     accent: "#58f0c2",
     selectedLabel: "Frazy",
     defaultMode: "degrees",
+    defaultDirection: "both",
+    supportsInversions: false,
+    supportsScaleStart: false,
     modeOptions: [
       { value: "degrees", label: "Stopnie" }
     ],
     itemsByLevel: {
       focus: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"],
-      core: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5"],
-      wide: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5", "1-6-5-3", "5-b3-2-1"]
-    }
+      core: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5", "1-3-5-6"],
+      wide: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2", "1-5-6", "1-2-5", "1-3-5-6", "1-6-5-3", "5-b3-2-1", "6-5-3-2", "1-7-6-5"]
+    },
+    presets: EAR_PRESET_LIBRARY.melody
   },
   pitch: {
     title: "Pitch",
@@ -311,14 +390,18 @@ const EAR_LIBRARY = {
     accent: "#8b5cf6",
     selectedLabel: "Dzwieki",
     defaultMode: "single",
+    defaultDirection: "both",
+    supportsInversions: false,
+    supportsScaleStart: false,
     modeOptions: [
       { value: "single", label: "Single" }
     ],
     itemsByLevel: {
-      focus: ["C", "D", "E", "G"],
-      core: ["C", "D", "E", "F", "G", "A", "B"],
+      focus: ["C", "D", "E", "G", "A"],
+      core: ["C", "D", "E", "F", "G", "A", "B", "Bb"],
       wide: ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
-    }
+    },
+    presets: EAR_PRESET_LIBRARY.pitch
   }
 };
 
@@ -334,7 +417,11 @@ const INTERVAL_SEMITONES = {
   M6: 9,
   m7: 10,
   M7: 11,
-  "8va": 12
+  "8va": 12,
+  m9: 13,
+  M9: 14,
+  P11: 17,
+  P12: 19
 };
 
 const CHORD_INTERVALS = {
@@ -346,17 +433,32 @@ const CHORD_INTERVALS = {
   Sus4: [0, 5, 7],
   Dom7: [0, 4, 7, 10],
   Maj7: [0, 4, 7, 11],
-  Min7: [0, 3, 7, 10]
+  Min7: [0, 3, 7, 10],
+  "Half-dim7": [0, 3, 6, 10],
+  Dim7: [0, 3, 6, 9],
+  MinMaj7: [0, 3, 7, 11],
+  Add9: [0, 4, 7, 14],
+  "6": [0, 4, 7, 9],
+  m6: [0, 3, 7, 9]
 };
 
 const SCALE_INTERVALS = {
   Major: [0, 2, 4, 5, 7, 9, 11],
   Minor: [0, 2, 3, 5, 7, 8, 10],
+  "Natural minor": [0, 2, 3, 5, 7, 8, 10],
+  "Harmonic minor": [0, 2, 3, 5, 7, 8, 11],
+  "Melodic minor": [0, 2, 3, 5, 7, 9, 11],
+  Ionian: [0, 2, 4, 5, 7, 9, 11],
   Dorian: [0, 2, 3, 5, 7, 9, 10],
   Phrygian: [0, 1, 3, 5, 7, 8, 10],
   Lydian: [0, 2, 4, 6, 7, 9, 11],
   Mixolydian: [0, 2, 4, 5, 7, 9, 10],
-  Locrian: [0, 1, 3, 5, 6, 8, 10]
+  Aeolian: [0, 2, 3, 5, 7, 8, 10],
+  Locrian: [0, 1, 3, 5, 6, 8, 10],
+  "Major pent": [0, 2, 4, 7, 9],
+  "Minor pent": [0, 3, 5, 7, 10],
+  Blues: [0, 3, 5, 6, 7, 10],
+  "Whole tone": [0, 2, 4, 6, 8, 10]
 };
 
 const RHYTHM_PATTERNS = {
@@ -367,7 +469,10 @@ const RHYTHM_PATTERNS = {
   Offbeat: [0.5, 1, 1.5],
   Push: [0, 0.5, 1.25],
   Clave: [0, 0.75, 1.25, 2, 2.5],
-  Gallop: [0, 0.25, 0.5, 1, 1.25, 1.5]
+  Gallop: [0, 0.25, 0.5, 1, 1.25, 1.5],
+  Backbeat: [0, 1, 2, 3],
+  "6/8 flow": [0, 0.5, 1, 1.5, 2, 2.5],
+  Shuffle: [0, 0.66, 1.5, 2.16]
 };
 
 const MELODY_PATTERNS = {
@@ -377,8 +482,11 @@ const MELODY_PATTERNS = {
   "5-4-2": [7, 5, 2],
   "1-5-6": [0, 7, 9],
   "1-2-5": [0, 2, 7],
+  "1-3-5-6": [0, 4, 7, 9],
   "1-6-5-3": [0, 9, 7, 4],
-  "5-b3-2-1": [7, 3, 2, 0]
+  "5-b3-2-1": [7, 3, 2, 0],
+  "6-5-3-2": [9, 7, 4, 2],
+  "1-7-6-5": [0, 11, 9, 7]
 };
 
 const NOTE_TO_SEMITONE = {
@@ -557,7 +665,13 @@ function normalizeState(rawState = {}) {
       questionCount: Math.max(1, Number(entry.config.questionCount || entry.totalQuestions || 5)),
       selectedItems: Array.isArray(entry.config.selectedItems) ? entry.config.selectedItems : [],
       playbackMode: entry.config.playbackMode || EAR_LIBRARY[entry.type || "intervals"]?.defaultMode || "both",
-      headphoneMode: entry.config.headphoneMode !== false
+      headphoneMode: entry.config.headphoneMode !== false,
+      selectedRoots: Array.isArray(entry.config.selectedRoots) ? entry.config.selectedRoots : [],
+      register: entry.config.register || "mid",
+      direction: entry.config.direction || EAR_LIBRARY[entry.type || "intervals"]?.defaultDirection || "both",
+      scaleStartDegree: entry.config.scaleStartDegree || "1",
+      selectedInversions: Array.isArray(entry.config.selectedInversions) ? entry.config.selectedInversions : ["root"],
+      presetId: entry.config.presetId || null
     } : cloneState(defaultState.earLastConfigs[entry.type || "intervals"] || defaultState.earLastConfigs.intervals),
     answers: Array.isArray(entry.answers) ? entry.answers.map((answer) => ({
       questionId: answer.questionId || uid("ea"),
@@ -584,7 +698,17 @@ function normalizeState(rawState = {}) {
         playbackMode: EAR_LIBRARY[type].modeOptions.some((option) => option.value === incoming?.playbackMode)
           ? incoming.playbackMode
           : fallback.playbackMode,
-        headphoneMode: incoming?.headphoneMode !== false
+        headphoneMode: incoming?.headphoneMode !== false,
+        selectedRoots: Array.isArray(incoming?.selectedRoots)
+          ? incoming.selectedRoots.filter((root) => EAR_ROOT_OPTIONS.includes(root))
+          : fallback.selectedRoots.slice(),
+        register: EAR_REGISTERS[incoming?.register] ? incoming.register : fallback.register,
+        direction: EAR_DIRECTIONS[incoming?.direction] ? incoming.direction : fallback.direction,
+        scaleStartDegree: EAR_SCALE_STARTS[incoming?.scaleStartDegree] ? incoming.scaleStartDegree : fallback.scaleStartDegree,
+        selectedInversions: Array.isArray(incoming?.selectedInversions)
+          ? incoming.selectedInversions.filter((item) => EAR_INVERSION_OPTIONS.includes(item))
+          : fallback.selectedInversions.slice(),
+        presetId: typeof incoming?.presetId === "string" ? incoming.presetId : fallback.presetId
       }];
     })
   );
@@ -985,47 +1109,105 @@ function noteNameToMidi(noteName, octave = 4) {
   return 12 * (octave + 1) + (NOTE_TO_SEMITONE[noteName] ?? 0);
 }
 
+function registerOctavePool(register) {
+  if (register === "low") return [2, 3];
+  if (register === "high") return [4, 5];
+  if (register === "wide") return [2, 3, 4, 5];
+  return [3, 4];
+}
+
+function pickEarRoot(config) {
+  const roots = config.selectedRoots?.length ? config.selectedRoots : EAR_ROOT_OPTIONS;
+  return roots[Math.floor(Math.random() * roots.length)] || "C";
+}
+
+function pickEarRootMidi(config) {
+  const root = pickEarRoot(config);
+  const octaves = registerOctavePool(config.register || "mid");
+  const octave = octaves[Math.floor(Math.random() * octaves.length)] || 4;
+  return noteNameToMidi(root, octave);
+}
+
+function applyChordInversion(intervals, inversion) {
+  const copy = [...intervals];
+  const count = inversion === "3rd" ? 3 : inversion === "2nd" ? 2 : inversion === "1st" ? 1 : 0;
+  for (let index = 0; index < count; index += 1) {
+    if (copy[index] === undefined) break;
+    copy[index] += 12;
+  }
+  return copy.sort((a, b) => a - b);
+}
+
+function buildScalePlaybackPattern(intervals, mode, scaleStartDegree) {
+  const source = intervals?.length ? intervals : SCALE_INTERVALS.Major;
+  const degree = scaleStartDegree === "random"
+    ? Math.floor(Math.random() * source.length)
+    : Math.max(0, Number(scaleStartDegree || 1) - 1);
+  const rotated = source.slice(degree).map((step) => step - source[degree]).concat(
+    source.slice(0, degree).map((step) => step + 12 - source[degree])
+  );
+  if (mode === "descending") {
+    return rotated.slice().reverse();
+  }
+  if (mode === "ascending") {
+    return rotated;
+  }
+  const phrase = [rotated[0], rotated[1] ?? rotated[0], rotated[3] ?? rotated[1] ?? rotated[0], rotated[4] ?? rotated[2] ?? rotated[0], rotated.at(-1) ?? rotated[0]];
+  return phrase;
+}
+
+function currentEarPreset(type, presetId) {
+  return EAR_LIBRARY[type]?.presets?.find((preset) => preset.id === presetId) || null;
+}
+
 function buildEarQuestion(type, config) {
   const selected = config.selectedItems?.length ? config.selectedItems : currentEarConfig(type).selectedItems;
-  const rootMidi = 57 + Math.floor(Math.random() * 8);
+  const rootMidi = pickEarRootMidi(config);
 
   if (type === "intervals") {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
-    const semitones = INTERVAL_SEMITONES[correctAnswer] ?? 7;
+    const semitonesBase = INTERVAL_SEMITONES[correctAnswer] ?? 7;
     const mode = config.playbackMode === "both"
       ? (Math.random() > 0.5 ? "melodic" : "harmonic")
       : config.playbackMode;
+    const direction = mode === "harmonic"
+      ? "both"
+      : (config.direction === "both" ? (Math.random() > 0.5 ? "up" : "down") : config.direction);
+    const semitones = direction === "down" ? -semitonesBase : semitonesBase;
     return {
       id: uid("eq"),
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: mode === "harmonic" ? "Harmoniczny" : "Melodyczny",
+      prompt: mode === "harmonic" ? "Harmoniczny" : (direction === "down" ? "W dol" : "W gore"),
       audio: { engine: "interval", rootMidi, semitones, mode }
     };
   }
 
   if (type === "chords") {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    const inversionPool = config.selectedInversions?.length ? config.selectedInversions : ["root"];
+    const inversion = inversionPool[Math.floor(Math.random() * inversionPool.length)] || "root";
     return {
       id: uid("eq"),
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: config.playbackMode === "arp" ? "Arpeggio" : "Stack",
-      audio: { engine: "chord", rootMidi, intervals: CHORD_INTERVALS[correctAnswer] || [0, 4, 7], mode: config.playbackMode }
+      prompt: inversion === "root" ? (config.playbackMode === "arp" ? "Arpeggio" : "Stack") : `${inversion}`,
+      audio: { engine: "chord", rootMidi, intervals: applyChordInversion(CHORD_INTERVALS[correctAnswer] || [0, 4, 7], inversion), mode: config.playbackMode }
     };
   }
 
   if (type === "scales") {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    const pattern = buildScalePlaybackPattern(SCALE_INTERVALS[correctAnswer] || SCALE_INTERVALS.Major, config.playbackMode, config.scaleStartDegree);
     return {
       id: uid("eq"),
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: config.playbackMode === "ascending" ? "Asc" : "Fraza",
-      audio: { engine: "scale", rootMidi, intervals: SCALE_INTERVALS[correctAnswer] || SCALE_INTERVALS.Major, mode: config.playbackMode }
+      prompt: config.scaleStartDegree === "random" ? "Random start" : `Start ${config.scaleStartDegree}`,
+      audio: { engine: "scale", rootMidi, intervals: pattern, mode: config.playbackMode }
     };
   }
 
@@ -1043,13 +1225,15 @@ function buildEarQuestion(type, config) {
 
   if (type === "melody") {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    const pattern = [...(MELODY_PATTERNS[correctAnswer] || MELODY_PATTERNS["1-2-3"])];
+    const direction = config.direction === "both" ? (Math.random() > 0.5 ? "up" : "down") : config.direction;
     return {
       id: uid("eq"),
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: "Fraza",
-      audio: { engine: "melody", rootMidi, pattern: MELODY_PATTERNS[correctAnswer] || MELODY_PATTERNS["1-2-3"] }
+      prompt: direction === "down" ? "Fraza down" : "Fraza",
+      audio: { engine: "melody", rootMidi, pattern: direction === "down" ? pattern.slice().reverse() : pattern }
     };
   }
 
@@ -1801,13 +1985,34 @@ function renderEarHome() {
 function renderEarConfig() {
   const meta = EAR_LIBRARY[earConfigType];
   const config = currentEarConfig(earConfigType);
+  const preset = currentEarPreset(earConfigType, config.presetId);
   document.getElementById("ear-config-title").textContent = meta.title;
   document.getElementById("ear-config-subtitle").textContent = meta.subtitle;
+  document.getElementById("ear-preset-copy").textContent = preset?.label || "Custom";
   document.getElementById("ear-config-level-copy").textContent = EAR_LEVELS[config.level];
   document.getElementById("ear-count-copy").textContent = `${config.questionCount}`;
   document.getElementById("ear-items-title").textContent = meta.selectedLabel;
   document.getElementById("ear-items-copy").textContent = `${config.selectedItems.length}`;
   document.getElementById("ear-mode-copy").textContent = meta.modeOptions.find((item) => item.value === config.playbackMode)?.label || meta.modeOptions[0].label;
+  document.getElementById("ear-roots-copy").textContent = config.selectedRoots?.length ? `${config.selectedRoots.length}` : "Random";
+  document.getElementById("ear-register-copy").textContent = EAR_REGISTERS[config.register] || "Mid";
+  document.getElementById("ear-direction-copy").textContent = EAR_DIRECTIONS[config.direction] || "Both";
+  document.getElementById("ear-scale-start-copy").textContent = EAR_SCALE_STARTS[config.scaleStartDegree] || "1";
+  document.getElementById("ear-inversions-copy").textContent = config.selectedInversions?.length ? config.selectedInversions.join(", ") : "Root";
+
+  const presetGrid = document.getElementById("ear-preset-grid");
+  presetGrid.innerHTML = "";
+  (meta.presets || []).forEach((entry) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${config.presetId === entry.id ? " active" : ""}`;
+    button.textContent = entry.label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { ...entry, type: earConfigType, questionCount: currentEarConfig(earConfigType).questionCount, headphoneMode: true });
+      renderEarConfig();
+    });
+    presetGrid.appendChild(button);
+  });
 
   const levelGrid = document.getElementById("ear-level-grid");
   levelGrid.innerHTML = "";
@@ -1818,7 +2023,7 @@ function renderEarConfig() {
     button.textContent = label;
     button.addEventListener("click", () => {
       const selectedItems = EAR_LIBRARY[earConfigType].itemsByLevel[value].slice();
-      setEarConfig(earConfigType, { level: value, selectedItems });
+      setEarConfig(earConfigType, { level: value, selectedItems, presetId: null });
       renderEarConfig();
     });
     levelGrid.appendChild(button);
@@ -1850,7 +2055,7 @@ function renderEarConfig() {
         ? config.selectedItems.filter((entry) => entry !== item)
         : [...config.selectedItems, item];
       const next = selected.length ? selected : [item];
-      setEarConfig(earConfigType, { selectedItems: next });
+      setEarConfig(earConfigType, { selectedItems: next, presetId: null });
       renderEarConfig();
     });
     itemGrid.appendChild(button);
@@ -1864,11 +2069,89 @@ function renderEarConfig() {
     button.className = `metronome-option-button${config.playbackMode === mode.value ? " active" : ""}`;
     button.textContent = mode.label;
     button.addEventListener("click", () => {
-      setEarConfig(earConfigType, { playbackMode: mode.value });
+      setEarConfig(earConfigType, { playbackMode: mode.value, presetId: null });
       renderEarConfig();
     });
     modeGrid.appendChild(button);
   });
+
+  const rootGrid = document.getElementById("ear-root-grid");
+  rootGrid.innerHTML = "";
+  EAR_ROOT_OPTIONS.forEach((root) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${config.selectedRoots.includes(root) ? " active" : ""}`;
+    button.textContent = root;
+    button.addEventListener("click", () => {
+      const selected = config.selectedRoots.includes(root)
+        ? config.selectedRoots.filter((entry) => entry !== root)
+        : [...config.selectedRoots, root];
+      setEarConfig(earConfigType, { selectedRoots: selected, presetId: null });
+      renderEarConfig();
+    });
+    rootGrid.appendChild(button);
+  });
+
+  const registerGrid = document.getElementById("ear-register-grid");
+  registerGrid.innerHTML = "";
+  Object.entries(EAR_REGISTERS).forEach(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.register === value ? " active" : ""}`;
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { register: value, presetId: null });
+      renderEarConfig();
+    });
+    registerGrid.appendChild(button);
+  });
+
+  const directionGrid = document.getElementById("ear-direction-grid");
+  directionGrid.innerHTML = "";
+  Object.entries(EAR_DIRECTIONS).forEach(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.direction === value ? " active" : ""}`;
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { direction: value, presetId: null });
+      renderEarConfig();
+    });
+    directionGrid.appendChild(button);
+  });
+
+  const scaleStartGrid = document.getElementById("ear-scale-start-grid");
+  scaleStartGrid.innerHTML = "";
+  Object.entries(EAR_SCALE_STARTS).forEach(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.scaleStartDegree === value ? " active" : ""}`;
+    button.textContent = label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { scaleStartDegree: value, presetId: null });
+      renderEarConfig();
+    });
+    scaleStartGrid.appendChild(button);
+  });
+  scaleStartGrid.closest(".advanced-config-block").hidden = !meta.supportsScaleStart;
+
+  const inversionGrid = document.getElementById("ear-inversion-grid");
+  inversionGrid.innerHTML = "";
+  EAR_INVERSION_OPTIONS.forEach((inversion) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${config.selectedInversions.includes(inversion) ? " active" : ""}`;
+    button.textContent = inversion;
+    button.addEventListener("click", () => {
+      const selected = config.selectedInversions.includes(inversion)
+        ? config.selectedInversions.filter((entry) => entry !== inversion)
+        : [...config.selectedInversions, inversion];
+      setEarConfig(earConfigType, { selectedInversions: selected.length ? selected : ["root"], presetId: null });
+      renderEarConfig();
+    });
+    inversionGrid.appendChild(button);
+  });
+  inversionGrid.closest(".advanced-config-block").hidden = !meta.supportsInversions;
 }
 
 function renderEarRound() {
@@ -2402,6 +2685,10 @@ function playEarAudio(spec) {
         notes.forEach((frequency, index) => {
           scheduleTone(ctx, frequency, start + index * 0.16, 0.28, { type: "triangle", gainValue: 0.055 });
         });
+      } else if (spec.mode === "broken") {
+        notes.forEach((frequency, index) => {
+          scheduleTone(ctx, frequency, start + index * 0.11, 0.42, { type: "triangle", gainValue: 0.045 });
+        });
       } else {
         notes.forEach((frequency) => {
           scheduleTone(ctx, frequency, start, 0.56, { type: "triangle", gainValue: 0.045 });
@@ -2411,9 +2698,7 @@ function playEarAudio(spec) {
     }
 
     if (spec.engine === "scale") {
-      const phrase = spec.mode === "ascending"
-        ? (spec.intervals || [0, 2, 4, 5, 7]).slice(0, 5)
-        : [0, spec.intervals[1] ?? 2, spec.intervals[2] ?? 4, spec.intervals[4] ?? 7, spec.intervals[6] ?? 11, 12];
+      const phrase = spec.intervals || [0, 2, 4, 5, 7];
       phrase.forEach((step, index) => {
         scheduleTone(ctx, midiToFrequency(spec.rootMidi + step), start + index * 0.16, 0.22, { type: "triangle", gainValue: 0.05 });
       });

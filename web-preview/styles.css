@@ -678,6 +678,10 @@ button:active {
   gap: 10px;
 }
 
+.ear-chip-grid-small {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .ear-chip-button {
   min-height: 52px;
   border: 0;
@@ -744,6 +748,24 @@ button:active {
 
 .ear-summary-actions {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.advanced-config-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.advanced-config-block {
+  display: grid;
+  gap: 10px;
+}
+
+.compact-card-head {
+  margin-bottom: 0;
+}
+
+.compact-card-head h2 {
+  font-size: 0.94rem;
 }
 
 .mini-progress-stack {
@@ -1461,12 +1483,17 @@ textarea:focus {
   .story-row,
   .stat-grid,
   .stat-grid-four,
+  .module-grid,
   .inline-form,
   .inline-form-two,
   .inline-form-three,
   .button-row,
   .button-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ear-chip-grid-small {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .active-exercise-card,
