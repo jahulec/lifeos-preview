@@ -1468,12 +1468,6 @@ function renderMetronome() {
     toggleButton.dataset.state = metronomeRunning ? "pause" : "start";
     toggleButton.setAttribute("aria-label", metronomeRunning ? "Wstrzymaj metronom" : "Uruchom metronom");
   }
-  if (wheel) {
-    positionMetronomeLabel("metronome-label-min", 30, wheel, METRONOME_RADIUS + 40, -18, 16);
-    positionMetronomeLabel("metronome-label-mid", 135, wheel, METRONOME_RADIUS - 6, 0, 8);
-    positionMetronomeLabel("metronome-label-max", 240, wheel, METRONOME_RADIUS + 40, 18, 16);
-  }
-
   if (optionGrid) {
     optionGrid.innerHTML = "";
     const items = metronomeOptionMode === "signature"
@@ -1512,19 +1506,6 @@ function renderMetronome() {
   if (state.activeTab === "guitar") {
     stabilizeGuitarLayout();
   }
-}
-
-function positionMetronomeLabel(id, bpm, wheel, radiusPx, offsetX = 0, offsetY = 0) {
-  const node = document.getElementById(id);
-  if (!node || !wheel) return;
-  if (!wheel.clientWidth || !wheel.clientHeight) return;
-  const angle = bpmToArcAngle(bpm) * (Math.PI / 180);
-  const scale = Math.min(wheel.clientWidth, wheel.clientHeight) / METRONOME_SVG_SIZE;
-  const radius = radiusPx * scale;
-  const x = wheel.clientWidth / 2 + Math.sin(angle) * radius + offsetX * scale;
-  const y = wheel.clientHeight / 2 - Math.cos(angle) * radius + offsetY * scale;
-  node.style.left = `${x}px`;
-  node.style.top = `${y}px`;
 }
 
 function selectGuitarExercise(id) {
