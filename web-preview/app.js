@@ -335,6 +335,7 @@ let feedbackHideTimer = null;
 let pendingGuitarSession = null;
 let lockedGuitarCardWidth = null;
 let guitarView = "main";
+const guitarScrollMemory = { main: 0, detail: 0, create: 0 };
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -357,6 +358,10 @@ function setFeedback(message) {
 }
 
 function setTab(tab) {
+  const previousTab = state.activeTab;
+  if (previousTab === "guitar") {
+    guitarScrollMemory[guitarView] = window.scrollY || window.pageYOffset || 0;
+  }
   state.activeTab = tab;
   tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
@@ -364,21 +369,25 @@ function setTab(tab) {
     requestAnimationFrame(() => {
       renderMetronome();
       stabilizeGuitarLayout();
+      window.scrollTo({ top: guitarScrollMemory[guitarView] || 0, behavior: "auto" });
     });
   }
   saveState();
 }
 
-function setGuitarView(view) {
+function setGuitarView(view, options = {}) {
+  const { scrollTop = false } = options;
+  guitarScrollMemory[guitarView] = window.scrollY || window.pageYOffset || 0;
   guitarView = view;
   renderGuitar();
-  window.scrollTo({ top: 0, behavior: "auto" });
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: scrollTop ? 0 : (guitarScrollMemory[view] || 0), behavior: "auto" });
+  });
 }
 
 function focusField(id) {
   if (id === "guitar-exercise-name-input" && guitarView !== "create") {
-    guitarView = "create";
-    renderGuitar();
+    setGuitarView("create", { scrollTop: true });
   }
   const target = document.getElementById(id);
   if (target) {
@@ -917,6 +926,7 @@ function renderGuitarExerciseDetail() {
   document.getElementById("guitar-detail-latest").textContent = `${sessions.latestBpm || 0}`;
   document.getElementById("guitar-detail-time").textContent = formatDuration(sessions.totalSec);
   document.getElementById("guitar-detail-goal").textContent = `${percent}%`;
+  document.getElementById("guitar-detail-history-summary").textContent = `${sessions.sessions.length}`;
   if (useButton) {
     useButton.disabled = !exercise;
     useButton.textContent = exercise && exercise.id === state.guitarActiveId ? "Off" : "Uzyj";
@@ -1458,11 +1468,11 @@ function inspectGuitarExercise(id) {
   if (!state.guitarExercises.some((exercise) => exercise.id === id)) return;
   state.guitarInspectId = id;
   saveState();
-  setGuitarView("detail");
+  setGuitarView("detail", { scrollTop: true });
 }
 
 function openGuitarCreateView() {
-  setGuitarView("create");
+  setGuitarView("create", { scrollTop: true });
   focusField("guitar-exercise-name-input");
 }
 

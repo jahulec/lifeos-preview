@@ -263,7 +263,8 @@
                 </div>
               </div>
               <div class="section-feed">
-                <article class="card">
+                <article class="card analytics-hero-card">
+                  <p class="analytics-kicker">Performance</p>
                   <div class="card-head">
                     <h2 id="guitar-detail-title">Statystyki cwiczenia</h2>
                     <div class="card-head-actions">
@@ -271,26 +272,33 @@
                       <button type="button" id="guitar-detail-delete" class="tool-button delete">Del</button>
                     </div>
                   </div>
-                  <div class="stat-grid stat-grid-four">
-                    <div class="stat-card">
+                  <div class="stat-grid analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
                       <span>Top BPM</span>
                       <strong id="guitar-detail-top">0</strong>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card analytics-stat-card">
                       <span>Ostatni BPM</span>
                       <strong id="guitar-detail-latest">0</strong>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card analytics-stat-card">
                       <span>Lacznie</span>
                       <strong id="guitar-detail-time">0 s</strong>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card analytics-stat-card">
                       <span>Cel</span>
                       <strong id="guitar-detail-goal">0%</strong>
                     </div>
                   </div>
-                  <div class="exercise-chart-card">
+                  <div class="exercise-chart-card analytics-chart-card">
                     <svg id="guitar-detail-chart" class="exercise-chart" viewBox="0 0 320 180" aria-hidden="true"></svg>
+                  </div>
+                </article>
+
+                <article class="card analytics-history-card">
+                  <div class="card-head">
+                    <h2>Ostatnie wejscia</h2>
+                    <span id="guitar-detail-history-summary">0</span>
                   </div>
                   <div id="guitar-detail-list" class="stack-list compact-stack"></div>
                 </article>

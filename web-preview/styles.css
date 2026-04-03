@@ -425,6 +425,71 @@ button:active {
   cursor: pointer;
 }
 
+.analytics-hero-card {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(29, 185, 84, 0.22), transparent 26%),
+    radial-gradient(circle at 88% 0%, rgba(88, 81, 219, 0.18), transparent 24%),
+    linear-gradient(180deg, #101113 0%, #16181c 48%, #1b1e22 100%);
+  color: white;
+  border: 0;
+  box-shadow: 0 24px 54px rgba(10, 10, 10, 0.2);
+}
+
+.analytics-kicker {
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.analytics-hero-card .card-head span,
+.analytics-hero-card .card-head h2,
+.analytics-hero-card .tool-button {
+  color: white;
+}
+
+.analytics-hero-card .tool-button {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.analytics-hero-card .tool-button.delete {
+  color: #ff8787;
+}
+
+.analytics-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analytics-stat-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.analytics-stat-card span {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.analytics-stat-card strong {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  letter-spacing: -0.06em;
+}
+
+.analytics-chart-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.analytics-history-card .list-item {
+  background: #ffffff;
+}
+
 .stack-list {
   display: grid;
   gap: 10px;
@@ -868,38 +933,38 @@ button:active {
 }
 
 .chart-grid-line {
-  stroke: rgba(107, 107, 107, 0.16);
+  stroke: rgba(255, 255, 255, 0.12);
   stroke-width: 1;
 }
 
 .chart-axis-label {
-  fill: var(--muted);
+  fill: rgba(255, 255, 255, 0.56);
   font-size: 10px;
   font-weight: 700;
 }
 
 .chart-line {
   fill: none;
-  stroke: var(--accent-3);
+  stroke: #1db954;
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .chart-point {
-  fill: white;
-  stroke: var(--accent-3);
+  fill: #101113;
+  stroke: #1db954;
   stroke-width: 3;
 }
 
 .chart-point-label {
-  fill: var(--text);
+  fill: white;
   font-size: 10px;
   font-weight: 800;
 }
 
 .chart-point-duration {
-  fill: var(--muted);
+  fill: rgba(255, 255, 255, 0.62);
   font-size: 10px;
   font-weight: 700;
 }
