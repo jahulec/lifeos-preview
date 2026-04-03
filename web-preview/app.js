@@ -154,11 +154,30 @@ const defaultState = {
         { questionId: "q-9", correctAnswer: "Minor", selectedAnswer: "Minor", isCorrect: true, responseTimeMs: 1910 },
         { questionId: "q-10", correctAnswer: "Major", selectedAnswer: "Minor", isCorrect: false, responseTimeMs: 2620 }
       ]
+    },
+    {
+      id: "er-4",
+      type: "progressions",
+      startedAt: isoDaysAgo(0, 20),
+      endedAt: isoDaysAgo(0, 20),
+      accuracy: 80,
+      correct: 4,
+      totalQuestions: 5,
+      averageResponseTimeMs: 2310,
+      config: { type: "progressions", level: "core", questionCount: 5, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
+      answers: [
+        { questionId: "q-1", correctAnswer: "ii-V-I", selectedAnswer: "ii-V-I", isCorrect: true, responseTimeMs: 1820 },
+        { questionId: "q-2", correctAnswer: "I-V-vi-IV", selectedAnswer: "vi-IV-I-V", isCorrect: false, responseTimeMs: 2780 },
+        { questionId: "q-3", correctAnswer: "I-IV-V-I", selectedAnswer: "I-IV-V-I", isCorrect: true, responseTimeMs: 2140 },
+        { questionId: "q-4", correctAnswer: "vi-IV-I-V", selectedAnswer: "vi-IV-I-V", isCorrect: true, responseTimeMs: 2230 },
+        { questionId: "q-5", correctAnswer: "ii-V-I", selectedAnswer: "ii-V-I", isCorrect: true, responseTimeMs: 2580 }
+      ]
     }
   ],
   earLastConfigs: {
     intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "TT", "P5"], playbackMode: "both", headphoneMode: true, selectedRoots: ["E", "A", "D", "G", "B"], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
     chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"], playbackMode: "stack", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
+    progressions: { type: "progressions", level: "core", questionCount: 10, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
     scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Natural minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "major-minor" },
     rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza", "Offbeat"], playbackMode: "click", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
     melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true, selectedRoots: [], register: "mid", direction: "up", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "three-note" },
@@ -276,8 +295,13 @@ const EAR_PRESET_LIBRARY = {
   chords: [
     { id: "triads", label: "Triads", level: "core", selectedItems: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4"], direction: "both", playbackMode: "stack", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" },
     { id: "sevenths", label: "7th chords", level: "wide", selectedItems: ["Dom7", "Maj7", "Min7", "Half-dim7", "Dim7"], direction: "both", playbackMode: "stack", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st", "2nd", "3rd"], scaleStartDegree: "1" },
-    { id: "arp-color", label: "Arp color", level: "wide", selectedItems: ["Major", "Minor", "Maj7", "Min7", "Dom7", "Add9"], direction: "both", playbackMode: "arp", register: "high", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" },
-    { id: "progressions", label: "Progressions", level: "wide", selectedItems: ["ii-V-I", "I-V-vi-IV", "vi-IV-I-V", "i-bVII-bVI-V"], direction: "both", playbackMode: "progression", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st"], scaleStartDegree: "1" }
+    { id: "arp-color", label: "Arp color", level: "wide", selectedItems: ["Major", "Minor", "Maj7", "Min7", "Dom7", "Add9"], direction: "both", playbackMode: "arp", register: "high", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" }
+  ],
+  progressions: [
+    { id: "cadences", label: "Cadences", level: "core", selectedItems: ["ii-V-I", "I-IV-V-I", "iv-V-i", "iio-V-i"], direction: "both", playbackMode: "block", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st"], scaleStartDegree: "1" },
+    { id: "pop-loops", label: "Pop loops", level: "core", selectedItems: ["I-V-vi-IV", "vi-IV-I-V", "I-vi-IV-V", "I-IV-vi-V"], direction: "both", playbackMode: "flow", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "1" },
+    { id: "jazz-turns", label: "Jazz turns", level: "wide", selectedItems: ["ii-V-I", "iii-vi-ii-V", "I-vi-ii-V", "ii-V-I-vi"], direction: "both", playbackMode: "spread", register: "mid", selectedRoots: [], selectedInversions: ["root", "1st", "2nd"], scaleStartDegree: "1" },
+    { id: "minor-color", label: "Minor color", level: "wide", selectedItems: ["i-bVII-bVI-V", "i-iv-bVII-III", "i-bVI-bIII-bVII", "iio-V-i"], direction: "both", playbackMode: "block", register: "low", selectedRoots: [], selectedInversions: ["root", "1st"], scaleStartDegree: "1" }
   ],
   scales: [
     { id: "modes", label: "Modes", level: "wide", selectedItems: ["Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"], direction: "both", playbackMode: "phrase", register: "mid", selectedRoots: [], selectedInversions: ["root"], scaleStartDegree: "random" },
@@ -338,8 +362,7 @@ const EAR_LIBRARY = {
     modeOptions: [
       { value: "stack", label: "Stack" },
       { value: "arp", label: "Arp" },
-      { value: "broken", label: "Spread" },
-      { value: "progression", label: "Prog" }
+      { value: "broken", label: "Spread" }
     ],
     itemsByLevel: {
       focus: ["Major", "Minor", "Sus2", "Sus4"],
@@ -347,6 +370,30 @@ const EAR_LIBRARY = {
       wide: ["Major", "Minor", "Dim", "Aug", "Sus2", "Sus4", "Dom7", "Maj7", "Min7", "Half-dim7", "Dim7", "MinMaj7", "Add9", "6", "m6"]
     },
     presets: EAR_PRESET_LIBRARY.chords
+  },
+  progressions: {
+    title: "Progresje",
+    subtitle: "Kadencje i loopy harmoniczne",
+    accent: "#4cc9f0",
+    selectedLabel: "Progresje",
+    defaultMode: "block",
+    defaultDirection: "both",
+    supportsRoots: true,
+    supportsRegister: true,
+    supportsDirection: false,
+    supportsInversions: true,
+    supportsScaleStart: false,
+    modeOptions: [
+      { value: "block", label: "Block" },
+      { value: "flow", label: "Flow" },
+      { value: "spread", label: "Spread" }
+    ],
+    itemsByLevel: {
+      focus: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"],
+      core: ["ii-V-I", "I-IV-V-I", "iv-V-i", "iio-V-i", "I-V-vi-IV", "vi-IV-I-V", "I-vi-IV-V", "I-IV-vi-V"],
+      wide: ["ii-V-I", "I-IV-V-I", "iv-V-i", "iio-V-i", "I-V-vi-IV", "vi-IV-I-V", "I-vi-IV-V", "I-IV-vi-V", "iii-vi-ii-V", "I-vi-ii-V", "ii-V-I-vi", "i-bVII-bVI-V", "i-iv-bVII-III", "i-bVI-bIII-bVII"]
+    },
+    presets: EAR_PRESET_LIBRARY.progressions
   },
   scales: {
     title: "Skale",
@@ -480,13 +527,40 @@ const CHORD_INTERVALS = {
 
 const CHORD_PROGRESSIONS = {
   "ii-V-I": {
+    category: "cadence",
     chords: [
       { rootShift: 2, quality: "Min7" },
       { rootShift: 7, quality: "Dom7" },
       { rootShift: 0, quality: "Maj7" }
     ]
   },
+  "I-IV-V-I": {
+    category: "cadence",
+    chords: [
+      { rootShift: 0, quality: "Major" },
+      { rootShift: 5, quality: "Major" },
+      { rootShift: 7, quality: "Major" },
+      { rootShift: 0, quality: "Major" }
+    ]
+  },
+  "iv-V-i": {
+    category: "cadence",
+    chords: [
+      { rootShift: 5, quality: "Minor" },
+      { rootShift: 7, quality: "Major" },
+      { rootShift: 0, quality: "Minor" }
+    ]
+  },
+  "iio-V-i": {
+    category: "cadence",
+    chords: [
+      { rootShift: 2, quality: "Half-dim7" },
+      { rootShift: 7, quality: "Dom7" },
+      { rootShift: 0, quality: "Min7" }
+    ]
+  },
   "I-V-vi-IV": {
+    category: "pop",
     chords: [
       { rootShift: 0, quality: "Major" },
       { rootShift: 7, quality: "Major" },
@@ -495,6 +569,7 @@ const CHORD_PROGRESSIONS = {
     ]
   },
   "vi-IV-I-V": {
+    category: "pop",
     chords: [
       { rootShift: 9, quality: "Minor" },
       { rootShift: 5, quality: "Major" },
@@ -502,7 +577,35 @@ const CHORD_PROGRESSIONS = {
       { rootShift: 7, quality: "Major" }
     ]
   },
+  "I-vi-IV-V": {
+    category: "pop",
+    chords: [
+      { rootShift: 0, quality: "Major" },
+      { rootShift: 9, quality: "Minor" },
+      { rootShift: 5, quality: "Major" },
+      { rootShift: 7, quality: "Major" }
+    ]
+  },
+  "I-IV-vi-V": {
+    category: "pop",
+    chords: [
+      { rootShift: 0, quality: "Major" },
+      { rootShift: 5, quality: "Major" },
+      { rootShift: 9, quality: "Minor" },
+      { rootShift: 7, quality: "Major" }
+    ]
+  },
+  "iii-vi-ii-V": {
+    category: "jazz",
+    chords: [
+      { rootShift: 4, quality: "Min7" },
+      { rootShift: 9, quality: "Min7" },
+      { rootShift: 2, quality: "Min7" },
+      { rootShift: 7, quality: "Dom7" }
+    ]
+  },
   "i-bVII-bVI-V": {
+    category: "minor",
     chords: [
       { rootShift: 0, quality: "Minor" },
       { rootShift: 10, quality: "Major" },
@@ -511,11 +614,39 @@ const CHORD_PROGRESSIONS = {
     ]
   },
   "I-vi-ii-V": {
+    category: "jazz",
     chords: [
       { rootShift: 0, quality: "Maj7" },
       { rootShift: 9, quality: "Min7" },
       { rootShift: 2, quality: "Min7" },
       { rootShift: 7, quality: "Dom7" }
+    ]
+  },
+  "ii-V-I-vi": {
+    category: "jazz",
+    chords: [
+      { rootShift: 2, quality: "Min7" },
+      { rootShift: 7, quality: "Dom7" },
+      { rootShift: 0, quality: "Maj7" },
+      { rootShift: 9, quality: "Min7" }
+    ]
+  },
+  "i-iv-bVII-III": {
+    category: "minor",
+    chords: [
+      { rootShift: 0, quality: "Minor" },
+      { rootShift: 5, quality: "Minor" },
+      { rootShift: 10, quality: "Major" },
+      { rootShift: 3, quality: "Major" }
+    ]
+  },
+  "i-bVI-bIII-bVII": {
+    category: "minor",
+    chords: [
+      { rootShift: 0, quality: "Minor" },
+      { rootShift: 8, quality: "Major" },
+      { rootShift: 3, quality: "Major" },
+      { rootShift: 10, quality: "Major" }
     ]
   }
 };
@@ -764,7 +895,10 @@ function normalizeState(rawState = {}) {
       const incoming = state.earLastConfigs?.[type];
       const fallback = defaultState.earLastConfigs[type];
       const level = incoming?.level && EAR_LEVELS[incoming.level] ? incoming.level : fallback.level;
-      const allowedItems = EAR_LIBRARY[type].itemsByLevel[level] || fallback.selectedItems;
+      const playbackMode = EAR_LIBRARY[type].modeOptions.some((option) => option.value === incoming?.playbackMode)
+        ? incoming.playbackMode
+        : fallback.playbackMode;
+      const allowedItems = getEarItemPool(type, { ...fallback, ...incoming, type, level, playbackMode }) || fallback.selectedItems;
       const selectedItems = Array.isArray(incoming?.selectedItems) && incoming.selectedItems.length
         ? incoming.selectedItems.filter((item) => allowedItems.includes(item))
         : fallback.selectedItems.slice();
@@ -773,9 +907,7 @@ function normalizeState(rawState = {}) {
         level,
         questionCount: [5, 10, 20].includes(Number(incoming?.questionCount)) ? Number(incoming.questionCount) : fallback.questionCount,
         selectedItems: selectedItems.length ? selectedItems : fallback.selectedItems.slice(),
-        playbackMode: EAR_LIBRARY[type].modeOptions.some((option) => option.value === incoming?.playbackMode)
-          ? incoming.playbackMode
-          : fallback.playbackMode,
+        playbackMode,
         headphoneMode: incoming?.headphoneMode !== false,
         selectedRoots: Array.isArray(incoming?.selectedRoots)
           ? incoming.selectedRoots.filter((root) => EAR_ROOT_OPTIONS.includes(root))
@@ -1096,9 +1228,6 @@ function earRoundsByType(type) {
 function getEarItemPool(type, config) {
   const meta = EAR_LIBRARY[type] || EAR_LIBRARY.intervals;
   const effectiveConfig = config || defaultState.earLastConfigs[type] || defaultState.earLastConfigs.intervals;
-  if (type === "chords" && effectiveConfig.playbackMode === "progression") {
-    return Object.keys(CHORD_PROGRESSIONS);
-  }
   return meta.itemsByLevel[effectiveConfig.level] || meta.itemsByLevel.core || [];
 }
 
@@ -1317,20 +1446,19 @@ function currentEarPreset(type, presetId) {
 }
 
 function earItemsTitle(type, config) {
-  if (type === "chords" && config.playbackMode === "progression") return "Progresje";
   return EAR_LIBRARY[type]?.selectedLabel || "Material";
 }
 
 function earPresetHelp(type, preset) {
   if (!preset) return "Gotowy zestaw ustawien dla szybkiego startu.";
-  if (type === "chords" && preset.playbackMode === "progression") return "Gotowy zestaw kadencji i progresji.";
+  if (type === "progressions") return "Gotowy zestaw progresji z jednej rodziny harmonicznej.";
   if (type === "scales") return "Gotowy zestaw skal albo trybow do konkretnego celu.";
   if (type === "rhythm") return "Gotowy zestaw patternow rytmicznych.";
   return "Gotowy zestaw materialu i ustawien.";
 }
 
 function earItemsHelp(type, config) {
-  if (type === "chords" && config.playbackMode === "progression") return "To mozliwe odpowiedzi dla rozpoznawania progresji.";
+  if (type === "progressions") return "To mozliwe odpowiedzi dla rozpoznawania progresji harmonicznych.";
   if (type === "scales") return "To skale albo tryby, z ktorych losowana jest odpowiedz.";
   if (type === "pitch") return "To pojedyncze dzwieki, ktore mozesz rozpoznac.";
   if (type === "rhythm") return "To wzory rytmiczne, ktore sa poprawna odpowiedzia.";
@@ -1349,8 +1477,14 @@ function earModeHelp(type, mode) {
     return {
       stack: "Akord grany naraz.",
       arp: "Akord jako arpeggio po kolei.",
-      broken: "Akord rozlozony szerzej w czasie.",
-      progression: "Kilka akordow po kolei jako progresja."
+      broken: "Akord rozlozony szerzej w czasie."
+    }[mode] || "";
+  }
+  if (type === "progressions") {
+    return {
+      block: "Kazdy akord brzmi pelnym blokiem.",
+      flow: "Akordy ukladaja sie plynniej, bardziej linearnie.",
+      spread: "Kazda progresja ma szersze, bardziej przestrzenne voicingi."
     }[mode] || "";
   }
   if (type === "scales") {
@@ -1397,21 +1531,6 @@ function buildEarQuestion(type, config) {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
     const inversionPool = config.selectedInversions?.length ? config.selectedInversions : ["root"];
     const inversion = inversionPool[Math.floor(Math.random() * inversionPool.length)] || "root";
-    if (config.playbackMode === "progression") {
-      return {
-        id: uid("eq"),
-        type,
-        correctAnswer,
-        options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-        prompt: inversion === "root" ? "Progresja" : `${inversion}`,
-        audio: {
-          engine: "progression",
-          rootMidi,
-          progression: CHORD_PROGRESSIONS[correctAnswer] || CHORD_PROGRESSIONS["ii-V-I"],
-          inversion
-        }
-      };
-    }
     return {
       id: uid("eq"),
       type,
@@ -1419,6 +1538,33 @@ function buildEarQuestion(type, config) {
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
       prompt: inversion === "root" ? (config.playbackMode === "arp" ? "Arpeggio" : "Stack") : `${inversion}`,
       audio: { engine: "chord", rootMidi, intervals: applyChordInversion(CHORD_INTERVALS[correctAnswer] || [0, 4, 7], inversion), mode: config.playbackMode }
+    };
+  }
+
+  if (type === "progressions") {
+    const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
+    const inversionPool = config.selectedInversions?.length ? config.selectedInversions : ["root"];
+    const inversion = inversionPool[Math.floor(Math.random() * inversionPool.length)] || "root";
+    const progression = CHORD_PROGRESSIONS[correctAnswer] || CHORD_PROGRESSIONS["ii-V-I"];
+    return {
+      id: uid("eq"),
+      type,
+      correctAnswer,
+      options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
+      prompt: progression.category === "cadence"
+        ? "Kadencja"
+        : progression.category === "pop"
+          ? "Loop"
+          : progression.category === "jazz"
+            ? "Turnaround"
+            : "Minor",
+      audio: {
+        engine: "progression",
+        rootMidi,
+        progression,
+        inversion,
+        mode: config.playbackMode
+      }
     };
   }
 
@@ -2241,8 +2387,8 @@ function renderEarConfig() {
   document.getElementById("ear-register-help").textContent = Object.entries(EAR_REGISTER_HELP).map(([key, value]) => `${EAR_REGISTERS[key]}: ${value}`).join(" ");
   document.getElementById("ear-direction-help").textContent = Object.entries(EAR_DIRECTION_HELP).map(([key, value]) => `${EAR_DIRECTIONS[key]}: ${value}`).join(" ");
   document.getElementById("ear-scale-start-help").textContent = "Okresla, od ktorego stopnia zaczyna sie pelny przebieg skali.";
-  document.getElementById("ear-inversions-help").textContent = earConfigType === "chords" && config.playbackMode === "progression"
-    ? "Wybierasz, jakie ustawienie akordow jest dozwolone w progresji."
+  document.getElementById("ear-inversions-help").textContent = earConfigType === "progressions"
+    ? "Wybierasz, jakie voicingi i przewroty sa dozwolone w progresji."
     : "Wybierasz, jakie przewroty akordu sa dozwolone.";
 
   const presetGrid = document.getElementById("ear-preset-grid");
@@ -2957,8 +3103,22 @@ function playEarAudio(spec) {
     if (spec.engine === "progression") {
       const progression = spec.progression?.chords || [];
       progression.forEach((entry, chordIndex) => {
-        const chordStart = start + chordIndex * 0.62;
+        const chordStart = start + chordIndex * (spec.mode === "flow" ? 0.52 : spec.mode === "spread" ? 0.76 : 0.64);
         const intervals = applyChordInversion(CHORD_INTERVALS[entry.quality] || [0, 4, 7], spec.inversion || "root");
+        if (spec.mode === "flow") {
+          intervals.forEach((step, noteIndex) => {
+            scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + noteIndex * 0.08, 0.28, { type: "triangle", gainValue: 0.045 });
+          });
+          return;
+        }
+        if (spec.mode === "spread") {
+          const bass = intervals[0] ?? 0;
+          scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + bass - 12), chordStart, 0.3, { type: "triangle", gainValue: 0.04 });
+          intervals.slice(1).forEach((step, noteIndex) => {
+            scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + 0.12 + noteIndex * 0.05, 0.36, { type: "triangle", gainValue: 0.04 });
+          });
+          return;
+        }
         intervals.forEach((step) => {
           scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart, 0.42, { type: "triangle", gainValue: 0.043 });
         });
