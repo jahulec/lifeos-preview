@@ -3005,19 +3005,25 @@ async function fetchPaperQuote(symbol, apiKey) {
   };
 }
 
-async function fetchPaperChart(symbol, apiKey) {
-  const now = Math.floor(Date.now() / 1000);
-  const from = now - (60 * 60 * 8);
-  const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=5&from=${from}&to=${now}&token=${encodeURIComponent(apiKey)}`);
-  const data = await response.json();
-  if (!response.ok || data.error || data.s !== "ok" || !Array.isArray(data.c) || !Array.isArray(data.t)) {
-    throw new Error(data.error || `Brak wykresu dla ${symbol}`);
+function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
+  const currentSymbol = state.paperTrading.chart.symbol || symbol;
+  const points = currentSymbol === symbol ? state.paperTrading.chart.points.slice() : [];
+  const nextPoint = {
+    value: Number(price || 0),
+    label: `$${Number(price || 0).toFixed(0)}`,
+    bottom: formatTimeOnly(timestamp)
+  };
+  const lastPoint = points.at(-1);
+  if (lastPoint && lastPoint.bottom === nextPoint.bottom) {
+    points[points.length - 1] = nextPoint;
+  } else {
+    points.push(nextPoint);
   }
-  return data.c.slice(-24).map((value, index) => ({
-    value: Number(value || 0),
-    label: `$${Number(value || 0).toFixed(0)}`,
-    bottom: formatTimeOnly(new Date(Number(data.t[data.t.length - data.c.slice(-24).length + index] || 0) * 1000))
-  }));
+  state.paperTrading.chart = {
+    symbol,
+    points: points.slice(-24),
+    updatedAt: timestamp.toISOString()
+  };
 }
 
 async function refreshPaperTrading(options = {}) {
@@ -3040,11 +3046,10 @@ async function refreshPaperTrading(options = {}) {
       state.paperTrading.quotes[quote.symbol] = quote;
     });
     const selected = paperSelectedSymbol();
-    state.paperTrading.chart = {
-      symbol: selected,
-      points: await fetchPaperChart(selected, state.paperTrading.apiKey),
-      updatedAt: new Date().toISOString()
-    };
+    const selectedQuote = quotes.find((quote) => quote.symbol === selected) || state.paperTrading.quotes[selected];
+    if (selectedQuote) {
+      updatePaperChartSnapshot(selected, selectedQuote.price, new Date());
+    }
     state.paperTrading.lastSyncAt = new Date().toISOString();
     state.paperTrading.error = "";
     saveState();
