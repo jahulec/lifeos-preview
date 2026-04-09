@@ -1056,6 +1056,7 @@ let earConfigType = state.earInspectType || "intervals";
 let earRoundSession = null;
 let paperTradingRefreshTimer = null;
 let paperTradingLoading = false;
+let paperChartRange = "1D";
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -3236,25 +3237,44 @@ function renderPaperWatchlist() {
   state.paperTrading.watchlist.forEach((symbol) => {
     const quote = paperQuote(symbol);
     const row = document.createElement("div");
-    row.className = `list-item list-item-block${paperSelectedSymbol() === symbol ? " active" : ""}`;
+    row.className = `list-item finance-watchlist-row${paperSelectedSymbol() === symbol ? " active" : ""}`;
+    row.setAttribute("role", "button");
+    row.tabIndex = 0;
     row.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(symbol)}</strong>
-        <span>${quote ? `${formatUsd(quote.price)} - ${formatPercent(quote.changePercent)}` : "Brak kursu"}</span>
+      <div class="finance-watchlist-main">
+        <div class="list-copy">
+          <strong>${escapeHtml(symbol)}</strong>
+          <span>${quote ? "US stock" : "Brak kursu"}</span>
+        </div>
+        <div class="finance-watchlist-quote">
+          <strong>${quote ? formatUsd(quote.price) : "--"}</strong>
+          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : "--"}</span>
+        </div>
       </div>
     `;
+    const openSymbol = () => {
+      state.paperTrading.selectedSymbol = symbol;
+      state.paperTrading.chart.symbol = symbol;
+      saveState();
+      renderFinance();
+      if (paperTradingApiKey()) {
+        refreshPaperTrading({ silent: true });
+      }
+    };
+    row.addEventListener("click", (event) => {
+      if (event.target.closest("button")) return;
+      openSymbol();
+    });
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openSymbol();
+      }
+    });
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Open", () => {
-        state.paperTrading.selectedSymbol = symbol;
-        state.paperTrading.chart.symbol = symbol;
-        saveState();
-        renderFinance();
-        if (paperTradingApiKey()) {
-          refreshPaperTrading({ silent: true });
-        }
-      }),
+      makeToolButton("Open", openSymbol),
       makeToolButton("Del", () => {
         state.paperTrading.watchlist = state.paperTrading.watchlist.filter((entry) => entry !== symbol);
         delete state.paperTrading.quotes[symbol];
@@ -3287,12 +3307,19 @@ function renderPaperPositions() {
       const quote = paperQuote(position.symbol);
       const marketValue = Number(quote?.price || position.avgCost || 0) * position.shares;
       const pnl = marketValue - (position.avgCost * position.shares);
+      const pnlPercent = position.avgCost ? ((Number(quote?.price || position.avgCost || 0) - position.avgCost) / position.avgCost) * 100 : 0;
       const row = document.createElement("div");
-      row.className = "list-item";
+      row.className = "list-item finance-position-row";
       row.innerHTML = `
-        <div class="list-copy">
-          <strong>${escapeHtml(position.symbol)}</strong>
-          <span>${position.shares} szt. - avg ${formatUsd(position.avgCost)} - ${formatUsd(marketValue)}</span>
+        <div class="finance-position-main">
+          <div class="list-copy">
+            <strong>${escapeHtml(position.symbol)}</strong>
+            <span>${position.shares} szt. · avg ${formatUsd(position.avgCost)}</span>
+          </div>
+          <div class="finance-position-quote">
+            <strong>${formatUsd(marketValue)}</strong>
+            <span class="${pnl >= 0 ? "positive" : "negative"}">${formatPercent(pnlPercent)}</span>
+          </div>
         </div>
       `;
       const meta = document.createElement("div");
@@ -3313,15 +3340,30 @@ function renderPaperOrders() {
   }
   state.paperTrading.orders.slice(0, 8).forEach((order) => {
     const row = document.createElement("div");
-    row.className = "list-item";
+    row.className = "list-item finance-order-row";
     row.innerHTML = `
-      <div class="list-copy">
-        <strong>${escapeHtml(order.symbol)} - ${order.side === "buy" ? "Buy" : "Sell"}</strong>
-        <span>${order.shares} szt. - ${formatUsd(order.price)} - ${formatShortDateLabel(order.createdAt)}</span>
+      <div class="finance-order-main">
+        <div class="list-copy">
+          <strong>${escapeHtml(order.symbol)} · ${order.side === "buy" ? "Buy" : "Sell"}</strong>
+          <span>${order.shares} szt. · ${formatShortDateLabel(order.createdAt)}</span>
+        </div>
+        <div class="finance-order-meta">
+          <strong>${formatUsd(order.price)}</strong>
+          <span>${formatUsd(order.price * order.shares)}</span>
+        </div>
       </div>
     `;
     node.appendChild(row);
   });
+}
+
+function paperChartPointsForRange(points) {
+  if (!points.length) return [];
+  const normalized = points.slice();
+  if (paperChartRange === "1D") return normalized.slice(-8);
+  if (paperChartRange === "1W") return normalized.slice(-12);
+  if (paperChartRange === "1M") return normalized.slice(-24);
+  return normalized;
 }
 
 function renderPaperChart() {
@@ -3334,11 +3376,15 @@ function renderPaperChart() {
         { value: Number(quote.price || quote.open || quote.prevClose || 0), label: "Now", bottom: formatTimeOnly(quote.updatedAt || new Date()) }
       ].filter((point) => Number.isFinite(point.value) && point.value > 0)
     : [];
-  const chartPoints = state.paperTrading.chart.points.length ? state.paperTrading.chart.points : fallbackPoints;
+  const basePoints = state.paperTrading.chart.points.length ? state.paperTrading.chart.points : fallbackPoints;
+  const chartPoints = paperChartPointsForRange(basePoints);
   document.getElementById("paper-chart-symbol").textContent = symbol;
   document.getElementById("paper-chart-updated").textContent = state.paperTrading.chart.updatedAt || quote?.updatedAt
     ? formatTimeOnly(state.paperTrading.chart.updatedAt || quote?.updatedAt)
     : "-";
+  document.querySelectorAll("[data-paper-range]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.paperRange === paperChartRange);
+  });
   renderSimpleLineChart("paper-chart", chartPoints, {
     topLabel: chartPoints.length
       ? `$${Math.max(...chartPoints.map((point) => Number(point.value || 0))).toFixed(0)}`
@@ -3391,6 +3437,7 @@ function renderFinance() {
   document.getElementById("paper-selected-price").textContent = selectedQuote ? formatUsd(selectedQuote.price) : "$0.00";
   document.getElementById("paper-selected-change").textContent = selectedQuote ? formatPercent(selectedQuote.changePercent) : "+0.00%";
   document.getElementById("paper-selected-change").classList.toggle("negative", Boolean(selectedQuote && selectedQuote.changePercent < 0));
+  document.getElementById("paper-pnl").classList.toggle("negative", pnl < 0);
   document.getElementById("paper-selected-open").textContent = selectedQuote ? formatUsd(selectedQuote.open) : "$0.00";
   document.getElementById("paper-selected-high").textContent = selectedQuote ? formatUsd(selectedQuote.high) : "$0.00";
   document.getElementById("paper-selected-low").textContent = selectedQuote ? formatUsd(selectedQuote.low) : "$0.00";
@@ -3418,6 +3465,7 @@ function renderFinance() {
   document.getElementById("paper-sell-button").classList.toggle("active", side === "sell");
   document.getElementById("paper-order-estimate").textContent = formatUsd((orderQuote?.price || 0) * Math.max(0, shares));
   document.getElementById("paper-order-available").textContent = `${paperPositionShares(orderSymbol)}`;
+  document.getElementById("paper-order-submit").textContent = side === "buy" ? "Kup wirtualnie" : "Sprzedaj wirtualnie";
   renderFinanceHome();
   renderFinanceEntries();
   renderPlannedExpenses();
@@ -4824,6 +4872,27 @@ function bindForms() {
 
   document.getElementById("paper-order-shares").addEventListener("input", () => {
     renderFinance();
+  });
+
+  document.getElementById("paper-shares-minus").addEventListener("click", () => {
+    const input = document.getElementById("paper-order-shares");
+    const next = Math.max(1, Number(input.value || 1) - 1);
+    input.value = `${next}`;
+    renderFinance();
+  });
+
+  document.getElementById("paper-shares-plus").addEventListener("click", () => {
+    const input = document.getElementById("paper-order-shares");
+    const next = Math.max(1, Number(input.value || 0) + 1);
+    input.value = `${next}`;
+    renderFinance();
+  });
+
+  document.querySelectorAll("[data-paper-range]").forEach((button) => {
+    button.addEventListener("click", () => {
+      paperChartRange = button.dataset.paperRange || "1D";
+      renderFinance();
+    });
   });
 
   document.getElementById("guitar-exercise-form").addEventListener("submit", (event) => {

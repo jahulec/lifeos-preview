@@ -971,10 +971,10 @@
                   </div>
                 </article>
 
-                <article class="card">
+                <article class="card finance-dark-card">
                   <div class="card-head">
-                    <h2>Dane</h2>
-                    <span>API</span>
+                    <h2>Feed</h2>
+                    <span>Live</span>
                   </div>
                   <form id="paper-feed-form" class="form-block">
                     <input id="paper-api-input" type="password" placeholder="Darmowy klucz Finnhub">
@@ -986,7 +986,7 @@
                   </form>
                 </article>
 
-                <article class="card">
+                <article class="card finance-dark-card">
                   <div class="card-head">
                     <h2>Watchlista</h2>
                     <span id="paper-watchlist-count">0</span>
@@ -998,16 +998,22 @@
                   <div id="paper-watchlist" class="stack-list"></div>
                 </article>
 
-                <article class="card">
+                <article class="card finance-dark-card finance-chart-card">
                   <div class="card-head">
                     <h2>Wykres</h2>
                     <span id="paper-chart-symbol">AAPL</span>
+                  </div>
+                  <div class="finance-chart-range" id="paper-chart-range">
+                    <button type="button" class="finance-range-button active" data-paper-range="1D">1D</button>
+                    <button type="button" class="finance-range-button" data-paper-range="1W">1W</button>
+                    <button type="button" class="finance-range-button" data-paper-range="1M">1M</button>
+                    <button type="button" class="finance-range-button" data-paper-range="ALL">All</button>
                   </div>
                   <svg id="paper-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Wykres waloru"></svg>
                   <p class="field-help">Live session z kolejnych odswiezen. <span id="paper-chart-updated">-</span></p>
                 </article>
 
-                <article class="card finance-ticket-card">
+                <article class="card finance-dark-card finance-ticket-card">
                   <div class="card-head">
                     <h2>Ticket</h2>
                     <span>Market</span>
@@ -1023,7 +1029,11 @@
                         <option value="sell">Sprzedaj</option>
                       </select>
                       <select id="paper-order-symbol"></select>
-                      <input id="paper-order-shares" type="number" step="1" min="1" placeholder="Liczba akcji">
+                      <div class="finance-qty-stepper">
+                        <button type="button" id="paper-shares-minus" class="finance-step-button" aria-label="Minus">-</button>
+                        <input id="paper-order-shares" type="number" step="1" min="1" placeholder="Akcje">
+                        <button type="button" id="paper-shares-plus" class="finance-step-button" aria-label="Plus">+</button>
+                      </div>
                     </div>
                     <div class="stat-grid">
                       <div class="stat-card">
@@ -1035,11 +1045,11 @@
                         <strong id="paper-order-available">0</strong>
                       </div>
                     </div>
-                    <button type="submit" class="primary-button full-button">Wykonaj</button>
+                    <button type="submit" id="paper-order-submit" class="primary-button full-button">Kup wirtualnie</button>
                   </form>
                 </article>
 
-                <article class="card">
+                <article class="card finance-dark-card">
                   <div class="card-head">
                     <h2>Pozycje</h2>
                     <span id="paper-position-count">0</span>
@@ -1047,7 +1057,7 @@
                   <div id="paper-positions-list" class="stack-list"></div>
                 </article>
 
-                <article class="card">
+                <article class="card finance-dark-card">
                   <div class="card-head">
                     <h2>Zlecenia</h2>
                     <span id="paper-order-count">0</span>

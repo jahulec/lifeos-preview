@@ -563,6 +563,67 @@ button:active {
   gap: 18px;
 }
 
+.finance-dark-card {
+  background:
+    linear-gradient(180deg, rgba(18, 20, 24, 0.98), rgba(25, 28, 34, 0.98));
+  color: white;
+  border: 0;
+  box-shadow: 0 24px 54px rgba(10, 10, 10, 0.18);
+}
+
+.finance-dark-card .card-head span,
+.finance-dark-card .card-head h2,
+.finance-dark-card .list-copy strong,
+.finance-dark-card .list-copy span,
+.finance-dark-card label,
+.finance-dark-card .field-help {
+  color: white;
+}
+
+.finance-dark-card .card-head span,
+.finance-dark-card .list-copy span,
+.finance-dark-card .field-help {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.finance-dark-card input,
+.finance-dark-card select {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.finance-dark-card input::placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+.finance-dark-card .secondary-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.finance-dark-card .metronome-option-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.finance-dark-card .metronome-option-button.active {
+  background: white;
+  color: #111111;
+  border-color: white;
+}
+
+.finance-dark-card .stat-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.finance-dark-card .stat-card span {
+  color: rgba(255, 255, 255, 0.48);
+}
+
 .finance-price-row {
   display: flex;
   align-items: flex-end;
@@ -629,6 +690,101 @@ button:active {
 
 .finance-ticket-card .stat-card strong {
   font-size: 1.05rem;
+}
+
+.finance-chart-card {
+  gap: 14px;
+}
+
+.finance-chart-range {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.finance-range-button,
+.finance-step-button {
+  border: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  min-height: 38px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.finance-range-button.active {
+  background: rgba(255, 255, 255, 0.92);
+  color: #111111;
+}
+
+.finance-qty-stepper {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  gap: 8px;
+}
+
+.finance-step-button {
+  min-height: 48px;
+  font-size: 1.2rem;
+}
+
+.finance-watchlist-row,
+.finance-position-row,
+.finance-order-row {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.finance-watchlist-row.active {
+  border-color: rgba(88, 240, 194, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(88, 240, 194, 0.22);
+}
+
+.finance-watchlist-main,
+.finance-position-main,
+.finance-order-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.finance-watchlist-quote,
+.finance-position-quote,
+.finance-order-meta {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  min-width: 0;
+}
+
+.finance-watchlist-quote strong,
+.finance-position-quote strong,
+.finance-order-meta strong {
+  font-size: 0.98rem;
+  color: white;
+}
+
+.finance-watchlist-quote span,
+.finance-position-quote span,
+.finance-order-meta span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.finance-watchlist-quote .positive,
+.finance-position-quote .positive {
+  color: #7ef0b7;
+}
+
+.finance-watchlist-quote .negative,
+.finance-position-quote .negative {
+  color: #ff9a9a;
+}
+
+#paper-pnl.negative {
+  color: #ff9a9a;
 }
 
 .analytics-hero-card .tool-button.delete {
