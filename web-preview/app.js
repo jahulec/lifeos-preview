@@ -1,5 +1,6 @@
 const STORAGE_KEY = "lifeos-preview-state-v5";
 const LEGACY_KEYS = ["lifeos-preview-state-v4", "lifeos-preview-state-v3"];
+const PAPER_TRADING_PUBLIC_API_KEY = "d7bqnapr01qom0rbtekgd7bqnapr01qom0rbtel0";
 
 function isoDaysAgo(days, hour = 9) {
   const date = new Date();
@@ -1100,7 +1101,7 @@ function setTab(tab) {
       window.scrollTo({ top: financeScrollMemory[financeView] || 0, behavior: "auto" });
     });
   }
-  if (tab === "finance" && state.paperTrading.apiKey && !paperTradingLoading && (!state.paperTrading.lastSyncAt || (Date.now() - new Date(state.paperTrading.lastSyncAt).getTime()) > 120000)) {
+  if (tab === "finance" && paperTradingApiKey() && !paperTradingLoading && (!state.paperTrading.lastSyncAt || (Date.now() - new Date(state.paperTrading.lastSyncAt).getTime()) > 120000)) {
     refreshPaperTrading({ silent: true });
   }
   syncPaperTradingAutoRefresh();
@@ -1227,6 +1228,10 @@ function paperQuote(symbol) {
   return state.paperTrading.quotes?.[symbol] || null;
 }
 
+function paperTradingApiKey() {
+  return state.paperTrading.apiKey || PAPER_TRADING_PUBLIC_API_KEY;
+}
+
 function paperSelectedSymbol() {
   return state.paperTrading.selectedSymbol || state.paperTrading.watchlist[0] || "AAPL";
 }
@@ -1258,7 +1263,7 @@ function paperEquity() {
 }
 
 function paperMarketStatus() {
-  if (!state.paperTrading.apiKey) return "Dodaj klucz API";
+  if (!paperTradingApiKey()) return "Dodaj klucz API";
   if (state.paperTrading.error) return state.paperTrading.error;
   if (state.paperTrading.lastSyncAt) return formatTimeOnly(state.paperTrading.lastSyncAt);
   return "Gotowe";
@@ -3053,8 +3058,9 @@ function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
 
 async function refreshPaperTrading(options = {}) {
   const { silent = false } = options;
+  const apiKey = paperTradingApiKey();
   if (paperTradingLoading) return;
-  if (!state.paperTrading.apiKey) {
+  if (!apiKey) {
     state.paperTrading.error = "Brak klucza";
     renderFinance();
     return;
@@ -3066,7 +3072,7 @@ async function refreshPaperTrading(options = {}) {
   try {
     paperSyncSelectedSymbol();
     const symbols = [...new Set(state.paperTrading.watchlist.slice(0, 6))];
-    const quotes = await Promise.all(symbols.map((symbol) => fetchPaperQuote(symbol, state.paperTrading.apiKey)));
+    const quotes = await Promise.all(symbols.map((symbol) => fetchPaperQuote(symbol, apiKey)));
     quotes.forEach((quote) => {
       state.paperTrading.quotes[quote.symbol] = quote;
     });
@@ -3101,7 +3107,7 @@ function stopPaperTradingAutoRefresh() {
 
 function syncPaperTradingAutoRefresh() {
   stopPaperTradingAutoRefresh();
-  if (state.activeTab !== "finance" || !state.paperTrading.autoRefresh || !state.paperTrading.apiKey) return;
+  if (state.activeTab !== "finance" || !state.paperTrading.autoRefresh || !paperTradingApiKey()) return;
   paperTradingRefreshTimer = setInterval(() => {
     refreshPaperTrading({ silent: true });
   }, 180000);
@@ -3245,7 +3251,7 @@ function renderPaperWatchlist() {
         state.paperTrading.chart.symbol = symbol;
         saveState();
         renderFinance();
-        if (state.paperTrading.apiKey) {
+        if (paperTradingApiKey()) {
           refreshPaperTrading({ silent: true });
         }
       }),
@@ -3320,13 +3326,22 @@ function renderPaperOrders() {
 
 function renderPaperChart() {
   const symbol = paperSelectedSymbol();
+  const quote = paperQuote(symbol);
+  const fallbackPoints = quote
+    ? [
+        { value: Number(quote.prevClose || quote.open || quote.price || 0), label: "Prev", bottom: "prev" },
+        { value: Number(quote.open || quote.prevClose || quote.price || 0), label: "Open", bottom: "open" },
+        { value: Number(quote.price || quote.open || quote.prevClose || 0), label: "Now", bottom: formatTimeOnly(quote.updatedAt || new Date()) }
+      ].filter((point) => Number.isFinite(point.value) && point.value > 0)
+    : [];
+  const chartPoints = state.paperTrading.chart.points.length ? state.paperTrading.chart.points : fallbackPoints;
   document.getElementById("paper-chart-symbol").textContent = symbol;
-  document.getElementById("paper-chart-updated").textContent = state.paperTrading.chart.updatedAt
-    ? formatTimeOnly(state.paperTrading.chart.updatedAt)
+  document.getElementById("paper-chart-updated").textContent = state.paperTrading.chart.updatedAt || quote?.updatedAt
+    ? formatTimeOnly(state.paperTrading.chart.updatedAt || quote?.updatedAt)
     : "-";
-  renderSimpleLineChart("paper-chart", state.paperTrading.chart.points, {
-    topLabel: state.paperTrading.chart.points.length
-      ? `$${Math.max(...state.paperTrading.chart.points.map((point) => Number(point.value || 0))).toFixed(0)}`
+  renderSimpleLineChart("paper-chart", chartPoints, {
+    topLabel: chartPoints.length
+      ? `$${Math.max(...chartPoints.map((point) => Number(point.value || 0))).toFixed(0)}`
       : "$0"
   });
 }
@@ -3381,6 +3396,7 @@ function renderFinance() {
   document.getElementById("paper-selected-low").textContent = selectedQuote ? formatUsd(selectedQuote.low) : "$0.00";
   document.getElementById("paper-selected-prev").textContent = selectedQuote ? formatUsd(selectedQuote.prevClose) : "$0.00";
   document.getElementById("paper-api-input").value = state.paperTrading.apiKey || "";
+  document.getElementById("paper-api-input").placeholder = state.paperTrading.apiKey ? "Klucz Finnhub" : "Wbudowany klucz aktywny";
   document.getElementById("paper-auto-button").textContent = state.paperTrading.autoRefresh ? "Auto 3m: On" : "Auto 3m: Off";
   document.getElementById("paper-watchlist-count").textContent = `${state.paperTrading.watchlist.length}`;
   document.getElementById("paper-position-count").textContent = `${state.paperTrading.positions.length}`;
@@ -4731,7 +4747,7 @@ function bindForms() {
     saveState();
     renderFinance();
     syncPaperTradingAutoRefresh();
-    if (state.paperTrading.autoRefresh && state.paperTrading.apiKey) {
+    if (state.paperTrading.autoRefresh && paperTradingApiKey()) {
       refreshPaperTrading({ silent: true });
     }
   });
@@ -4758,7 +4774,7 @@ function bindForms() {
     input.value = "";
     saveState();
     renderFinance();
-    if (state.paperTrading.apiKey) {
+    if (paperTradingApiKey()) {
       refreshPaperTrading({ silent: true });
     }
   });
@@ -4778,7 +4794,7 @@ function bindForms() {
     button.addEventListener("click", () => {
       const nextView = button.dataset.openFinanceView;
       setFinanceView(nextView, { scrollTop: true });
-      if (nextView === "market" && state.paperTrading.apiKey && !paperTradingLoading) {
+      if (nextView === "market" && paperTradingApiKey() && !paperTradingLoading) {
         refreshPaperTrading({ silent: true });
       }
     });
