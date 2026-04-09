@@ -563,6 +563,12 @@ button:active {
   gap: 18px;
 }
 
+.finance-hero-copy {
+  margin: -6px 0 0;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.92rem;
+}
+
 .finance-dark-card {
   background:
     linear-gradient(180deg, rgba(18, 20, 24, 0.98), rgba(25, 28, 34, 0.98));
@@ -601,6 +607,11 @@ button:active {
   background: rgba(255, 255, 255, 0.08);
   color: white;
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+.finance-dark-card .primary-button {
+  background: white;
+  color: #111111;
 }
 
 .finance-dark-card .metronome-option-button {
@@ -736,6 +747,10 @@ button:active {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
+.finance-watchlist-row {
+  cursor: pointer;
+}
+
 .finance-watchlist-row.active {
   border-color: rgba(88, 240, 194, 0.42);
   box-shadow: inset 0 0 0 1px rgba(88, 240, 194, 0.22);
@@ -784,6 +799,16 @@ button:active {
 }
 
 #paper-pnl.negative {
+  color: #ff9a9a;
+}
+
+.finance-dark-card .tool-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.finance-dark-card .tool-button.delete {
   color: #ff9a9a;
 }
 

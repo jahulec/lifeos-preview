@@ -80,7 +80,7 @@ const defaultState = {
     provider: "finnhub",
     apiKey: "",
     cash: 100000,
-    watchlist: ["AAPL", "MSFT", "NVDA", "SPY"],
+    watchlist: ["AAPL", "MSFT", "NVDA", "SPY", "AMZN", "GOOGL", "META", "TSLA", "AMD", "PLTR", "QQQ", "JPM"],
     selectedSymbol: "AAPL",
     quotes: {},
     chart: { symbol: "AAPL", points: [], updatedAt: null },
@@ -205,6 +205,31 @@ const defaultState = {
     { name: "Magnesium", dosage: "evening" }
   ]
 };
+
+const MARKET_UNIVERSE = [
+  { symbol: "AAPL", name: "Apple", category: "Tech" },
+  { symbol: "MSFT", name: "Microsoft", category: "Tech" },
+  { symbol: "NVDA", name: "NVIDIA", category: "Tech" },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", category: "ETF" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", category: "ETF" },
+  { symbol: "AMZN", name: "Amazon", category: "Consumer" },
+  { symbol: "GOOGL", name: "Alphabet", category: "Tech" },
+  { symbol: "META", name: "Meta Platforms", category: "Tech" },
+  { symbol: "TSLA", name: "Tesla", category: "Auto" },
+  { symbol: "AMD", name: "AMD", category: "Tech" },
+  { symbol: "PLTR", name: "Palantir", category: "Software" },
+  { symbol: "JPM", name: "JPMorgan", category: "Finance" },
+  { symbol: "BAC", name: "Bank of America", category: "Finance" },
+  { symbol: "BRK.B", name: "Berkshire Hathaway", category: "Finance" },
+  { symbol: "TSM", name: "Taiwan Semi", category: "Tech" },
+  { symbol: "NFLX", name: "Netflix", category: "Media" },
+  { symbol: "KO", name: "Coca-Cola", category: "Consumer" },
+  { symbol: "SHOP", name: "Shopify", category: "Software" },
+  { symbol: "UBER", name: "Uber", category: "Mobility" },
+  { symbol: "CRM", name: "Salesforce", category: "Software" },
+  { symbol: "INTC", name: "Intel", category: "Tech" },
+  { symbol: "DIS", name: "Disney", category: "Media" }
+];
 
 function cloneState(value) {
   return JSON.parse(JSON.stringify(value));
@@ -858,7 +883,7 @@ function normalizeState(rawState = {}) {
         ...cloneState(defaultState.paperTrading),
         ...state.paperTrading,
         watchlist: Array.isArray(state.paperTrading.watchlist)
-          ? state.paperTrading.watchlist.map((symbol) => String(symbol || "").trim().toUpperCase()).filter(Boolean).slice(0, 6)
+          ? state.paperTrading.watchlist.map((symbol) => String(symbol || "").trim().toUpperCase()).filter(Boolean).slice(0, 16)
           : defaultState.paperTrading.watchlist.slice(),
         quotes: state.paperTrading.quotes && typeof state.paperTrading.quotes === "object" ? state.paperTrading.quotes : {},
         chart: state.paperTrading.chart && typeof state.paperTrading.chart === "object"
@@ -872,7 +897,7 @@ function normalizeState(rawState = {}) {
                       value: Number(point.value || 0)
                     }))
                     .filter((point) => Number.isFinite(point.value))
-                    .slice(-24)
+                    .slice(-120)
                 : [],
               updatedAt: state.paperTrading.chart.updatedAt || null
             }
@@ -1057,6 +1082,9 @@ let earRoundSession = null;
 let paperTradingRefreshTimer = null;
 let paperTradingLoading = false;
 let paperChartRange = "1D";
+let paperChartLoading = false;
+let paperChartRequestKey = "";
+const paperChartCache = new Map();
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -1231,6 +1259,14 @@ function paperQuote(symbol) {
 
 function paperTradingApiKey() {
   return state.paperTrading.apiKey || PAPER_TRADING_PUBLIC_API_KEY;
+}
+
+function marketMeta(symbol) {
+  return MARKET_UNIVERSE.find((entry) => entry.symbol === symbol) || {
+    symbol,
+    name: symbol,
+    category: "Market"
+  };
 }
 
 function paperSelectedSymbol() {
@@ -3036,6 +3072,81 @@ async function fetchPaperQuote(symbol, apiKey) {
   };
 }
 
+async function fetchPaperHistory(symbol, range) {
+  const params = {
+    "1D": { range: "1d", interval: "5m" },
+    "1W": { range: "5d", interval: "30m" },
+    "1M": { range: "1mo", interval: "1d" },
+    ALL: { range: "6mo", interval: "1wk" }
+  }[range] || { range: "1d", interval: "5m" };
+  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${params.range}&interval=${params.interval}`);
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  if (!response.ok || !result?.timestamp?.length) {
+    throw new Error("Brak historii");
+  }
+  const closes = result.indicators?.quote?.[0]?.close || [];
+  const points = result.timestamp
+    .map((timestamp, index) => {
+      const value = Number(closes[index]);
+      if (!Number.isFinite(value) || value <= 0) return null;
+      const date = new Date(timestamp * 1000);
+      return {
+        value,
+        label: `$${value.toFixed(0)}`,
+        bottom: range === "1D" || range === "1W"
+          ? formatTimeOnly(date)
+          : `${date.getDate()}/${date.getMonth() + 1}`
+      };
+    })
+    .filter(Boolean);
+  if (!points.length) {
+    throw new Error("Pusty wykres");
+  }
+  return {
+    symbol,
+    range,
+    points,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+async function ensurePaperHistory(symbol, range) {
+  const cacheKey = `${symbol}:${range}`;
+  if (!symbol || paperChartRequestKey === cacheKey || paperChartLoading) return;
+  if (paperChartCache.has(cacheKey)) {
+    const cached = paperChartCache.get(cacheKey);
+    state.paperTrading.chart = {
+      symbol,
+      points: cached.points.slice(-120),
+      updatedAt: cached.updatedAt
+    };
+    return;
+  }
+  paperChartLoading = true;
+  paperChartRequestKey = cacheKey;
+  try {
+    const payload = await fetchPaperHistory(symbol, range);
+    paperChartCache.set(cacheKey, payload);
+    if (paperSelectedSymbol() === symbol && paperChartRange === range) {
+      state.paperTrading.chart = {
+        symbol,
+        points: payload.points.slice(-120),
+        updatedAt: payload.updatedAt
+      };
+      saveState();
+      renderFinance();
+    }
+  } catch (error) {
+    if (!state.paperTrading.chart.points.length) {
+      renderFinance();
+    }
+  } finally {
+    paperChartLoading = false;
+    paperChartRequestKey = "";
+  }
+}
+
 function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
   const currentSymbol = state.paperTrading.chart.symbol || symbol;
   const points = currentSymbol === symbol ? state.paperTrading.chart.points.slice() : [];
@@ -3052,7 +3163,7 @@ function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
   }
   state.paperTrading.chart = {
     symbol,
-    points: points.slice(-24),
+    points: points.slice(-120),
     updatedAt: timestamp.toISOString()
   };
 }
@@ -3072,7 +3183,7 @@ async function refreshPaperTrading(options = {}) {
   renderFinance();
   try {
     paperSyncSelectedSymbol();
-    const symbols = [...new Set(state.paperTrading.watchlist.slice(0, 6))];
+    const symbols = [...new Set(state.paperTrading.watchlist.slice(0, 16))];
     const quotes = await Promise.all(symbols.map((symbol) => fetchPaperQuote(symbol, apiKey)));
     quotes.forEach((quote) => {
       state.paperTrading.quotes[quote.symbol] = quote;
@@ -3357,12 +3468,54 @@ function renderPaperOrders() {
   });
 }
 
+function renderPaperSuggestions() {
+  const node = document.getElementById("paper-market-suggestions");
+  if (!node) return;
+  const query = (document.getElementById("paper-market-search")?.value || "").trim().toLowerCase();
+  const results = MARKET_UNIVERSE
+    .filter((entry) => !query || entry.symbol.toLowerCase().includes(query) || entry.name.toLowerCase().includes(query))
+    .slice(0, 8);
+  node.innerHTML = "";
+  results.forEach((entry) => {
+    const quote = paperQuote(entry.symbol);
+    const row = document.createElement("div");
+    row.className = "list-item finance-watchlist-row";
+    row.innerHTML = `
+      <div class="finance-watchlist-main">
+        <div class="list-copy">
+          <strong>${escapeHtml(entry.symbol)}</strong>
+          <span>${escapeHtml(entry.name)} · ${escapeHtml(entry.category)}</span>
+        </div>
+        <div class="finance-watchlist-quote">
+          <strong>${quote ? formatUsd(quote.price) : "--"}</strong>
+          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : entry.category}</span>
+        </div>
+      </div>
+    `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(makeToolButton(state.paperTrading.watchlist.includes(entry.symbol) ? "Open" : "Add", () => {
+      if (!state.paperTrading.watchlist.includes(entry.symbol)) {
+        state.paperTrading.watchlist.unshift(entry.symbol);
+        state.paperTrading.watchlist = [...new Set(state.paperTrading.watchlist)].slice(0, 16);
+      }
+      state.paperTrading.selectedSymbol = entry.symbol;
+      state.paperTrading.chart.symbol = entry.symbol;
+      saveState();
+      renderFinance();
+      refreshPaperTrading({ silent: true });
+    }));
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+}
+
 function paperChartPointsForRange(points) {
   if (!points.length) return [];
   const normalized = points.slice();
-  if (paperChartRange === "1D") return normalized.slice(-8);
-  if (paperChartRange === "1W") return normalized.slice(-12);
-  if (paperChartRange === "1M") return normalized.slice(-24);
+  if (paperChartRange === "1D") return normalized.slice(-32);
+  if (paperChartRange === "1W") return normalized.slice(-40);
+  if (paperChartRange === "1M") return normalized.slice(-40);
   return normalized;
 }
 
@@ -3420,6 +3573,7 @@ function renderFinance() {
   const pnl = paperUnrealizedPnl();
   const selectedSymbol = paperSelectedSymbol();
   const selectedQuote = paperQuote(selectedSymbol);
+  const selectedMeta = marketMeta(selectedSymbol);
   document.getElementById("finance-balance").textContent = formatZl(finance.income - finance.expense);
   document.getElementById("finance-income").textContent = formatZl(finance.income);
   document.getElementById("finance-expense").textContent = formatZl(finance.expense);
@@ -3434,6 +3588,7 @@ function renderFinance() {
   document.getElementById("paper-feed-status").textContent = paperTradingLoading ? "Laduje" : paperMarketStatus();
   document.getElementById("paper-feed-provider").textContent = state.paperTrading.provider.toUpperCase();
   document.getElementById("paper-selected-symbol").textContent = selectedSymbol;
+  document.getElementById("paper-selected-company").textContent = `${selectedMeta.name} · ${selectedMeta.category}`;
   document.getElementById("paper-selected-price").textContent = selectedQuote ? formatUsd(selectedQuote.price) : "$0.00";
   document.getElementById("paper-selected-change").textContent = selectedQuote ? formatPercent(selectedQuote.changePercent) : "+0.00%";
   document.getElementById("paper-selected-change").classList.toggle("negative", Boolean(selectedQuote && selectedQuote.changePercent < 0));
@@ -3469,10 +3624,14 @@ function renderFinance() {
   renderFinanceHome();
   renderFinanceEntries();
   renderPlannedExpenses();
+  renderPaperSuggestions();
   renderPaperWatchlist();
   renderPaperPositions();
   renderPaperOrders();
   renderPaperChart();
+  if (financeView === "market") {
+    ensurePaperHistory(selectedSymbol, paperChartRange);
+  }
 }
 
 function renderTaskList() {
@@ -4812,8 +4971,8 @@ function bindForms() {
       input.value = "";
       return;
     }
-    if (state.paperTrading.watchlist.length >= 6) {
-      setFeedback("Limit watchlist to 6.");
+    if (state.paperTrading.watchlist.length >= 16) {
+      setFeedback("Limit watchlist to 16.");
       return;
     }
     state.paperTrading.watchlist.push(symbol);
@@ -4874,6 +5033,10 @@ function bindForms() {
     renderFinance();
   });
 
+  document.getElementById("paper-market-search").addEventListener("input", () => {
+    renderPaperSuggestions();
+  });
+
   document.getElementById("paper-shares-minus").addEventListener("click", () => {
     const input = document.getElementById("paper-order-shares");
     const next = Math.max(1, Number(input.value || 1) - 1);
@@ -4891,6 +5054,7 @@ function bindForms() {
   document.querySelectorAll("[data-paper-range]").forEach((button) => {
     button.addEventListener("click", () => {
       paperChartRange = button.dataset.paperRange || "1D";
+      ensurePaperHistory(paperSelectedSymbol(), paperChartRange);
       renderFinance();
     });
   });
