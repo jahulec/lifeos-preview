@@ -435,6 +435,24 @@ button:active {
     linear-gradient(180deg, #121216 0%, #171922 42%, #1e2230 100%);
 }
 
+.module-card-finance-personal {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 191, 105, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent 24%),
+    linear-gradient(180deg, #151518 0%, #1d1f24 48%, #22242a 100%);
+}
+
+.module-card-finance-market {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(88, 240, 194, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(88, 81, 219, 0.16), transparent 26%),
+    linear-gradient(180deg, #101114 0%, #14171b 44%, #191d23 100%);
+}
+
+.module-card-copy {
+  margin: 0;
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;
@@ -538,6 +556,79 @@ button:active {
 .analytics-hero-card .tool-button {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+.finance-market-hero {
+  display: grid;
+  gap: 18px;
+}
+
+.finance-price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.finance-price-row strong {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+
+.finance-change-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(126, 240, 183, 0.16);
+  color: #7ef0b7;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.finance-change-pill.negative {
+  background: rgba(255, 142, 142, 0.12);
+  color: #ff9a9a;
+}
+
+.finance-quote-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.finance-quote-mini {
+  padding: 12px 12px 13px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.finance-quote-mini span {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.finance-quote-mini strong {
+  font-size: 0.95rem;
+  color: white;
+}
+
+.finance-ticket-card .preset-row {
+  margin-bottom: 2px;
+}
+
+.finance-ticket-card .stat-card strong {
+  font-size: 1.05rem;
 }
 
 .analytics-hero-card .tool-button.delete {
@@ -1547,6 +1638,20 @@ textarea:focus {
 
   .compact-exercise-card .active-stats {
     justify-items: end;
+  }
+
+  .finance-price-row,
+  .finance-quote-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .finance-price-row {
+    display: grid;
+    align-items: start;
+  }
+
+  .finance-price-row strong {
+    font-size: 2.5rem;
   }
 
   .dial-step {

@@ -781,201 +781,280 @@
           </section>
 
           <section class="tab-page" data-tab="finance">
-            <div class="section-feed">
-              <article class="card">
-                <div class="card-head">
-                  <h2>Finanse</h2>
+            <div id="finance-home-view" class="guitar-view">
+              <div class="section-feed">
+                <article class="card module-card module-card-finance-personal" data-open-finance-view="personal">
+                  <p class="module-card-kicker">FINANSE</p>
+                  <div class="card-head">
+                    <h2>Finanse osobiste</h2>
+                    <span id="finance-home-personal-summary">0 zl</span>
+                  </div>
+                  <p id="finance-home-personal-copy" class="module-card-copy"></p>
+                </article>
+
+                <article class="card module-card module-card-finance-market" data-open-finance-view="market">
+                  <p class="module-card-kicker">GIELDA</p>
+                  <div class="card-head">
+                    <h2>Paper trading</h2>
+                    <span id="finance-home-market-summary">0</span>
+                  </div>
+                  <p id="finance-home-market-copy" class="module-card-copy"></p>
+                </article>
+              </div>
+            </div>
+
+            <div id="finance-personal-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="finance-personal-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2>Finanse osobiste</h2>
                   <span id="finance-summary-label">This month</span>
                 </div>
-                <div class="stat-grid">
-                  <div class="stat-card">
-                    <span>Bilans</span>
-                    <strong id="finance-balance">0 zl</strong>
+                <div></div>
+              </div>
+              <div class="section-feed">
+                <article class="card">
+                  <div class="stat-grid">
+                    <div class="stat-card">
+                      <span>Bilans</span>
+                      <strong id="finance-balance">0 zl</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Przychod</span>
+                      <strong id="finance-income">0 zl</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Wydatek</span>
+                      <strong id="finance-expense">0 zl</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Planowane</span>
+                      <strong id="finance-planned">0 zl</strong>
+                    </div>
                   </div>
-                  <div class="stat-card">
-                    <span>Przychod</span>
-                    <strong id="finance-income">0 zl</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Wydatek</span>
-                    <strong id="finance-expense">0 zl</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Planowane</span>
-                    <strong id="finance-planned">0 zl</strong>
-                  </div>
-                </div>
-              </article>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Paper trading</h2>
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Nowy wpis</h2>
+                    <span>Cashflow</span>
+                  </div>
+                  <form id="finance-form" class="form-block">
+                    <select id="finance-type-input">
+                      <option value="expense" selected>Wydatek</option>
+                      <option value="income">Przychod</option>
+                    </select>
+                    <input id="finance-title-input" type="text" placeholder="Tytul">
+                    <div class="inline-form inline-form-two">
+                      <input id="finance-amount-input" type="number" step="0.01" placeholder="Kwota zl">
+                      <input id="finance-category-input" type="text" placeholder="Kategoria">
+                    </div>
+                    <button type="submit" class="primary-button full-button">Dodaj wpis</button>
+                  </form>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Planowany wydatek</h2>
+                    <span>Later</span>
+                  </div>
+                  <form id="planned-form" class="form-block">
+                    <input id="planned-title-input" type="text" placeholder="Co planujesz">
+                    <div class="inline-form inline-form-two">
+                      <input id="planned-amount-input" type="number" step="0.01" placeholder="Kwota zl">
+                      <input id="planned-date-input" type="text" placeholder="Kiedy">
+                    </div>
+                    <button type="submit" class="primary-button full-button">Dodaj plan</button>
+                  </form>
+                  <div id="planned-list" class="stack-list"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Ocena zakupu</h2>
+                    <span>Quick</span>
+                  </div>
+                  <form id="evaluator-form" class="form-block">
+                    <div class="inline-form inline-form-two">
+                      <input id="eval-cost-input" type="number" step="0.01" placeholder="Koszt zl">
+                      <input id="eval-uses-input" type="number" step="1" placeholder="Uzycia / mies.">
+                    </div>
+                    <div class="inline-form inline-form-two">
+                      <input id="eval-value-input" type="number" step="1" min="1" max="10" placeholder="Wartosc 1-10">
+                      <input id="eval-goal-input" type="number" step="1" min="1" max="10" placeholder="Wplyw 1-10">
+                    </div>
+                    <button type="submit" class="primary-button full-button">Policz</button>
+                  </form>
+                  <div class="stat-grid">
+                    <div class="stat-card">
+                      <span>Score</span>
+                      <strong id="evaluator-score">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Komentarz</span>
+                      <strong id="evaluator-label">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Koszt/uzycie</span>
+                      <strong id="evaluator-cpu">-</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Historia</h2>
+                    <span id="finance-entry-count">0</span>
+                  </div>
+                  <div id="finance-list" class="stack-list"></div>
+                </article>
+              </div>
+            </div>
+
+            <div id="finance-market-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="finance-market-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2>Gielda</h2>
                   <span id="paper-feed-provider">FINNHUB</span>
                 </div>
-                <div class="stat-grid">
-                  <div class="stat-card">
-                    <span>Cash</span>
-                    <strong id="paper-cash">$0.00</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Portfel</span>
-                    <strong id="paper-portfolio">$0.00</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Equity</span>
-                    <strong id="paper-equity">$0.00</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>P/L</span>
-                    <strong id="paper-pnl">$0.00</strong>
-                  </div>
+                <div class="subview-actions">
+                  <button type="button" id="paper-market-refresh" class="header-pill-button">Refresh</button>
                 </div>
-              </article>
+              </div>
+              <div class="section-feed">
+                <article class="card analytics-hero-card finance-market-hero">
+                  <p class="analytics-kicker">Paper Trading</p>
+                  <div class="card-head">
+                    <h2 id="paper-selected-symbol">AAPL</h2>
+                    <span id="paper-feed-status">Dodaj klucz API</span>
+                  </div>
+                  <div class="finance-price-row">
+                    <strong id="paper-selected-price">$0.00</strong>
+                    <span id="paper-selected-change" class="finance-change-pill">+0.00%</span>
+                  </div>
+                  <div class="analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
+                      <span>Cash</span>
+                      <strong id="paper-cash">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Equity</span>
+                      <strong id="paper-equity">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Portfel</span>
+                      <strong id="paper-portfolio">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>P/L</span>
+                      <strong id="paper-pnl">$0.00</strong>
+                    </div>
+                  </div>
+                  <div class="finance-quote-grid">
+                    <div class="finance-quote-mini">
+                      <span>Open</span>
+                      <strong id="paper-selected-open">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>High</span>
+                      <strong id="paper-selected-high">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Low</span>
+                      <strong id="paper-selected-low">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Prev</span>
+                      <strong id="paper-selected-prev">$0.00</strong>
+                    </div>
+                  </div>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Feed</h2>
-                  <span id="paper-feed-status">Dodaj klucz API</span>
-                </div>
-                <form id="paper-feed-form" class="form-block">
-                  <input id="paper-api-input" type="password" placeholder="Darmowy klucz Finnhub">
-                  <div class="button-row">
-                    <button type="submit" class="primary-button">Zapisz</button>
-                    <button type="button" id="paper-refresh-button" class="secondary-button">Refresh</button>
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Dane</h2>
+                    <span>API</span>
                   </div>
-                  <button type="button" id="paper-auto-button" class="secondary-button full-button">Auto 3m: Off</button>
-                </form>
-              </article>
+                  <form id="paper-feed-form" class="form-block">
+                    <input id="paper-api-input" type="password" placeholder="Darmowy klucz Finnhub">
+                    <div class="button-row">
+                      <button type="submit" class="primary-button">Zapisz</button>
+                      <button type="button" id="paper-refresh-button" class="secondary-button">Refresh</button>
+                    </div>
+                    <button type="button" id="paper-auto-button" class="secondary-button full-button">Auto 3m: Off</button>
+                  </form>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Rynek</h2>
-                  <span id="paper-watchlist-count">0</span>
-                </div>
-                <form id="paper-watchlist-form" class="inline-form">
-                  <input id="paper-symbol-input" type="text" placeholder="Ticker, np. AAPL" maxlength="10">
-                  <button type="submit" class="primary-button">Dodaj</button>
-                </form>
-                <div id="paper-watchlist" class="stack-list"></div>
-              </article>
-
-              <article class="card">
-                <div class="card-head">
-                  <h2>Wykres</h2>
-                  <span id="paper-chart-symbol">AAPL</span>
-                </div>
-                <svg id="paper-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Wykres waloru"></svg>
-                <p class="field-help">Live session z kolejnych odswiezen. <span id="paper-chart-updated">-</span></p>
-              </article>
-
-              <article class="card">
-                <div class="card-head">
-                  <h2>Zlecenie</h2>
-                  <span>Market</span>
-                </div>
-                <form id="paper-order-form" class="form-block">
-                  <div class="inline-form inline-form-two">
-                    <select id="paper-order-side">
-                      <option value="buy" selected>Kup</option>
-                      <option value="sell">Sprzedaj</option>
-                    </select>
-                    <select id="paper-order-symbol"></select>
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Watchlista</h2>
+                    <span id="paper-watchlist-count">0</span>
                   </div>
-                  <input id="paper-order-shares" type="number" step="1" min="1" placeholder="Liczba akcji">
-                  <button type="submit" class="primary-button full-button">Wykonaj</button>
-                </form>
-              </article>
+                  <form id="paper-watchlist-form" class="inline-form">
+                    <input id="paper-symbol-input" type="text" placeholder="Ticker, np. AAPL" maxlength="10">
+                    <button type="submit" class="primary-button">Dodaj</button>
+                  </form>
+                  <div id="paper-watchlist" class="stack-list"></div>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Pozycje</h2>
-                  <span id="paper-position-count">0</span>
-                </div>
-                <div id="paper-positions-list" class="stack-list"></div>
-              </article>
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Wykres</h2>
+                    <span id="paper-chart-symbol">AAPL</span>
+                  </div>
+                  <svg id="paper-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Wykres waloru"></svg>
+                  <p class="field-help">Live session z kolejnych odswiezen. <span id="paper-chart-updated">-</span></p>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Zlecenia</h2>
-                  <span id="paper-order-count">0</span>
-                </div>
-                <div id="paper-orders-list" class="stack-list"></div>
-              </article>
+                <article class="card finance-ticket-card">
+                  <div class="card-head">
+                    <h2>Ticket</h2>
+                    <span>Market</span>
+                  </div>
+                  <form id="paper-order-form" class="form-block">
+                    <div class="preset-row" id="paper-order-side-grid">
+                      <button type="button" id="paper-buy-button" class="metronome-option-button active">Buy</button>
+                      <button type="button" id="paper-sell-button" class="metronome-option-button">Sell</button>
+                    </div>
+                    <div class="inline-form inline-form-two">
+                      <select id="paper-order-side" hidden>
+                        <option value="buy" selected>Kup</option>
+                        <option value="sell">Sprzedaj</option>
+                      </select>
+                      <select id="paper-order-symbol"></select>
+                      <input id="paper-order-shares" type="number" step="1" min="1" placeholder="Liczba akcji">
+                    </div>
+                    <div class="stat-grid">
+                      <div class="stat-card">
+                        <span>Szacowana wartosc</span>
+                        <strong id="paper-order-estimate">$0.00</strong>
+                      </div>
+                      <div class="stat-card">
+                        <span>Dostepne akcje</span>
+                        <strong id="paper-order-available">0</strong>
+                      </div>
+                    </div>
+                    <button type="submit" class="primary-button full-button">Wykonaj</button>
+                  </form>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Nowy wpis</h2>
-                  <span>Cashflow</span>
-                </div>
-                <form id="finance-form" class="form-block">
-                  <select id="finance-type-input">
-                    <option value="expense" selected>Wydatek</option>
-                    <option value="income">Przychod</option>
-                  </select>
-                  <input id="finance-title-input" type="text" placeholder="Tytul">
-                  <div class="inline-form inline-form-two">
-                    <input id="finance-amount-input" type="number" step="0.01" placeholder="Kwota zl">
-                    <input id="finance-category-input" type="text" placeholder="Kategoria">
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Pozycje</h2>
+                    <span id="paper-position-count">0</span>
                   </div>
-                  <button type="submit" class="primary-button full-button">Dodaj wpis</button>
-                </form>
-              </article>
+                  <div id="paper-positions-list" class="stack-list"></div>
+                </article>
 
-              <article class="card">
-                <div class="card-head">
-                  <h2>Planowany wydatek</h2>
-                  <span>Later</span>
-                </div>
-                <form id="planned-form" class="form-block">
-                  <input id="planned-title-input" type="text" placeholder="Co planujesz">
-                  <div class="inline-form inline-form-two">
-                    <input id="planned-amount-input" type="number" step="0.01" placeholder="Kwota zl">
-                    <input id="planned-date-input" type="text" placeholder="Kiedy">
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Zlecenia</h2>
+                    <span id="paper-order-count">0</span>
                   </div>
-                  <button type="submit" class="primary-button full-button">Dodaj plan</button>
-                </form>
-                <div id="planned-list" class="stack-list"></div>
-              </article>
-
-              <article class="card">
-                <div class="card-head">
-                  <h2>Ocena zakupu</h2>
-                  <span>Quick</span>
-                </div>
-                <form id="evaluator-form" class="form-block">
-                  <div class="inline-form inline-form-two">
-                    <input id="eval-cost-input" type="number" step="0.01" placeholder="Koszt zl">
-                    <input id="eval-uses-input" type="number" step="1" placeholder="Uzycia / mies.">
-                  </div>
-                  <div class="inline-form inline-form-two">
-                    <input id="eval-value-input" type="number" step="1" min="1" max="10" placeholder="Wartosc 1-10">
-                    <input id="eval-goal-input" type="number" step="1" min="1" max="10" placeholder="Wplyw 1-10">
-                  </div>
-                  <button type="submit" class="primary-button full-button">Policz</button>
-                </form>
-                <div class="stat-grid">
-                  <div class="stat-card">
-                    <span>Score</span>
-                    <strong id="evaluator-score">-</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Komentarz</span>
-                    <strong id="evaluator-label">-</strong>
-                  </div>
-                  <div class="stat-card">
-                    <span>Koszt/uzycie</span>
-                    <strong id="evaluator-cpu">-</strong>
-                  </div>
-                </div>
-              </article>
-
-              <article class="card">
-                <div class="card-head">
-                  <h2>Historia</h2>
-                  <span id="finance-entry-count">0</span>
-                </div>
-                <div id="finance-list" class="stack-list"></div>
-              </article>
+                  <div id="paper-orders-list" class="stack-list"></div>
+                </article>
+              </div>
             </div>
           </section>
 

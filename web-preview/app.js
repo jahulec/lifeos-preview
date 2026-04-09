@@ -1047,6 +1047,8 @@ let pendingGuitarSession = null;
 let lockedGuitarCardWidth = null;
 let guitarView = "home";
 const guitarScrollMemory = { home: 0, main: 0, detail: 0, create: 0, "ear-home": 0, "ear-config": 0, "ear-round": 0, "ear-summary": 0, "ear-detail": 0 };
+let financeView = "home";
+const financeScrollMemory = { home: 0, personal: 0, market: 0 };
 let editingGuitarExerciseId = null;
 let guitarSessionsExpanded = false;
 let earConfigType = state.earInspectType || "intervals";
@@ -1079,6 +1081,9 @@ function setTab(tab) {
   if (previousTab === "guitar") {
     guitarScrollMemory[guitarView] = window.scrollY || window.pageYOffset || 0;
   }
+  if (previousTab === "finance") {
+    financeScrollMemory[financeView] = window.scrollY || window.pageYOffset || 0;
+  }
   state.activeTab = tab;
   tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
@@ -1087,6 +1092,12 @@ function setTab(tab) {
       renderMusic();
       if (guitarView === "main") stabilizeGuitarLayout();
       window.scrollTo({ top: guitarScrollMemory[guitarView] || 0, behavior: "auto" });
+    });
+  }
+  if (tab === "finance") {
+    requestAnimationFrame(() => {
+      renderFinance();
+      window.scrollTo({ top: financeScrollMemory[financeView] || 0, behavior: "auto" });
     });
   }
   if (tab === "finance" && state.paperTrading.apiKey && !paperTradingLoading && (!state.paperTrading.lastSyncAt || (Date.now() - new Date(state.paperTrading.lastSyncAt).getTime()) > 120000)) {
@@ -1103,6 +1114,16 @@ function setGuitarView(view, options = {}) {
   renderMusic();
   requestAnimationFrame(() => {
     window.scrollTo({ top: scrollTop ? 0 : (guitarScrollMemory[view] || 0), behavior: "auto" });
+  });
+}
+
+function setFinanceView(view, options = {}) {
+  const { scrollTop = false } = options;
+  financeScrollMemory[financeView] = window.scrollY || window.pageYOffset || 0;
+  financeView = view;
+  renderFinance();
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: scrollTop ? 0 : (financeScrollMemory[view] || 0), behavior: "auto" });
   });
 }
 
@@ -3001,6 +3022,10 @@ async function fetchPaperQuote(symbol, apiKey) {
     price: Number(data.c || 0),
     change: Number(data.d || 0),
     changePercent: Number(data.dp || 0),
+    high: Number(data.h || 0),
+    low: Number(data.l || 0),
+    open: Number(data.o || 0),
+    prevClose: Number(data.pc || 0),
     updatedAt: new Date((Number(data.t || 0) || Math.floor(Date.now() / 1000)) * 1000).toISOString()
   };
 }
@@ -3306,11 +3331,34 @@ function renderPaperChart() {
   });
 }
 
+function renderFinanceHome() {
+  const finance = financeSummary();
+  const quote = paperQuote(paperSelectedSymbol());
+  document.getElementById("finance-home-personal-summary").textContent = formatZl(finance.income - finance.expense);
+  document.getElementById("finance-home-personal-copy").textContent = `${formatZl(finance.income)} przychodu, ${formatZl(finance.expense)} wydatkow, ${formatZl(plannedTotal())} planowanych.`;
+  document.getElementById("finance-home-market-summary").textContent = paperSelectedSymbol();
+  document.getElementById("finance-home-market-copy").textContent = quote
+    ? `${formatUsd(quote.price)} ${formatPercent(quote.changePercent)} · ${state.paperTrading.positions.length} pozycji`
+    : `${state.paperTrading.watchlist.length} walorow, equity ${formatUsd(paperEquity())}`;
+}
+
 function renderFinance() {
+  const visible = {
+    home: "finance-home-view",
+    personal: "finance-personal-view",
+    market: "finance-market-view"
+  }[financeView] || "finance-home-view";
+  ["finance-home-view", "finance-personal-view", "finance-market-view"].forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) node.hidden = id !== visible;
+  });
+
   const finance = financeSummary();
   const positionsValue = paperPositionsValue();
   const equity = paperEquity();
   const pnl = paperUnrealizedPnl();
+  const selectedSymbol = paperSelectedSymbol();
+  const selectedQuote = paperQuote(selectedSymbol);
   document.getElementById("finance-balance").textContent = formatZl(finance.income - finance.expense);
   document.getElementById("finance-income").textContent = formatZl(finance.income);
   document.getElementById("finance-expense").textContent = formatZl(finance.expense);
@@ -3324,6 +3372,14 @@ function renderFinance() {
   document.getElementById("paper-pnl").textContent = formatUsd(pnl);
   document.getElementById("paper-feed-status").textContent = paperTradingLoading ? "Laduje" : paperMarketStatus();
   document.getElementById("paper-feed-provider").textContent = state.paperTrading.provider.toUpperCase();
+  document.getElementById("paper-selected-symbol").textContent = selectedSymbol;
+  document.getElementById("paper-selected-price").textContent = selectedQuote ? formatUsd(selectedQuote.price) : "$0.00";
+  document.getElementById("paper-selected-change").textContent = selectedQuote ? formatPercent(selectedQuote.changePercent) : "+0.00%";
+  document.getElementById("paper-selected-change").classList.toggle("negative", Boolean(selectedQuote && selectedQuote.changePercent < 0));
+  document.getElementById("paper-selected-open").textContent = selectedQuote ? formatUsd(selectedQuote.open) : "$0.00";
+  document.getElementById("paper-selected-high").textContent = selectedQuote ? formatUsd(selectedQuote.high) : "$0.00";
+  document.getElementById("paper-selected-low").textContent = selectedQuote ? formatUsd(selectedQuote.low) : "$0.00";
+  document.getElementById("paper-selected-prev").textContent = selectedQuote ? formatUsd(selectedQuote.prevClose) : "$0.00";
   document.getElementById("paper-api-input").value = state.paperTrading.apiKey || "";
   document.getElementById("paper-auto-button").textContent = state.paperTrading.autoRefresh ? "Auto 3m: On" : "Auto 3m: Off";
   document.getElementById("paper-watchlist-count").textContent = `${state.paperTrading.watchlist.length}`;
@@ -3335,9 +3391,18 @@ function renderFinance() {
     const option = document.createElement("option");
     option.value = symbol;
     option.textContent = symbol;
-    if (symbol === paperSelectedSymbol()) option.selected = true;
+    if (symbol === selectedSymbol) option.selected = true;
     orderSymbolSelect.appendChild(option);
   });
+  const side = document.getElementById("paper-order-side").value;
+  const orderSymbol = orderSymbolSelect.value || selectedSymbol;
+  const orderQuote = paperQuote(orderSymbol) || selectedQuote;
+  const shares = Number(document.getElementById("paper-order-shares").value || 0);
+  document.getElementById("paper-buy-button").classList.toggle("active", side === "buy");
+  document.getElementById("paper-sell-button").classList.toggle("active", side === "sell");
+  document.getElementById("paper-order-estimate").textContent = formatUsd((orderQuote?.price || 0) * Math.max(0, shares));
+  document.getElementById("paper-order-available").textContent = `${paperPositionShares(orderSymbol)}`;
+  renderFinanceHome();
   renderFinanceEntries();
   renderPlannedExpenses();
   renderPaperWatchlist();
@@ -4400,8 +4465,10 @@ function importState(file) {
       earConfigType = state.earInspectType || "intervals";
       earRoundSession = null;
       guitarView = "home";
+      financeView = "home";
       resetRestTimer();
       stopMetronome(true);
+      stopPaperTradingAutoRefresh();
       metronomeBpm = 80;
       saveState();
       renderAll();
@@ -4420,8 +4487,10 @@ function resetState() {
   earConfigType = state.earInspectType || "intervals";
   earRoundSession = null;
   guitarView = "home";
+  financeView = "home";
   resetRestTimer();
   stopMetronome(true);
+  stopPaperTradingAutoRefresh();
   metronomeBpm = 80;
   saveState();
   renderAll();
@@ -4653,6 +4722,10 @@ function bindForms() {
     refreshPaperTrading();
   });
 
+  document.getElementById("paper-market-refresh").addEventListener("click", () => {
+    refreshPaperTrading();
+  });
+
   document.getElementById("paper-auto-button").addEventListener("click", () => {
     state.paperTrading.autoRefresh = !state.paperTrading.autoRefresh;
     saveState();
@@ -4699,6 +4772,42 @@ function bindForms() {
     if (executePaperOrder(side, symbol, shares)) {
       sharesInput.value = "";
     }
+  });
+
+  document.querySelectorAll("[data-open-finance-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextView = button.dataset.openFinanceView;
+      setFinanceView(nextView, { scrollTop: true });
+      if (nextView === "market" && state.paperTrading.apiKey && !paperTradingLoading) {
+        refreshPaperTrading({ silent: true });
+      }
+    });
+  });
+
+  document.getElementById("finance-personal-back").addEventListener("click", () => {
+    setFinanceView("home");
+  });
+
+  document.getElementById("finance-market-back").addEventListener("click", () => {
+    setFinanceView("home");
+  });
+
+  document.getElementById("paper-buy-button").addEventListener("click", () => {
+    document.getElementById("paper-order-side").value = "buy";
+    renderFinance();
+  });
+
+  document.getElementById("paper-sell-button").addEventListener("click", () => {
+    document.getElementById("paper-order-side").value = "sell";
+    renderFinance();
+  });
+
+  document.getElementById("paper-order-symbol").addEventListener("change", () => {
+    renderFinance();
+  });
+
+  document.getElementById("paper-order-shares").addEventListener("input", () => {
+    renderFinance();
   });
 
   document.getElementById("guitar-exercise-form").addEventListener("submit", (event) => {
@@ -4751,6 +4860,9 @@ function bindTabs() {
       if (button.dataset.tabButton === "guitar") {
         guitarView = "home";
       }
+      if (button.dataset.tabButton === "finance") {
+        financeView = "home";
+      }
       setTab(button.dataset.tabButton);
     });
   });
@@ -4759,6 +4871,9 @@ function bindTabs() {
     button.addEventListener("click", () => {
       if (button.dataset.switchTab === "guitar") {
         guitarView = "home";
+      }
+      if (button.dataset.switchTab === "finance") {
+        financeView = "home";
       }
       setTab(button.dataset.switchTab);
     });
