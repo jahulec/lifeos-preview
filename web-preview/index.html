@@ -809,6 +809,101 @@
 
               <article class="card">
                 <div class="card-head">
+                  <h2>Paper trading</h2>
+                  <span id="paper-feed-provider">FINNHUB</span>
+                </div>
+                <div class="stat-grid">
+                  <div class="stat-card">
+                    <span>Cash</span>
+                    <strong id="paper-cash">$0.00</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Portfel</span>
+                    <strong id="paper-portfolio">$0.00</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>Equity</span>
+                    <strong id="paper-equity">$0.00</strong>
+                  </div>
+                  <div class="stat-card">
+                    <span>P/L</span>
+                    <strong id="paper-pnl">$0.00</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Feed</h2>
+                  <span id="paper-feed-status">Dodaj klucz API</span>
+                </div>
+                <form id="paper-feed-form" class="form-block">
+                  <input id="paper-api-input" type="password" placeholder="Darmowy klucz Finnhub">
+                  <div class="button-row">
+                    <button type="submit" class="primary-button">Zapisz</button>
+                    <button type="button" id="paper-refresh-button" class="secondary-button">Refresh</button>
+                  </div>
+                  <button type="button" id="paper-auto-button" class="secondary-button full-button">Auto 3m: Off</button>
+                </form>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Rynek</h2>
+                  <span id="paper-watchlist-count">0</span>
+                </div>
+                <form id="paper-watchlist-form" class="inline-form">
+                  <input id="paper-symbol-input" type="text" placeholder="Ticker, np. AAPL" maxlength="10">
+                  <button type="submit" class="primary-button">Dodaj</button>
+                </form>
+                <div id="paper-watchlist" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Wykres</h2>
+                  <span id="paper-chart-symbol">AAPL</span>
+                </div>
+                <svg id="paper-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Wykres waloru"></svg>
+                <p class="field-help">Ostatnie 8h, interwal 5 min. <span id="paper-chart-updated">-</span></p>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Zlecenie</h2>
+                  <span>Market</span>
+                </div>
+                <form id="paper-order-form" class="form-block">
+                  <div class="inline-form inline-form-two">
+                    <select id="paper-order-side">
+                      <option value="buy" selected>Kup</option>
+                      <option value="sell">Sprzedaj</option>
+                    </select>
+                    <select id="paper-order-symbol"></select>
+                  </div>
+                  <input id="paper-order-shares" type="number" step="1" min="1" placeholder="Liczba akcji">
+                  <button type="submit" class="primary-button full-button">Wykonaj</button>
+                </form>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Pozycje</h2>
+                  <span id="paper-position-count">0</span>
+                </div>
+                <div id="paper-positions-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <h2>Zlecenia</h2>
+                  <span id="paper-order-count">0</span>
+                </div>
+                <div id="paper-orders-list" class="stack-list"></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
                   <h2>Nowy wpis</h2>
                   <span>Cashflow</span>
                 </div>

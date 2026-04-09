@@ -775,6 +775,34 @@ button:active {
   line-height: 1.45;
 }
 
+.quote-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.quote-badge.positive {
+  color: #7ef0b7;
+}
+
+.quote-badge.negative {
+  color: #ff8e8e;
+}
+
+#paper-chart {
+  width: 100%;
+  min-height: 148px;
+}
+
 .mini-progress-stack {
   display: grid;
   gap: 8px;

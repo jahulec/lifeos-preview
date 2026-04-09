@@ -75,6 +75,20 @@ const defaultState = {
     label: "-",
     costPerUse: null
   },
+  paperTrading: {
+    provider: "finnhub",
+    apiKey: "",
+    cash: 100000,
+    watchlist: ["AAPL", "MSFT", "NVDA", "SPY"],
+    selectedSymbol: "AAPL",
+    quotes: {},
+    chart: { symbol: "AAPL", points: [], updatedAt: null },
+    positions: [],
+    orders: [],
+    autoRefresh: false,
+    lastSyncAt: null,
+    error: ""
+  },
   weightHistory: [
     { id: "weight-1", value: 81.2, createdAt: isoDaysAgo(5, 8) },
     { id: "weight-2", value: 80.9, createdAt: isoDaysAgo(4, 8) },
@@ -838,6 +852,67 @@ function normalizeState(rawState = {}) {
   state.financeEntries = normalizeArray(state.financeEntries, defaultState.financeEntries).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 12)));
   state.plannedExpenses = normalizeArray(state.plannedExpenses, defaultState.plannedExpenses);
   state.evaluator = state.evaluator && typeof state.evaluator === "object" ? { ...cloneState(defaultState.evaluator), ...state.evaluator } : cloneState(defaultState.evaluator);
+  state.paperTrading = state.paperTrading && typeof state.paperTrading === "object"
+    ? {
+        ...cloneState(defaultState.paperTrading),
+        ...state.paperTrading,
+        watchlist: Array.isArray(state.paperTrading.watchlist)
+          ? state.paperTrading.watchlist.map((symbol) => String(symbol || "").trim().toUpperCase()).filter(Boolean).slice(0, 6)
+          : defaultState.paperTrading.watchlist.slice(),
+        quotes: state.paperTrading.quotes && typeof state.paperTrading.quotes === "object" ? state.paperTrading.quotes : {},
+        chart: state.paperTrading.chart && typeof state.paperTrading.chart === "object"
+          ? {
+              symbol: String(state.paperTrading.chart.symbol || state.paperTrading.selectedSymbol || defaultState.paperTrading.selectedSymbol).trim().toUpperCase(),
+              points: Array.isArray(state.paperTrading.chart.points)
+                ? state.paperTrading.chart.points
+                    .map((point) => ({
+                      label: String(point.label || ""),
+                      bottom: String(point.bottom || ""),
+                      value: Number(point.value || 0)
+                    }))
+                    .filter((point) => Number.isFinite(point.value))
+                    .slice(-24)
+                : [],
+              updatedAt: state.paperTrading.chart.updatedAt || null
+            }
+          : cloneState(defaultState.paperTrading.chart),
+        positions: Array.isArray(state.paperTrading.positions)
+          ? state.paperTrading.positions
+              .map((position) => ({
+                symbol: String(position.symbol || "").trim().toUpperCase(),
+                shares: Math.max(0, Number(position.shares || 0)),
+                avgCost: Math.max(0, Number(position.avgCost || 0))
+              }))
+              .filter((position) => position.symbol && position.shares > 0)
+          : [],
+        orders: Array.isArray(state.paperTrading.orders)
+          ? state.paperTrading.orders
+              .map((order) => ({
+                id: order.id || uid("pord"),
+                symbol: String(order.symbol || "").trim().toUpperCase(),
+                side: order.side === "sell" ? "sell" : "buy",
+                shares: Math.max(0, Number(order.shares || 0)),
+                price: Math.max(0, Number(order.price || 0)),
+                createdAt: order.createdAt || new Date().toISOString()
+              }))
+              .filter((order) => order.symbol && order.shares > 0)
+          : [],
+        cash: Math.max(0, Number(state.paperTrading.cash || defaultState.paperTrading.cash)),
+        selectedSymbol: String(state.paperTrading.selectedSymbol || state.paperTrading.watchlist?.[0] || defaultState.paperTrading.selectedSymbol).trim().toUpperCase(),
+        autoRefresh: Boolean(state.paperTrading.autoRefresh),
+        lastSyncAt: state.paperTrading.lastSyncAt || null,
+        error: String(state.paperTrading.error || "")
+      }
+    : cloneState(defaultState.paperTrading);
+  if (!state.paperTrading.watchlist.length) {
+    state.paperTrading.watchlist = defaultState.paperTrading.watchlist.slice();
+  }
+  if (!state.paperTrading.watchlist.includes(state.paperTrading.selectedSymbol)) {
+    state.paperTrading.selectedSymbol = state.paperTrading.watchlist[0];
+  }
+  if (state.paperTrading.chart.symbol !== state.paperTrading.selectedSymbol) {
+    state.paperTrading.chart.symbol = state.paperTrading.selectedSymbol;
+  }
   state.weightHistory = normalizeArray(state.weightHistory, defaultState.weightHistory).map((entry, index) => normalizeCreatedAt(entry, isoDaysAgo(Math.max(0, index), 8)));
   state.guitarExercises = normalizeArray(state.guitarExercises, defaultState.guitarExercises).map((entry) => ({
     id: entry.id || uid("gex"),
@@ -976,6 +1051,8 @@ let editingGuitarExerciseId = null;
 let guitarSessionsExpanded = false;
 let earConfigType = state.earInspectType || "intervals";
 let earRoundSession = null;
+let paperTradingRefreshTimer = null;
+let paperTradingLoading = false;
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -1012,6 +1089,10 @@ function setTab(tab) {
       window.scrollTo({ top: guitarScrollMemory[guitarView] || 0, behavior: "auto" });
     });
   }
+  if (tab === "finance" && state.paperTrading.apiKey && !paperTradingLoading && (!state.paperTrading.lastSyncAt || (Date.now() - new Date(state.paperTrading.lastSyncAt).getTime()) > 120000)) {
+    refreshPaperTrading({ silent: true });
+  }
+  syncPaperTradingAutoRefresh();
   saveState();
 }
 
@@ -1112,6 +1193,65 @@ function plannedTotal() {
   return state.plannedExpenses.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
 }
 
+function formatUsd(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function formatPercent(value) {
+  const numeric = Number(value || 0);
+  return `${numeric >= 0 ? "+" : ""}${numeric.toFixed(2)}%`;
+}
+
+function paperQuote(symbol) {
+  return state.paperTrading.quotes?.[symbol] || null;
+}
+
+function paperSelectedSymbol() {
+  return state.paperTrading.selectedSymbol || state.paperTrading.watchlist[0] || "AAPL";
+}
+
+function paperPositionShares(symbol) {
+  return state.paperTrading.positions
+    .filter((position) => position.symbol === symbol)
+    .reduce((sum, position) => sum + Number(position.shares || 0), 0);
+}
+
+function paperPositionsValue() {
+  return state.paperTrading.positions.reduce((sum, position) => {
+    const quote = paperQuote(position.symbol);
+    const price = Number(quote?.price || position.avgCost || 0);
+    return sum + price * Number(position.shares || 0);
+  }, 0);
+}
+
+function paperUnrealizedPnl() {
+  return state.paperTrading.positions.reduce((sum, position) => {
+    const quote = paperQuote(position.symbol);
+    const price = Number(quote?.price || position.avgCost || 0);
+    return sum + (price - Number(position.avgCost || 0)) * Number(position.shares || 0);
+  }, 0);
+}
+
+function paperEquity() {
+  return Number(state.paperTrading.cash || 0) + paperPositionsValue();
+}
+
+function paperMarketStatus() {
+  if (!state.paperTrading.apiKey) return "Dodaj klucz API";
+  if (state.paperTrading.error) return state.paperTrading.error;
+  if (state.paperTrading.lastSyncAt) return formatTimeOnly(state.paperTrading.lastSyncAt);
+  return "Gotowe";
+}
+
+function paperSyncSelectedSymbol() {
+  if (!state.paperTrading.watchlist.includes(state.paperTrading.selectedSymbol)) {
+    state.paperTrading.selectedSymbol = state.paperTrading.watchlist[0] || "AAPL";
+  }
+  if (state.paperTrading.chart.symbol !== state.paperTrading.selectedSymbol) {
+    state.paperTrading.chart.symbol = state.paperTrading.selectedSymbol;
+  }
+}
+
 function guitarSessionsToday() {
   const today = todayKey();
   return state.guitarSessions.filter((entry) => todayKey(new Date(entry.createdAt)) === today);
@@ -1186,6 +1326,11 @@ function pendingExerciseSec(exerciseId) {
 function formatShortDateLabel(value) {
   const date = new Date(value);
   return `${date.getDate()}.${date.getMonth() + 1}`;
+}
+
+function formatTimeOnly(value) {
+  const date = new Date(value);
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function formatResponseMs(value) {
@@ -2845,6 +2990,150 @@ function renderGym() {
   renderRestTimer();
 }
 
+async function fetchPaperQuote(symbol, apiKey) {
+  const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${encodeURIComponent(apiKey)}`);
+  const data = await response.json();
+  if (!response.ok || data.error || data.c === undefined) {
+    throw new Error(data.error || `Brak danych dla ${symbol}`);
+  }
+  return {
+    symbol,
+    price: Number(data.c || 0),
+    change: Number(data.d || 0),
+    changePercent: Number(data.dp || 0),
+    updatedAt: new Date((Number(data.t || 0) || Math.floor(Date.now() / 1000)) * 1000).toISOString()
+  };
+}
+
+async function fetchPaperChart(symbol, apiKey) {
+  const now = Math.floor(Date.now() / 1000);
+  const from = now - (60 * 60 * 8);
+  const response = await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=5&from=${from}&to=${now}&token=${encodeURIComponent(apiKey)}`);
+  const data = await response.json();
+  if (!response.ok || data.error || data.s !== "ok" || !Array.isArray(data.c) || !Array.isArray(data.t)) {
+    throw new Error(data.error || `Brak wykresu dla ${symbol}`);
+  }
+  return data.c.slice(-24).map((value, index) => ({
+    value: Number(value || 0),
+    label: `$${Number(value || 0).toFixed(0)}`,
+    bottom: formatTimeOnly(new Date(Number(data.t[data.t.length - data.c.slice(-24).length + index] || 0) * 1000))
+  }));
+}
+
+async function refreshPaperTrading(options = {}) {
+  const { silent = false } = options;
+  if (paperTradingLoading) return;
+  if (!state.paperTrading.apiKey) {
+    state.paperTrading.error = "Brak klucza";
+    renderFinance();
+    return;
+  }
+
+  paperTradingLoading = true;
+  state.paperTrading.error = "";
+  renderFinance();
+  try {
+    paperSyncSelectedSymbol();
+    const symbols = [...new Set(state.paperTrading.watchlist.slice(0, 6))];
+    const quotes = await Promise.all(symbols.map((symbol) => fetchPaperQuote(symbol, state.paperTrading.apiKey)));
+    quotes.forEach((quote) => {
+      state.paperTrading.quotes[quote.symbol] = quote;
+    });
+    const selected = paperSelectedSymbol();
+    state.paperTrading.chart = {
+      symbol: selected,
+      points: await fetchPaperChart(selected, state.paperTrading.apiKey),
+      updatedAt: new Date().toISOString()
+    };
+    state.paperTrading.lastSyncAt = new Date().toISOString();
+    state.paperTrading.error = "";
+    saveState();
+    renderFinance();
+    if (!silent) {
+      setFeedback(`Odswiezono rynek: ${selected}.`);
+    }
+  } catch (error) {
+    state.paperTrading.error = String(error?.message || "Blad danych");
+    renderFinance();
+    if (!silent) {
+      setFeedback("Nie udalo sie pobrac rynku.");
+    }
+  } finally {
+    paperTradingLoading = false;
+    renderFinance();
+  }
+}
+
+function stopPaperTradingAutoRefresh() {
+  clearInterval(paperTradingRefreshTimer);
+  paperTradingRefreshTimer = null;
+}
+
+function syncPaperTradingAutoRefresh() {
+  stopPaperTradingAutoRefresh();
+  if (state.activeTab !== "finance" || !state.paperTrading.autoRefresh || !state.paperTrading.apiKey) return;
+  paperTradingRefreshTimer = setInterval(() => {
+    refreshPaperTrading({ silent: true });
+  }, 180000);
+}
+
+function executePaperOrder(side, symbol, shares) {
+  const quote = paperQuote(symbol);
+  const price = Number(quote?.price || 0);
+  if (!price || !Number.isFinite(price)) {
+    setFeedback("Najpierw odswiez kurs.");
+    return false;
+  }
+
+  const quantity = Number(shares || 0);
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    setFeedback("Podaj liczbe akcji.");
+    return false;
+  }
+
+  if (side === "buy") {
+    const cost = price * quantity;
+    if (cost > Number(state.paperTrading.cash || 0)) {
+      setFeedback("Za malo gotowki.");
+      return false;
+    }
+    const existing = state.paperTrading.positions.find((position) => position.symbol === symbol);
+    if (existing) {
+      const totalShares = existing.shares + quantity;
+      existing.avgCost = ((existing.avgCost * existing.shares) + cost) / totalShares;
+      existing.shares = totalShares;
+    } else {
+      state.paperTrading.positions.push({ symbol, shares: quantity, avgCost: price });
+    }
+    state.paperTrading.cash -= cost;
+  } else {
+    const existing = state.paperTrading.positions.find((position) => position.symbol === symbol);
+    if (!existing || existing.shares < quantity) {
+      setFeedback("Za malo akcji.");
+      return false;
+    }
+    existing.shares -= quantity;
+    state.paperTrading.cash += price * quantity;
+    if (existing.shares <= 0) {
+      state.paperTrading.positions = state.paperTrading.positions.filter((position) => position.symbol !== symbol);
+    }
+  }
+
+  state.paperTrading.orders.unshift({
+    id: uid("pord"),
+    symbol,
+    side,
+    shares: quantity,
+    price,
+    createdAt: new Date().toISOString()
+  });
+  state.paperTrading.orders = state.paperTrading.orders.slice(0, 24);
+  saveState();
+  renderFinance();
+  setFeedback(`${side === "buy" ? "Kupiono" : "Sprzedano"} ${symbol}.`);
+  return true;
+}
+
 function renderFinanceEntries() {
   const node = document.getElementById("finance-list");
   node.innerHTML = "";
@@ -2904,8 +3193,119 @@ function renderPlannedExpenses() {
   });
 }
 
+function renderPaperWatchlist() {
+  const node = document.getElementById("paper-watchlist");
+  if (!node) return;
+  node.innerHTML = "";
+  state.paperTrading.watchlist.forEach((symbol) => {
+    const quote = paperQuote(symbol);
+    const row = document.createElement("div");
+    row.className = `list-item list-item-block${paperSelectedSymbol() === symbol ? " active" : ""}`;
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(symbol)}</strong>
+        <span>${quote ? `${formatUsd(quote.price)} - ${formatPercent(quote.changePercent)}` : "Brak kursu"}</span>
+      </div>
+    `;
+    const tools = document.createElement("div");
+    tools.className = "list-tools";
+    tools.append(
+      makeToolButton("Open", () => {
+        state.paperTrading.selectedSymbol = symbol;
+        state.paperTrading.chart.symbol = symbol;
+        saveState();
+        renderFinance();
+        if (state.paperTrading.apiKey) {
+          refreshPaperTrading({ silent: true });
+        }
+      }),
+      makeToolButton("Del", () => {
+        state.paperTrading.watchlist = state.paperTrading.watchlist.filter((entry) => entry !== symbol);
+        delete state.paperTrading.quotes[symbol];
+        paperSyncSelectedSymbol();
+        saveState();
+        renderFinance();
+      }, true)
+    );
+    row.appendChild(tools);
+    node.appendChild(row);
+  });
+
+  if (!state.paperTrading.watchlist.length) {
+    node.appendChild(emptyNode("Dodaj ticker."));
+  }
+}
+
+function renderPaperPositions() {
+  const node = document.getElementById("paper-positions-list");
+  if (!node) return;
+  node.innerHTML = "";
+  if (!state.paperTrading.positions.length) {
+    node.appendChild(emptyNode("Brak pozycji."));
+    return;
+  }
+  state.paperTrading.positions
+    .slice()
+    .sort((a, b) => a.symbol.localeCompare(b.symbol))
+    .forEach((position) => {
+      const quote = paperQuote(position.symbol);
+      const marketValue = Number(quote?.price || position.avgCost || 0) * position.shares;
+      const pnl = marketValue - (position.avgCost * position.shares);
+      const row = document.createElement("div");
+      row.className = "list-item";
+      row.innerHTML = `
+        <div class="list-copy">
+          <strong>${escapeHtml(position.symbol)}</strong>
+          <span>${position.shares} szt. - avg ${formatUsd(position.avgCost)} - ${formatUsd(marketValue)}</span>
+        </div>
+      `;
+      const meta = document.createElement("div");
+      meta.className = `quote-badge${pnl >= 0 ? " positive" : " negative"}`;
+      meta.textContent = formatUsd(pnl);
+      row.appendChild(meta);
+      node.appendChild(row);
+    });
+}
+
+function renderPaperOrders() {
+  const node = document.getElementById("paper-orders-list");
+  if (!node) return;
+  node.innerHTML = "";
+  if (!state.paperTrading.orders.length) {
+    node.appendChild(emptyNode("Brak zlecen."));
+    return;
+  }
+  state.paperTrading.orders.slice(0, 8).forEach((order) => {
+    const row = document.createElement("div");
+    row.className = "list-item";
+    row.innerHTML = `
+      <div class="list-copy">
+        <strong>${escapeHtml(order.symbol)} - ${order.side === "buy" ? "Buy" : "Sell"}</strong>
+        <span>${order.shares} szt. - ${formatUsd(order.price)} - ${formatShortDateLabel(order.createdAt)}</span>
+      </div>
+    `;
+    node.appendChild(row);
+  });
+}
+
+function renderPaperChart() {
+  const symbol = paperSelectedSymbol();
+  document.getElementById("paper-chart-symbol").textContent = symbol;
+  document.getElementById("paper-chart-updated").textContent = state.paperTrading.chart.updatedAt
+    ? formatTimeOnly(state.paperTrading.chart.updatedAt)
+    : "-";
+  renderSimpleLineChart("paper-chart", state.paperTrading.chart.points, {
+    topLabel: state.paperTrading.chart.points.length
+      ? `$${Math.max(...state.paperTrading.chart.points.map((point) => Number(point.value || 0))).toFixed(0)}`
+      : "$0"
+  });
+}
+
 function renderFinance() {
   const finance = financeSummary();
+  const positionsValue = paperPositionsValue();
+  const equity = paperEquity();
+  const pnl = paperUnrealizedPnl();
   document.getElementById("finance-balance").textContent = formatZl(finance.income - finance.expense);
   document.getElementById("finance-income").textContent = formatZl(finance.income);
   document.getElementById("finance-expense").textContent = formatZl(finance.expense);
@@ -2913,8 +3313,32 @@ function renderFinance() {
   document.getElementById("evaluator-score").textContent = state.evaluator.score ?? "-";
   document.getElementById("evaluator-label").textContent = state.evaluator.label ?? "-";
   document.getElementById("evaluator-cpu").textContent = state.evaluator.costPerUse != null ? `${state.evaluator.costPerUse.toFixed(0)} zl` : "-";
+  document.getElementById("paper-cash").textContent = formatUsd(state.paperTrading.cash);
+  document.getElementById("paper-portfolio").textContent = formatUsd(positionsValue);
+  document.getElementById("paper-equity").textContent = formatUsd(equity);
+  document.getElementById("paper-pnl").textContent = formatUsd(pnl);
+  document.getElementById("paper-feed-status").textContent = paperTradingLoading ? "Laduje" : paperMarketStatus();
+  document.getElementById("paper-feed-provider").textContent = state.paperTrading.provider.toUpperCase();
+  document.getElementById("paper-api-input").value = state.paperTrading.apiKey || "";
+  document.getElementById("paper-auto-button").textContent = state.paperTrading.autoRefresh ? "Auto 3m: On" : "Auto 3m: Off";
+  document.getElementById("paper-watchlist-count").textContent = `${state.paperTrading.watchlist.length}`;
+  document.getElementById("paper-position-count").textContent = `${state.paperTrading.positions.length}`;
+  document.getElementById("paper-order-count").textContent = `${state.paperTrading.orders.length}`;
+  const orderSymbolSelect = document.getElementById("paper-order-symbol");
+  orderSymbolSelect.innerHTML = "";
+  state.paperTrading.watchlist.forEach((symbol) => {
+    const option = document.createElement("option");
+    option.value = symbol;
+    option.textContent = symbol;
+    if (symbol === paperSelectedSymbol()) option.selected = true;
+    orderSymbolSelect.appendChild(option);
+  });
   renderFinanceEntries();
   renderPlannedExpenses();
+  renderPaperWatchlist();
+  renderPaperPositions();
+  renderPaperOrders();
+  renderPaperChart();
 }
 
 function renderTaskList() {
@@ -4207,6 +4631,69 @@ function bindForms() {
     saveState();
     renderAll();
     setFeedback(`Policzono zakup: ${state.evaluator.label}.`);
+  });
+
+  document.getElementById("paper-feed-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("paper-api-input");
+    state.paperTrading.apiKey = input.value.trim();
+    state.paperTrading.error = "";
+    saveState();
+    renderFinance();
+    syncPaperTradingAutoRefresh();
+    setFeedback("Zapisano klucz rynku.");
+  });
+
+  document.getElementById("paper-refresh-button").addEventListener("click", () => {
+    refreshPaperTrading();
+  });
+
+  document.getElementById("paper-auto-button").addEventListener("click", () => {
+    state.paperTrading.autoRefresh = !state.paperTrading.autoRefresh;
+    saveState();
+    renderFinance();
+    syncPaperTradingAutoRefresh();
+    if (state.paperTrading.autoRefresh && state.paperTrading.apiKey) {
+      refreshPaperTrading({ silent: true });
+    }
+  });
+
+  document.getElementById("paper-watchlist-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.getElementById("paper-symbol-input");
+    const symbol = input.value.trim().toUpperCase();
+    if (!symbol) return;
+    if (state.paperTrading.watchlist.includes(symbol)) {
+      state.paperTrading.selectedSymbol = symbol;
+      saveState();
+      renderFinance();
+      input.value = "";
+      return;
+    }
+    if (state.paperTrading.watchlist.length >= 6) {
+      setFeedback("Limit watchlist to 6.");
+      return;
+    }
+    state.paperTrading.watchlist.push(symbol);
+    state.paperTrading.selectedSymbol = symbol;
+    state.paperTrading.chart.symbol = symbol;
+    input.value = "";
+    saveState();
+    renderFinance();
+    if (state.paperTrading.apiKey) {
+      refreshPaperTrading({ silent: true });
+    }
+  });
+
+  document.getElementById("paper-order-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const side = document.getElementById("paper-order-side").value;
+    const symbol = document.getElementById("paper-order-symbol").value;
+    const sharesInput = document.getElementById("paper-order-shares");
+    const shares = Number(sharesInput.value);
+    if (executePaperOrder(side, symbol, shares)) {
+      sharesInput.value = "";
+    }
   });
 
   document.getElementById("guitar-exercise-form").addEventListener("submit", (event) => {
