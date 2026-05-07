@@ -11,6 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-180.png">
   <link rel="stylesheet" href="./styles.css">
+  <script src="./vendor/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -77,7 +78,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Na dzisiaj</h2>
-                  <span>Snapshot</span>
+                  <span>Podgląd</span>
                 </div>
                 <div class="stat-grid">
                   <div class="stat-card">
@@ -114,7 +115,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Strefy</h2>
-                  <span>Live</span>
+                  <span>Aktywne</span>
                 </div>
                 <div class="zone-stack">
                   <div class="zone-row">
@@ -122,21 +123,21 @@
                       <strong>Muzyka</strong>
                       <p id="home-guitar-copy" class="muted-copy"></p>
                     </div>
-                    <button class="tool-button" type="button" data-switch-tab="guitar">Open</button>
+                    <button class="tool-button" type="button" data-switch-tab="guitar">Otwórz</button>
                   </div>
                   <div class="zone-row">
                     <div>
                       <strong>Silownia</strong>
                       <p id="home-gym-copy" class="muted-copy"></p>
                     </div>
-                    <button class="tool-button" type="button" data-switch-tab="gym">Open</button>
+                    <button class="tool-button" type="button" data-switch-tab="gym">Otwórz</button>
                   </div>
                   <div class="zone-row">
                     <div>
                       <strong>Finanse</strong>
                       <p id="home-finance-copy" class="muted-copy"></p>
                     </div>
-                    <button class="tool-button" type="button" data-switch-tab="finance">Open</button>
+                    <button class="tool-button" type="button" data-switch-tab="finance">Otwórz</button>
                   </div>
                 </div>
               </article>
@@ -144,7 +145,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Notatka</h2>
-                  <span>Today</span>
+                  <span>Dzisiaj</span>
                 </div>
                 <p id="home-note" class="muted-copy"></p>
               </article>
@@ -164,6 +165,11 @@
                     <span class="module-card-kicker">Trening sluchu</span>
                     <strong>Rundy i statystyki</strong>
                     <span id="music-ear-card-copy">0 rund</span>
+                  </button>
+                  <button type="button" id="open-tuner-home" class="module-card module-card-tuner">
+                    <span class="module-card-kicker">Strojenie</span>
+                    <strong>Tuner gitarowy</strong>
+                    <span id="music-tuner-card-copy">Mikrofon i gryf</span>
                   </button>
                 </div>
               </div>
@@ -272,17 +278,17 @@
                   <span id="guitar-detail-summary">0 sesji</span>
                 </div>
                 <div class="subview-actions">
-                  <button type="button" id="guitar-detail-use" class="header-pill-button">Uzyj</button>
+                  <button type="button" id="guitar-detail-use" class="header-pill-button">Użyj</button>
                 </div>
               </div>
               <div class="section-feed">
                 <article class="card analytics-hero-card">
-                  <p class="analytics-kicker">Performance</p>
+                  <p class="analytics-kicker">Wyniki</p>
                   <div class="card-head">
                     <h2 id="guitar-detail-title">Statystyki cwiczenia</h2>
                     <div class="card-head-actions">
-                      <button type="button" id="guitar-detail-edit" class="tool-button">Edit</button>
-                      <button type="button" id="guitar-detail-delete" class="tool-button delete">Del</button>
+                      <button type="button" id="guitar-detail-edit" class="tool-button">Edytuj</button>
+                      <button type="button" id="guitar-detail-delete" class="tool-button delete">Usuń</button>
                     </div>
                   </div>
                   <div class="stat-grid analytics-stat-grid">
@@ -351,6 +357,102 @@
               </div>
             </div>
 
+            <div id="guitar-tuner-view" class="guitar-view guitar-subview" hidden>
+              <div class="subview-header">
+                <button type="button" id="tuner-back" class="back-button" aria-label="Wroc">&larr;</button>
+                <div class="subview-copy">
+                  <h2>Strojenie gitary</h2>
+                  <span id="tuner-status">Mikrofon wylaczony</span>
+                </div>
+                <div class="subview-actions">
+                  <button type="button" id="tuner-toggle" class="header-pill-button">Start</button>
+                </div>
+              </div>
+              <div class="section-feed">
+                <article class="card tuner-card">
+                  <p class="analytics-kicker">Tuner</p>
+                  <div class="tuner-readout">
+                    <strong id="tuner-note">--</strong>
+                    <span id="tuner-frequency">0.0 Hz</span>
+                  </div>
+                  <div class="tuner-meter" aria-hidden="true">
+                    <span class="tuner-meter-line"></span>
+                    <span id="tuner-needle" class="tuner-needle"></span>
+                  </div>
+                  <div class="tuner-cents-row">
+                    <span>-50 c</span>
+                    <strong id="tuner-cents">0 c</strong>
+                    <span>+50 c</span>
+                  </div>
+                  <div id="tuner-string-grid" class="tuner-string-grid"></div>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Gryf</h2>
+                    <div class="card-head-actions">
+                      <span id="tuner-target-copy">Standard E</span>
+                      <button type="button" id="fretboard-fullscreen-open" class="tool-button">Fullscreen</button>
+                    </div>
+                  </div>
+                  <div id="tuner-fretboard" class="tuner-fretboard" aria-hidden="true"></div>
+                  <p class="field-help">Cienka struna e jest u gory, niska E na dole.</p>
+                </article>
+
+                <article class="card fret-practice-card">
+                  <div class="card-head">
+                    <h2>Cwiczenia wizualizacji gryfu</h2>
+                    <span id="fret-practice-status">Czeka</span>
+                  </div>
+                  <div class="advanced-config-stack">
+                    <div class="advanced-config-block">
+                      <div class="card-head compact-card-head">
+                        <h2>Material</h2>
+                        <span id="fret-practice-pattern-copy">Pentatonika mol</span>
+                      </div>
+                      <div id="fret-practice-pattern-grid" class="fret-practice-groups"></div>
+                    </div>
+                    <div class="advanced-config-block">
+                      <div class="card-head compact-card-head">
+                        <h2>Tonacja</h2>
+                        <span id="fret-practice-root-copy">E</span>
+                      </div>
+                      <div id="fret-practice-root-grid" class="ear-chip-grid ear-chip-grid-small"></div>
+                    </div>
+                    <div class="advanced-config-block">
+                      <div class="card-head compact-card-head">
+                        <h2>Pozycja</h2>
+                        <span id="fret-practice-position-copy">Caly gryf</span>
+                      </div>
+                      <div id="fret-practice-position-grid" class="ear-chip-grid ear-chip-grid-small"></div>
+                    </div>
+                  </div>
+                  <div class="fret-practice-live">
+                    <span>Grasz</span>
+                    <strong id="fret-practice-note">--</strong>
+                    <em id="fret-practice-result">Wlacz mikrofon i zagraj dzwiek ze skali.</em>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div id="fretboard-fullscreen" class="fretboard-fullscreen" hidden>
+              <div class="fretboard-fullscreen-head">
+                <div>
+                  <h2 id="fretboard-fullscreen-title">Gryf</h2>
+                  <span id="fretboard-fullscreen-subtitle">Caly gryf</span>
+                </div>
+                <button type="button" id="fretboard-fullscreen-close" class="header-pill-button">Zamknij</button>
+              </div>
+              <div id="fretboard-fullscreen-position-grid" class="fretboard-fullscreen-positions"></div>
+              <div id="fretboard-fullscreen-board" class="tuner-fretboard tuner-fretboard-full" aria-hidden="true"></div>
+              <div class="fretboard-fullscreen-live">
+                <span>Grasz</span>
+                <strong id="fretboard-fullscreen-note">--</strong>
+                <em id="fretboard-fullscreen-result">Wlacz mikrofon i zagraj dzwiek.</em>
+              </div>
+            </div>
+
             <div id="ear-home-view" class="guitar-view guitar-subview" hidden>
               <div class="subview-header">
                 <button type="button" id="ear-home-back" class="back-button" aria-label="Wroc">&larr;</button>
@@ -364,7 +466,7 @@
               </div>
               <div class="section-feed">
                 <article class="card analytics-hero-card music-overview-card">
-                  <p class="analytics-kicker">Trening sluchu</p>
+                  <p class="analytics-kicker">Trener sluchu</p>
                   <div class="card-head">
                     <h2 id="ear-home-last-title">Ostatnia runda</h2>
                     <span id="ear-home-last-copy">Brak</span>
@@ -381,9 +483,21 @@
                   </div>
                 </article>
 
+                <article class="card ear-coach-card">
+                  <div class="card-head">
+                    <h2>Nastepna najlepsza runda</h2>
+                    <span id="ear-recommendation-kind">Coach</span>
+                  </div>
+                  <div class="ear-coach-body">
+                    <strong id="ear-recommendation-title">Interwaly</strong>
+                    <p id="ear-recommendation-copy">Start od podstawowego zestawu i zbierz pierwsze wyniki.</p>
+                    <button type="button" id="ear-recommendation-start" class="primary-button">Start</button>
+                  </div>
+                </article>
+
                 <article class="card">
                   <div class="card-head">
-                    <h2>Typy cwiczen</h2>
+                    <h2>Lekcje</h2>
                     <span id="ear-type-count">0</span>
                   </div>
                   <div id="ear-exercise-list" class="stack-list"></div>
@@ -391,7 +505,7 @@
 
                 <article class="card">
                   <div class="card-head">
-                    <h2>Ostatnie wyniki</h2>
+                    <h2>Slabe punkty i ostatnie wyniki</h2>
                     <span id="ear-recent-summary">0</span>
                   </div>
                   <div id="ear-recent-list" class="stack-list"></div>
@@ -411,8 +525,8 @@
               <div class="section-feed">
                 <article class="card">
                   <div class="card-head">
-                    <h2>Tryby</h2>
-                    <span id="ear-preset-copy">Core</span>
+                    <h2>Gotowe lekcje</h2>
+                    <span id="ear-preset-copy">Podstawy</span>
                   </div>
                   <div id="ear-preset-grid" class="ear-chip-grid"></div>
                   <p id="ear-preset-help" class="field-help"></p>
@@ -421,7 +535,7 @@
                 <article class="card">
                   <div class="card-head">
                     <h2>Poziom</h2>
-                    <span id="ear-config-level-copy">Core</span>
+                    <span id="ear-config-level-copy">Podstawy</span>
                   </div>
                   <div id="ear-level-grid" class="preset-row"></div>
                   <p id="ear-level-help" class="field-help"></p>
@@ -447,11 +561,29 @@
 
                 <article class="card">
                   <div class="card-head">
-                    <h2>Tryb</h2>
+                    <h2>Sposob odtwarzania</h2>
                     <span id="ear-mode-copy">Mix</span>
                   </div>
                   <div id="ear-mode-grid" class="preset-row"></div>
                   <p id="ear-mode-help" class="field-help"></p>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Brzmienie</h2>
+                    <span id="ear-sound-copy">Fortepian</span>
+                  </div>
+                  <div id="ear-sound-grid" class="ear-chip-grid"></div>
+                  <p id="ear-sound-help" class="field-help"></p>
+                </article>
+
+                <article class="card">
+                  <div class="card-head">
+                    <h2>Widok instrumentu</h2>
+                    <span id="ear-visual-copy">Pokaz</span>
+                  </div>
+                  <div id="ear-visual-grid" class="preset-row"></div>
+                  <p id="ear-visual-help" class="field-help">Mozesz ukryc klawiature albo gryf podczas rundy.</p>
                 </article>
 
                 <article id="ear-advanced-card" class="card">
@@ -505,8 +637,8 @@
 
                 <article class="card">
                   <div class="card-head">
-                    <h2>Sluchawki</h2>
-                    <span>On</span>
+                    <h2>Cwiczenie wlasne</h2>
+                    <span id="ear-start-profile-copy">Gotowe</span>
                   </div>
                   <button type="button" id="ear-start-round" class="primary-button full-button">Start rundy</button>
                 </article>
@@ -526,11 +658,18 @@
               </div>
               <div class="section-feed">
                 <article class="card analytics-hero-card ear-round-card">
+                  <div class="ear-round-progress">
+                    <div class="progress-track bpm-progress-track">
+                      <div class="progress-fill bpm-progress-fill" id="ear-round-progress-bar"></div>
+                    </div>
+                  </div>
                   <div class="card-head">
                     <h2 id="ear-round-prompt">Melodyczny</h2>
                     <span id="ear-round-live-score">0%</span>
                   </div>
+                  <div id="ear-visualizer" class="ear-visualizer" aria-hidden="true"></div>
                   <button type="button" id="ear-round-play" class="ear-play-button">Play</button>
+                  <div id="ear-round-feedback" class="ear-feedback" hidden></div>
                   <div id="ear-answer-grid" class="ear-answer-grid"></div>
                 </article>
               </div>
@@ -550,7 +689,7 @@
                   <p class="analytics-kicker">Podsumowanie</p>
                   <div class="stat-grid analytics-stat-grid">
                     <div class="stat-card analytics-stat-card">
-                      <span>Accuracy</span>
+                      <span>Dokladnosc</span>
                       <strong id="ear-summary-accuracy">0%</strong>
                     </div>
                     <div class="stat-card analytics-stat-card">
@@ -558,7 +697,7 @@
                       <strong id="ear-summary-response">0 ms</strong>
                     </div>
                     <div class="stat-card analytics-stat-card">
-                      <span>Streak</span>
+                      <span>Seria</span>
                       <strong id="ear-summary-streak">0</strong>
                     </div>
                     <div class="stat-card analytics-stat-card">
@@ -572,7 +711,7 @@
                   <div class="button-grid ear-summary-actions">
                     <button type="button" id="ear-summary-repeat" class="secondary-button">Powtorz</button>
                     <button type="button" id="ear-summary-stats" class="secondary-button">Statystyki</button>
-                    <button type="button" id="ear-summary-home" class="primary-button">Dalej</button>
+                    <button type="button" id="ear-summary-home" class="primary-button">Lekcje</button>
                   </div>
                 </article>
               </div>
@@ -591,18 +730,18 @@
               </div>
               <div class="section-feed">
                 <article class="card analytics-hero-card">
-                  <p class="analytics-kicker">Analytics</p>
+                  <p class="analytics-kicker">Statystyki</p>
                   <div class="card-head">
                     <h2 id="ear-detail-title">Interwaly</h2>
                     <span id="ear-detail-last-used">Brak</span>
                   </div>
                   <div class="stat-grid analytics-stat-grid">
                     <div class="stat-card analytics-stat-card">
-                      <span>Accuracy</span>
+                      <span>Dokladnosc</span>
                       <strong id="ear-detail-accuracy">0%</strong>
                     </div>
                     <div class="stat-card analytics-stat-card">
-                      <span>Best</span>
+                      <span>Najlepszy</span>
                       <strong id="ear-detail-best">0%</strong>
                     </div>
                     <div class="stat-card analytics-stat-card">
@@ -708,7 +847,7 @@
                   <input id="workout-title-input" type="text" placeholder="Np. Upper A">
                   <div class="inline-form inline-form-two">
                     <input id="workout-duration-input" type="number" step="1" placeholder="Min">
-                    <input id="workout-focus-input" type="text" placeholder="Focus">
+                    <input id="workout-focus-input" type="text" placeholder="Cel">
                   </div>
                   <button type="submit" class="primary-button full-button">Dodaj trening</button>
                 </form>
@@ -745,7 +884,7 @@
                   </div>
                   <div class="button-row">
                     <button type="button" id="rest-start-button" class="primary-button">Start</button>
-                    <button type="button" id="rest-reset-button" class="secondary-button">Reset</button>
+                    <button type="button" id="rest-reset-button" class="secondary-button">Wyzeruj</button>
                   </div>
                 </div>
               </article>
@@ -795,7 +934,7 @@
                 <article class="card module-card module-card-finance-market" data-open-finance-view="market">
                   <p class="module-card-kicker">GIELDA</p>
                   <div class="card-head">
-                    <h2>Paper trading</h2>
+                    <h2>Symulator giełdy</h2>
                     <span id="finance-home-market-summary">0</span>
                   </div>
                   <p id="finance-home-market-copy" class="module-card-copy"></p>
@@ -808,7 +947,7 @@
                 <button type="button" id="finance-personal-back" class="back-button" aria-label="Wroc">&larr;</button>
                 <div class="subview-copy">
                   <h2>Finanse osobiste</h2>
-                  <span id="finance-summary-label">This month</span>
+                  <span id="finance-summary-label">Ten miesiąc</span>
                 </div>
                 <div></div>
               </div>
@@ -837,7 +976,7 @@
                 <article class="card">
                   <div class="card-head">
                     <h2>Nowy wpis</h2>
-                    <span>Cashflow</span>
+                    <span>Przepływ</span>
                   </div>
                   <form id="finance-form" class="form-block">
                     <select id="finance-type-input">
@@ -856,7 +995,7 @@
                 <article class="card">
                   <div class="card-head">
                     <h2>Planowany wydatek</h2>
-                    <span>Later</span>
+                    <span>Później</span>
                   </div>
                   <form id="planned-form" class="form-block">
                     <input id="planned-title-input" type="text" placeholder="Co planujesz">
@@ -872,7 +1011,7 @@
                 <article class="card">
                   <div class="card-head">
                     <h2>Ocena zakupu</h2>
-                    <span>Quick</span>
+                    <span>Szybko</span>
                   </div>
                   <form id="evaluator-form" class="form-block">
                     <div class="inline-form inline-form-two">
@@ -887,7 +1026,7 @@
                   </form>
                   <div class="stat-grid">
                     <div class="stat-card">
-                      <span>Score</span>
+                      <span>Ocena</span>
                       <strong id="evaluator-score">-</strong>
                     </div>
                     <div class="stat-card">
@@ -919,86 +1058,81 @@
                   <span id="paper-feed-provider">FINNHUB</span>
                 </div>
                 <div class="subview-actions">
-                  <button type="button" id="paper-market-refresh" class="header-pill-button">Refresh</button>
+                  <button type="button" id="paper-open-data-panel" class="header-pill-button secondary-header-button">Dane</button>
+                  <button type="button" id="paper-market-refresh" class="header-pill-button">Odśwież</button>
                 </div>
               </div>
-              <div class="section-feed">
-                <article class="card analytics-hero-card finance-market-hero">
-                  <p class="analytics-kicker">Paper Trading</p>
-                  <div class="card-head">
-                    <h2 id="paper-selected-symbol">AAPL</h2>
-                    <span id="paper-feed-status">Dodaj klucz API</span>
-                  </div>
-                  <p id="paper-selected-company" class="finance-hero-copy">Apple · Tech</p>
-                  <div class="finance-price-row">
+              <div class="section-feed market-terminal-feed">
+                <section class="market-instrument-header">
+                  <button type="button" id="paper-open-symbol-sheet" class="market-symbol-button">
+                    <span id="paper-selected-symbol">AAPL</span>
+                    <small id="paper-selected-company">Apple · Tech</small>
+                  </button>
+                  <div class="market-price-block">
                     <strong id="paper-selected-price">$0.00</strong>
                     <span id="paper-selected-change" class="finance-change-pill">+0.00%</span>
                   </div>
-                  <div class="analytics-stat-grid">
-                    <div class="stat-card analytics-stat-card">
-                      <span>Cash</span>
-                      <strong id="paper-cash">$0.00</strong>
-                    </div>
-                    <div class="stat-card analytics-stat-card">
-                      <span>Equity</span>
-                      <strong id="paper-equity">$0.00</strong>
-                    </div>
-                    <div class="stat-card analytics-stat-card">
-                      <span>Portfel</span>
-                      <strong id="paper-portfolio">$0.00</strong>
-                    </div>
-                    <div class="stat-card analytics-stat-card">
-                      <span>P/L</span>
-                      <strong id="paper-pnl">$0.00</strong>
-                    </div>
+                  <div class="market-status-strip">
+                    <span id="paper-feed-status">Dodaj klucz API</span>
+                    <span id="paper-market-clock">Rynek zamkniety</span>
                   </div>
-                  <div class="finance-quote-grid">
-                    <div class="finance-quote-mini">
-                      <span>Open</span>
-                      <strong id="paper-selected-open">$0.00</strong>
-                    </div>
-                    <div class="finance-quote-mini">
-                      <span>High</span>
-                      <strong id="paper-selected-high">$0.00</strong>
-                    </div>
-                    <div class="finance-quote-mini">
-                      <span>Low</span>
-                      <strong id="paper-selected-low">$0.00</strong>
-                    </div>
-                    <div class="finance-quote-mini">
-                      <span>Prev</span>
-                      <strong id="paper-selected-prev">$0.00</strong>
-                    </div>
-                  </div>
-                </article>
+                </section>
 
-                <article class="card finance-dark-card">
+                <section class="market-symbol-rail">
+                  <div id="paper-symbol-rail" class="symbol-rail-list"></div>
+                  <button type="button" id="paper-symbol-rail-search" class="symbol-search-button">Szukaj</button>
+                </section>
+
+                <article class="card finance-dark-card terminal-feed-card" data-market-panel="data">
                   <div class="card-head">
-                    <h2>Feed</h2>
-                    <span>Live</span>
+                    <h2>Dane rynku</h2>
+                    <span>Na żywo</span>
                   </div>
                   <form id="paper-feed-form" class="form-block">
                     <input id="paper-api-input" type="password" placeholder="Darmowy klucz Finnhub">
                     <div class="button-row">
                       <button type="submit" class="primary-button">Zapisz</button>
-                      <button type="button" id="paper-refresh-button" class="secondary-button">Refresh</button>
+                      <button type="button" id="paper-refresh-button" class="secondary-button">Odśwież</button>
                     </div>
-                    <button type="button" id="paper-auto-button" class="secondary-button full-button">Auto 3m: Off</button>
+                    <button type="button" id="paper-auto-button" class="secondary-button full-button">Auto 3 min: wył.</button>
                   </form>
                 </article>
 
-                <article class="card finance-dark-card">
+                <article class="card finance-dark-card terminal-settings-card" data-market-panel="data">
+                  <div class="card-head">
+                    <h2>Warunki symulacji</h2>
+                    <span>Makler</span>
+                  </div>
+                  <form id="paper-settings-form" class="form-block">
+                    <div class="inline-form inline-form-three">
+                      <input id="paper-commission-input" type="number" step="0.01" min="0" placeholder="Prowizja $">
+                      <input id="paper-spread-input" type="number" step="1" min="0" placeholder="Spread bps">
+                      <input id="paper-slippage-input" type="number" step="1" min="0" placeholder="Slippage bps">
+                    </div>
+                    <label class="checkbox-row">
+                      <input id="paper-after-hours-input" type="checkbox">
+                      <span>Pozwól na egzekucję poza sesją</span>
+                    </label>
+                    <div class="button-row">
+                      <button type="submit" class="secondary-button">Zapisz warunki</button>
+                      <button type="button" id="paper-account-reset" class="danger-button">Wyczyść konto</button>
+                    </div>
+                  </form>
+                </article>
+
+                <article class="card finance-dark-card terminal-search-card">
                   <div class="card-head">
                     <h2>Instrumenty</h2>
-                    <span>Popularne</span>
+                    <button type="button" id="paper-symbol-sheet-close" class="head-icon-button" aria-label="Zamknij wybór">×</button>
                   </div>
                   <input id="paper-market-search" type="text" placeholder="Szukaj po tickerze lub nazwie">
+                  <div id="paper-market-categories" class="market-category-row"></div>
                   <div id="paper-market-suggestions" class="stack-list"></div>
                 </article>
 
-                <article class="card finance-dark-card">
+                <article class="card finance-dark-card terminal-watchlist-card" data-market-panel="data">
                   <div class="card-head">
-                    <h2>Watchlista</h2>
+                    <h2>Obserwowane</h2>
                     <span id="paper-watchlist-count">0</span>
                   </div>
                   <form id="paper-watchlist-form" class="inline-form">
@@ -1008,30 +1142,37 @@
                   <div id="paper-watchlist" class="stack-list"></div>
                 </article>
 
-                <article class="card finance-dark-card finance-chart-card">
+                <article class="card finance-dark-card finance-chart-card terminal-chart-card">
                   <div class="card-head">
                     <h2>Wykres</h2>
                     <span id="paper-chart-symbol">AAPL</span>
                   </div>
-                  <div class="finance-chart-range" id="paper-chart-range">
-                    <button type="button" class="finance-range-button active" data-paper-range="1D">1D</button>
-                    <button type="button" class="finance-range-button" data-paper-range="1W">1W</button>
-                    <button type="button" class="finance-range-button" data-paper-range="1M">1M</button>
-                    <button type="button" class="finance-range-button" data-paper-range="ALL">All</button>
+                  <div class="finance-chart-tools">
+                    <button type="button" class="finance-range-button active" data-paper-chart-mode="candles">Świece</button>
+                    <button type="button" class="finance-range-button" data-paper-chart-mode="line">Linia</button>
+                    <button type="button" id="paper-chart-fullscreen-button" class="finance-range-button">Fullscreen</button>
                   </div>
-                  <svg id="paper-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Wykres waloru"></svg>
-                  <p class="field-help">Live session z kolejnych odswiezen. <span id="paper-chart-updated">-</span></p>
+                  <div class="finance-chart-range" id="paper-chart-range">
+                    <button type="button" class="finance-range-button" data-paper-range="1M">1 mies.</button>
+                    <button type="button" class="finance-range-button" data-paper-range="3M">3 mies.</button>
+                    <button type="button" class="finance-range-button active" data-paper-range="6M">6 mies.</button>
+                    <button type="button" class="finance-range-button" data-paper-range="1Y">1 rok</button>
+                    <button type="button" class="finance-range-button" data-paper-range="ALL">Całość</button>
+                  </div>
+                  <div id="paper-chart" class="tradingview-chart-card" role="img" aria-label="Wykres waloru"></div>
+                  <p class="field-help">Historia OHLCV z lokalnego silnika. <span id="paper-chart-updated">-</span></p>
+                  <p class="tradingview-attribution">Wykresy: <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView Lightweight Charts</a></p>
                 </article>
 
-                <article class="card finance-dark-card finance-ticket-card">
+                <article class="card finance-dark-card finance-ticket-card terminal-ticket-card">
                   <div class="card-head">
-                    <h2>Ticket</h2>
-                    <span>Market</span>
+                    <h2>Zlecenie</h2>
+                    <button type="button" id="paper-order-sheet-close" class="head-icon-button" aria-label="Zamknij zlecenie">×</button>
                   </div>
                   <form id="paper-order-form" class="form-block">
                     <div class="preset-row" id="paper-order-side-grid">
-                      <button type="button" id="paper-buy-button" class="metronome-option-button active">Buy</button>
-                      <button type="button" id="paper-sell-button" class="metronome-option-button">Sell</button>
+                      <button type="button" id="paper-buy-button" class="metronome-option-button active">Kup</button>
+                      <button type="button" id="paper-sell-button" class="metronome-option-button">Sprzedaj</button>
                     </div>
                     <div class="inline-form inline-form-two">
                       <select id="paper-order-side" hidden>
@@ -1045,21 +1186,267 @@
                         <button type="button" id="paper-shares-plus" class="finance-step-button" aria-label="Plus">+</button>
                       </div>
                     </div>
+                    <div class="inline-form inline-form-three">
+                      <select id="paper-order-type">
+                        <option value="market" selected>Po rynku</option>
+                        <option value="limit">Limit ceny</option>
+                        <option value="stop">Stop</option>
+                      </select>
+                      <input id="paper-limit-price" type="number" step="0.01" min="0" placeholder="Limit">
+                      <input id="paper-stop-price" type="number" step="0.01" min="0" placeholder="Stop">
+                    </div>
                     <div class="stat-grid">
                       <div class="stat-card">
-                        <span>Szacowana wartosc</span>
+                        <span>Szacowana wartość</span>
                         <strong id="paper-order-estimate">$0.00</strong>
                       </div>
                       <div class="stat-card">
-                        <span>Dostepne akcje</span>
+                        <span>Dostępne akcje</span>
                         <strong id="paper-order-available">0</strong>
                       </div>
                     </div>
+                    <textarea id="paper-order-thesis" rows="3" placeholder="Teza transakcji, ryzyko albo czego chcesz się nauczyć"></textarea>
                     <button type="submit" id="paper-order-submit" class="primary-button full-button">Kup wirtualnie</button>
                   </form>
                 </article>
 
-                <article class="card finance-dark-card">
+                <nav class="market-panel-tabs" aria-label="Widok giełdy">
+                  <button type="button" class="market-panel-tab active" data-market-panel-tab="info">Info</button>
+                  <button type="button" class="market-panel-tab" data-market-panel-tab="portfolio">Portfel</button>
+                  <button type="button" class="market-panel-tab" data-market-panel-tab="orders">Zlecenia</button>
+                  <button type="button" class="market-panel-tab" data-market-panel-tab="agent">Agent Lab</button>
+                </nav>
+
+                <article class="card finance-dark-card market-info-card" data-market-panel="info">
+                  <div class="card-head">
+                    <h2>Info</h2>
+                    <span id="paper-info-symbol">AAPL</span>
+                  </div>
+                  <div class="finance-quote-grid compact-market-grid">
+                    <div class="finance-quote-mini">
+                      <span>Otwarcie</span>
+                      <strong id="paper-selected-open">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Maksimum</span>
+                      <strong id="paper-selected-high">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Minimum</span>
+                      <strong id="paper-selected-low">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Poprzednio</span>
+                      <strong id="paper-selected-prev">$0.00</strong>
+                    </div>
+                  </div>
+                  <div class="finance-quote-grid compact-market-grid">
+                    <div class="finance-quote-mini">
+                      <span>Prowizja</span>
+                      <strong id="paper-info-commission">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Spread</span>
+                      <strong id="paper-info-spread">0 bps</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Slippage</span>
+                      <strong id="paper-info-slippage">0 bps</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Otwarte</span>
+                      <strong id="paper-open-orders">0</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card analytics-hero-card finance-market-hero terminal-account-card" data-market-panel="portfolio">
+                  <div class="card-head">
+                    <h2>Rachunek demo</h2>
+                    <span id="paper-account-status">Portfel</span>
+                  </div>
+                  <div class="analytics-stat-grid">
+                    <div class="stat-card analytics-stat-card">
+                      <span>Gotówka</span>
+                      <strong id="paper-cash">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Wartość konta</span>
+                      <strong id="paper-equity">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Portfel</span>
+                      <strong id="paper-portfolio">$0.00</strong>
+                    </div>
+                    <div class="stat-card analytics-stat-card">
+                      <span>Zysk/strata</span>
+                      <strong id="paper-pnl">$0.00</strong>
+                    </div>
+                  </div>
+                  <div class="finance-quote-grid compact-market-grid">
+                    <div class="finance-quote-mini">
+                      <span>Zrealizowany</span>
+                      <strong id="paper-realized-pnl">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Stopa zwrotu</span>
+                      <strong id="paper-return">+0.00%</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Koszty</span>
+                      <strong id="paper-fees">$0.00</strong>
+                    </div>
+                    <div class="finance-quote-mini">
+                      <span>Pozycje</span>
+                      <strong id="paper-account-position-count">0</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card finance-dark-card terminal-agent-card" data-market-panel="agent">
+                  <div class="card-head">
+                    <div>
+                      <h2>Boty</h2>
+                      <span id="agent-status">Silnik lokalny</span>
+                    </div>
+                    <strong id="agent-session-chip" class="agent-session-chip">offline</strong>
+                  </div>
+                  <section class="agent-simple-hero">
+                    <div>
+                      <span>Aktualny bot</span>
+                      <strong id="agent-simple-name">Research Core</strong>
+                      <small id="agent-simple-copy">Najpierw testy i paper trading. Bez realnych zleceń.</small>
+                    </div>
+                    <button type="button" id="agent-simple-run" class="primary-button">Testuj boty</button>
+                  </section>
+                  <div class="button-row agent-command-row">
+                    <button type="button" id="agent-research-sync" class="secondary-button">Odśwież dane</button>
+                    <button type="button" id="agent-feature-build" class="secondary-button">Zbuduj test</button>
+                    <button type="button" id="agent-signal-refresh" class="secondary-button">Pokaż sygnał</button>
+                  </div>
+                  <div class="stat-grid agent-stat-grid">
+                    <div class="stat-card">
+                      <span>Research</span>
+                      <strong id="agent-research-status">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>SEC cache</span>
+                      <strong id="agent-sec-cache">0</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Newsy</span>
+                      <strong id="agent-news-cache">0</strong>
+                    </div>
+                  </div>
+                  <div id="agent-signal-card" class="agent-signal-card"></div>
+                  <div class="card-head inline-card-head agent-runs-head">
+                    <h2>Ranking botów</h2>
+                    <button type="button" id="agent-runs-refresh" class="secondary-button">Odśwież</button>
+                  </div>
+                  <div id="agent-runs-list" class="stack-list agent-log-list"></div>
+                  <details class="agent-advanced-panel">
+                    <summary>Ustawienia zaawansowane</summary>
+                    <div id="agent-research-list" class="stack-list agent-log-list"></div>
+                  <form id="agent-reset-form" class="form-block agent-lab-form">
+                    <div class="inline-form inline-form-two">
+                      <input id="agent-symbols-input" type="text" placeholder="Symbole, np. AAPL,MSFT,SPY" value="AAPL">
+                      <select id="agent-mode-input">
+                        <option value="single" selected>Jeden instrument</option>
+                        <option value="portfolio">Portfel</option>
+                      </select>
+                    </div>
+                    <div class="inline-form inline-form-three">
+                      <input id="agent-cash-input" type="number" min="1" step="1000" value="100000" placeholder="Kapital startowy">
+                      <input id="agent-seed-input" type="number" step="1" placeholder="Seed">
+                      <select id="agent-reward-preset-input">
+                        <option value="balanced" selected>Zbalansowany</option>
+                        <option value="growth">Agresywny wzrost</option>
+                        <option value="lowDrawdown">Niski drawdown</option>
+                        <option value="costAware">Minimalizacja kosztow</option>
+                        <option value="benchmark">Benchmark</option>
+                        <option value="custom">Wlasne wagi</option>
+                      </select>
+                    </div>
+                    <div class="inline-form inline-form-two">
+                      <input id="agent-episode-input" type="number" min="2" step="1" value="120" placeholder="Dlugosc epizodu">
+                      <input id="agent-lookback-input" type="number" min="2" step="1" value="30" placeholder="Lookback">
+                    </div>
+                    <div class="inline-form inline-form-two">
+                      <input id="agent-start-input" type="date" placeholder="Start">
+                      <input id="agent-end-input" type="date" placeholder="Koniec">
+                    </div>
+                    <div class="agent-reward-grid">
+                      <label>
+                        <span>Zwrot</span>
+                        <input id="agent-return-weight-input" type="number" step="0.05" value="1">
+                      </label>
+                      <label>
+                        <span>Drawdown</span>
+                        <input id="agent-drawdown-weight-input" type="number" step="0.05" value="0.35">
+                      </label>
+                      <label>
+                        <span>Zmiennosc</span>
+                        <input id="agent-volatility-weight-input" type="number" step="0.05" value="0.05">
+                      </label>
+                      <label>
+                        <span>Koszty</span>
+                        <input id="agent-cost-weight-input" type="number" step="0.05" value="1">
+                      </label>
+                    </div>
+                    <button type="submit" id="agent-reset-button" class="secondary-button full-button">Reset środowiska</button>
+                  </form>
+                  <form id="agent-step-form" class="form-block">
+                    <div class="inline-form inline-form-two">
+                      <select id="agent-action-input">
+                        <option value="hold" selected>Trzymaj</option>
+                        <option value="buy">Kup</option>
+                        <option value="sell">Sprzedaj</option>
+                      </select>
+                      <input id="agent-fraction-input" type="number" min="0" max="1" step="0.05" value="0.25" placeholder="Udzial 0-1">
+                    </div>
+                    <div class="button-row">
+                      <button type="submit" id="agent-step-button" class="primary-button">Krok agenta</button>
+                      <button type="button" id="agent-random-step-button" class="secondary-button">Losowy</button>
+                      <button type="button" id="agent-ten-steps-button" class="secondary-button">10 krokow</button>
+                    </div>
+                  </form>
+                  <div class="stat-grid agent-stat-grid">
+                    <div class="stat-card">
+                      <span>Data</span>
+                      <strong id="agent-date">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Equity</span>
+                      <strong id="agent-equity">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Zwrot epizodu</span>
+                      <strong id="agent-return">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Total reward</span>
+                      <strong id="agent-total-reward">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Ostatnia nagroda</span>
+                      <strong id="agent-reward">-</strong>
+                    </div>
+                    <div class="stat-card">
+                      <span>Drawdown</span>
+                      <strong id="agent-drawdown">-</strong>
+                    </div>
+                  </div>
+                  <div class="agent-breakdown-grid">
+                    <span id="agent-breakdown-return">return 0.00000</span>
+                    <span id="agent-breakdown-drawdown">drawdown 0.00000</span>
+                    <span id="agent-breakdown-volatility">volatility 0.00000</span>
+                    <span id="agent-breakdown-cost">cost 0.00000</span>
+                  </div>
+                  <div id="agent-log-list" class="stack-list agent-log-list"></div>
+                  </details>
+                </article>
+
+                <article class="card finance-dark-card terminal-positions-card" data-market-panel="portfolio">
                   <div class="card-head">
                     <h2>Pozycje</h2>
                     <span id="paper-position-count">0</span>
@@ -1067,13 +1454,48 @@
                   <div id="paper-positions-list" class="stack-list"></div>
                 </article>
 
-                <article class="card finance-dark-card">
+                <article class="card finance-dark-card finance-chart-card terminal-equity-card" data-market-panel="portfolio">
+                  <div class="card-head">
+                    <h2>Krzywa kapitału</h2>
+                    <span id="paper-equity-chart-summary">$0.00</span>
+                  </div>
+                  <svg id="paper-equity-chart" class="chart-card" viewBox="0 0 320 140" role="img" aria-label="Krzywa equity"></svg>
+                </article>
+
+                <article class="card finance-dark-card terminal-orders-card" data-market-panel="orders">
                   <div class="card-head">
                     <h2>Zlecenia</h2>
                     <span id="paper-order-count">0</span>
                   </div>
                   <div id="paper-orders-list" class="stack-list"></div>
                 </article>
+              </div>
+              <div class="market-trade-bar">
+                <button type="button" id="paper-trade-bar-buy" class="trade-bar-side active">Kup</button>
+                <button type="button" id="paper-trade-bar-sell" class="trade-bar-side">Sprzedaj</button>
+                <div class="trade-bar-qty">
+                  <button type="button" id="paper-trade-bar-minus" class="finance-step-button" aria-label="Mniej">-</button>
+                  <strong id="paper-trade-bar-shares">1</strong>
+                  <button type="button" id="paper-trade-bar-plus" class="finance-step-button" aria-label="Więcej">+</button>
+                </div>
+                <button type="button" id="paper-open-order-sheet" class="primary-button">Zlecenie</button>
+              </div>
+              <div id="paper-order-backdrop" class="sheet-backdrop" hidden></div>
+              <div id="paper-symbol-backdrop" class="sheet-backdrop" hidden></div>
+              <div id="paper-chart-fullscreen" class="chart-fullscreen" hidden>
+                <div class="chart-fullscreen-head">
+                  <div>
+                    <strong id="paper-chart-fullscreen-symbol">AAPL</strong>
+                    <span id="paper-chart-fullscreen-status">Historia</span>
+                  </div>
+                  <button type="button" id="paper-chart-fullscreen-close" class="secondary-button">Zamknij</button>
+                </div>
+                <div class="finance-chart-tools">
+                  <button type="button" class="finance-range-button active" data-paper-chart-mode="candles">Świece</button>
+                  <button type="button" class="finance-range-button" data-paper-chart-mode="line">Linia</button>
+                </div>
+                <div id="paper-chart-fullscreen-canvas" class="tradingview-chart-card fullscreen-chart-card"></div>
+                <p class="tradingview-attribution">Wykresy: <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView Lightweight Charts</a></p>
               </div>
             </div>
           </section>
@@ -1104,7 +1526,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Nowy task</h2>
-                  <span>Inbox</span>
+                  <span>Skrzynka</span>
                 </div>
                 <form id="task-form" class="form-block">
                   <input id="task-input" type="text" placeholder="Nowe zadanie">
@@ -1123,7 +1545,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Nowy habit</h2>
-                  <span>Daily</span>
+                  <span>Dziennie</span>
                 </div>
                 <form id="habit-form" class="form-block">
                   <input id="habit-input" type="text" placeholder="Nowy habit">
@@ -1151,7 +1573,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Notatka dnia</h2>
-                  <span>Quick</span>
+                  <span>Szybko</span>
                 </div>
                 <form id="note-form" class="form-block">
                   <textarea id="note-input" rows="4" placeholder="Jedno zdanie o dniu"></textarea>
@@ -1163,7 +1585,7 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Suplementy</h2>
-                  <span>Daily</span>
+                  <span>Dziennie</span>
                 </div>
                 <div id="supplement-list" class="stack-list"></div>
               </article>
@@ -1171,12 +1593,12 @@
               <article class="card">
                 <div class="card-head">
                   <h2>Narzedzia</h2>
-                  <span>Data</span>
+                  <span>Dane</span>
                 </div>
                 <div class="button-grid">
-                  <button id="import-button" class="secondary-button" type="button">Import JSON</button>
-                  <button id="export-button" class="secondary-button" type="button">Export JSON</button>
-                  <button id="reset-button" class="danger-button" type="button">Reset demo</button>
+                  <button id="import-button" class="secondary-button" type="button">Importuj JSON</button>
+                  <button id="export-button" class="secondary-button" type="button">Eksportuj JSON</button>
+                  <button id="reset-button" class="danger-button" type="button">Przywróć demo</button>
                 </div>
                 <input id="import-input" type="file" accept="application/json" hidden>
               </article>

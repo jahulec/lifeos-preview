@@ -1,6 +1,53 @@
 const STORAGE_KEY = "lifeos-preview-state-v5";
 const LEGACY_KEYS = ["lifeos-preview-state-v4", "lifeos-preview-state-v3"];
 const PAPER_TRADING_PUBLIC_API_KEY = "d7bqnapr01qom0rbtekgd7bqnapr01qom0rbtel0";
+const MARKET_SIM_API_URLS = ["http://127.0.0.1:8765", "http://127.0.0.1:8766"];
+const PAPER_TRADING_INITIAL_CASH = 100000;
+const PAPER_WATCHLIST_LIMIT = 48;
+const PAPER_MARKET_TIME_ZONE = "America/New_York";
+const PAPER_DEFAULT_SETTINGS = {
+  commission: 1,
+  spreadBps: 6,
+  slippageBps: 4,
+  allowAfterHours: false
+};
+const AGENT_REWARD_PRESETS = {
+  balanced: {
+    label: "Zbalansowany",
+    return_weight: 1,
+    drawdown_weight: 0.35,
+    volatility_weight: 0.05,
+    cost_weight: 1
+  },
+  growth: {
+    label: "Agresywny wzrost",
+    return_weight: 1.4,
+    drawdown_weight: 0.18,
+    volatility_weight: 0.03,
+    cost_weight: 0.8
+  },
+  lowDrawdown: {
+    label: "Niski drawdown",
+    return_weight: 1,
+    drawdown_weight: 0.9,
+    volatility_weight: 0.14,
+    cost_weight: 1.1
+  },
+  costAware: {
+    label: "Minimalizacja kosztow",
+    return_weight: 1,
+    drawdown_weight: 0.35,
+    volatility_weight: 0.05,
+    cost_weight: 2.2
+  },
+  benchmark: {
+    label: "Benchmark buy-and-hold",
+    return_weight: 1,
+    drawdown_weight: 0,
+    volatility_weight: 0,
+    cost_weight: 0
+  }
+};
 
 function isoDaysAgo(days, hour = 9) {
   const date = new Date();
@@ -79,13 +126,16 @@ const defaultState = {
   paperTrading: {
     provider: "finnhub",
     apiKey: "",
-    cash: 100000,
-    watchlist: ["AAPL", "MSFT", "NVDA", "SPY", "AMZN", "GOOGL", "META", "TSLA", "AMD", "PLTR", "QQQ", "JPM"],
+    initialCash: PAPER_TRADING_INITIAL_CASH,
+    cash: PAPER_TRADING_INITIAL_CASH,
+    settings: cloneState(PAPER_DEFAULT_SETTINGS),
+    watchlist: ["AAPL", "MSFT", "NVDA", "SPY", "QQQ", "CDR", "PKN", "PKO", "PZU", "ALE", "KGH", "XTB", "GLD", "SLV", "USO", "GOLD"],
     selectedSymbol: "AAPL",
     quotes: {},
     chart: { symbol: "AAPL", points: [], updatedAt: null },
     positions: [],
     orders: [],
+    equityHistory: [],
     autoRefresh: false,
     lastSyncAt: null,
     error: ""
@@ -120,7 +170,7 @@ const defaultState = {
       correct: 4,
       totalQuestions: 5,
       averageResponseTimeMs: 1650,
-      config: { type: "intervals", level: "core", questionCount: 5, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
+      config: { type: "intervals", level: "core", questionCount: 5, selectedItems: ["m2", "M2", "m3", "M3", "P4", "P5"], playbackMode: "both", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
       answers: [
         { questionId: "q-1", correctAnswer: "m3", selectedAnswer: "m3", isCorrect: true, responseTimeMs: 1200 },
         { questionId: "q-2", correctAnswer: "P4", selectedAnswer: "P4", isCorrect: true, responseTimeMs: 1880 },
@@ -138,7 +188,7 @@ const defaultState = {
       correct: 3,
       totalQuestions: 5,
       averageResponseTimeMs: 2140,
-      config: { type: "rhythm", level: "core", questionCount: 5, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
+      config: { type: "rhythm", level: "core", questionCount: 5, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza"], playbackMode: "click", headphoneMode: true, soundProfile: "tone", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
       answers: [
         { questionId: "q-1", correctAnswer: "Prosto", selectedAnswer: "Prosto", isCorrect: true, responseTimeMs: 1430 },
         { questionId: "q-2", correctAnswer: "Synkopa", selectedAnswer: "Pauza", isCorrect: false, responseTimeMs: 2490 },
@@ -156,7 +206,7 @@ const defaultState = {
       correct: 7,
       totalQuestions: 10,
       averageResponseTimeMs: 1860,
-      config: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
+      config: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dom7", "Maj7"], playbackMode: "stack", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
       answers: [
         { questionId: "q-1", correctAnswer: "Major", selectedAnswer: "Major", isCorrect: true, responseTimeMs: 1410 },
         { questionId: "q-2", correctAnswer: "Minor", selectedAnswer: "Minor", isCorrect: true, responseTimeMs: 1510 },
@@ -179,7 +229,7 @@ const defaultState = {
       correct: 4,
       totalQuestions: 5,
       averageResponseTimeMs: 2310,
-      config: { type: "progressions", level: "core", questionCount: 5, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
+      config: { type: "progressions", level: "core", questionCount: 5, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
       answers: [
         { questionId: "q-1", correctAnswer: "ii-V-I", selectedAnswer: "ii-V-I", isCorrect: true, responseTimeMs: 1820 },
         { questionId: "q-2", correctAnswer: "I-V-vi-IV", selectedAnswer: "vi-IV-I-V", isCorrect: false, responseTimeMs: 2780 },
@@ -190,13 +240,13 @@ const defaultState = {
     }
   ],
   earLastConfigs: {
-    intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "TT", "P5"], playbackMode: "both", headphoneMode: true, selectedRoots: ["E", "A", "D", "G", "B"], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
-    chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"], playbackMode: "stack", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
-    progressions: { type: "progressions", level: "core", questionCount: 10, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
-    scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Natural minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "major-minor" },
-    rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza", "Offbeat"], playbackMode: "click", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
-    melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true, selectedRoots: [], register: "mid", direction: "up", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "three-note" },
-    pitch: { type: "pitch", level: "core", questionCount: 10, selectedItems: ["C", "D", "E", "F", "G", "A", "B"], playbackMode: "single", headphoneMode: true, selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "natural" }
+    intervals: { type: "intervals", level: "core", questionCount: 10, selectedItems: ["m2", "M2", "m3", "M3", "P4", "TT", "P5"], playbackMode: "both", headphoneMode: true, soundProfile: "cleanGuitar", selectedRoots: ["E", "A", "D", "G", "B"], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "guitar-core" },
+    chords: { type: "chords", level: "core", questionCount: 10, selectedItems: ["Major", "Minor", "Dim", "Aug", "Dom7", "Maj7", "Min7"], playbackMode: "stack", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st", "2nd"], presetId: "triads" },
+    progressions: { type: "progressions", level: "core", questionCount: 10, selectedItems: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"], playbackMode: "block", headphoneMode: true, soundProfile: "keysPad", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root", "1st"], presetId: "cadences" },
+    scales: { type: "scales", level: "core", questionCount: 10, selectedItems: ["Major", "Natural minor", "Dorian", "Mixolydian"], playbackMode: "phrase", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "major-minor" },
+    rhythm: { type: "rhythm", level: "core", questionCount: 10, selectedItems: ["Prosto", "Synkopa", "Triola", "Pauza", "Offbeat"], playbackMode: "click", headphoneMode: true, soundProfile: "tone", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "pulse" },
+    melody: { type: "melody", level: "focus", questionCount: 5, selectedItems: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"], playbackMode: "degrees", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "up", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "three-note" },
+    pitch: { type: "pitch", level: "core", questionCount: 10, selectedItems: ["C", "D", "E", "F", "G", "A", "B"], playbackMode: "single", headphoneMode: true, soundProfile: "piano", selectedRoots: [], register: "mid", direction: "both", scaleStartDegree: "1", selectedInversions: ["root"], presetId: "natural" }
   },
   earInspectType: "intervals",
   supplements: [
@@ -206,29 +256,62 @@ const defaultState = {
   ]
 };
 
-const MARKET_UNIVERSE = [
-  { symbol: "AAPL", name: "Apple", category: "Tech" },
-  { symbol: "MSFT", name: "Microsoft", category: "Tech" },
-  { symbol: "NVDA", name: "NVIDIA", category: "Tech" },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF", category: "ETF" },
-  { symbol: "QQQ", name: "Invesco QQQ Trust", category: "ETF" },
-  { symbol: "AMZN", name: "Amazon", category: "Consumer" },
-  { symbol: "GOOGL", name: "Alphabet", category: "Tech" },
-  { symbol: "META", name: "Meta Platforms", category: "Tech" },
-  { symbol: "TSLA", name: "Tesla", category: "Auto" },
-  { symbol: "AMD", name: "AMD", category: "Tech" },
-  { symbol: "PLTR", name: "Palantir", category: "Software" },
-  { symbol: "JPM", name: "JPMorgan", category: "Finance" },
-  { symbol: "BAC", name: "Bank of America", category: "Finance" },
-  { symbol: "BRK.B", name: "Berkshire Hathaway", category: "Finance" },
-  { symbol: "TSM", name: "Taiwan Semi", category: "Tech" },
-  { symbol: "NFLX", name: "Netflix", category: "Media" },
-  { symbol: "KO", name: "Coca-Cola", category: "Consumer" },
-  { symbol: "SHOP", name: "Shopify", category: "Software" },
-  { symbol: "UBER", name: "Uber", category: "Mobility" },
-  { symbol: "CRM", name: "Salesforce", category: "Software" },
-  { symbol: "INTC", name: "Intel", category: "Tech" },
-  { symbol: "DIS", name: "Disney", category: "Media" }
+let MARKET_UNIVERSE = [
+  { symbol: "AAPL", name: "Apple", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "MSFT", name: "Microsoft", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "NVDA", name: "NVIDIA", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "AMZN", name: "Amazon", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "GOOGL", name: "Alphabet", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "META", name: "Meta Platforms", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "TSLA", name: "Tesla", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "AMD", name: "AMD", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "PLTR", name: "Palantir", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "JPM", name: "JPMorgan Chase", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "BAC", name: "Bank of America", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "BRK.B", name: "Berkshire Hathaway", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "NFLX", name: "Netflix", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "KO", name: "Coca-Cola", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "SHOP", name: "Shopify", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "UBER", name: "Uber", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "CRM", name: "Salesforce", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "INTC", name: "Intel", category: "USA", exchange: "NASDAQ", currency: "USD", assetClass: "stock" },
+  { symbol: "DIS", name: "Disney", category: "USA", exchange: "NYSE", currency: "USD", assetClass: "stock" },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", category: "ETF", exchange: "NYSE Arca", currency: "USD", assetClass: "etf" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", category: "ETF", exchange: "NASDAQ", currency: "USD", assetClass: "etf" },
+  { symbol: "IWM", name: "iShares Russell 2000 ETF", category: "ETF", exchange: "NYSE Arca", currency: "USD", assetClass: "etf" },
+  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", category: "ETF", exchange: "NYSE Arca", currency: "USD", assetClass: "etf" },
+  { symbol: "EFA", name: "iShares MSCI EAFE ETF", category: "ETF", exchange: "NYSE Arca", currency: "USD", assetClass: "etf" },
+  { symbol: "CDR", name: "CD Projekt", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "PKN", name: "Orlen", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "PKO", name: "PKO Bank Polski", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "PZU", name: "PZU", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "ALE", name: "Allegro", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "DNP", name: "Dino Polska", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "LPP", name: "LPP", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "KGH", name: "KGHM", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "PEO", name: "Bank Pekao", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "MBK", name: "mBank", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "CCC", name: "CCC", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "SPL", name: "Santander Bank Polska", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "XTB", name: "XTB", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "JSW", name: "JSW", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "OPL", name: "Orange Polska", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "ACP", name: "Asseco Poland", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "BDX", name: "Budimex", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "BFT", name: "Benefit Systems", category: "GPW", exchange: "GPW", currency: "PLN", assetClass: "stock" },
+  { symbol: "WIG20", name: "WIG20", category: "Indeksy", exchange: "GPW", currency: "PLN", assetClass: "index" },
+  { symbol: "SPX", name: "S&P 500", category: "Indeksy", exchange: "CBOE", currency: "USD", assetClass: "index" },
+  { symbol: "NDX", name: "Nasdaq 100", category: "Indeksy", exchange: "NASDAQ", currency: "USD", assetClass: "index" },
+  { symbol: "DAX", name: "DAX", category: "Indeksy", exchange: "XETRA", currency: "EUR", assetClass: "index" },
+  { symbol: "GLD", name: "Gold ETF", category: "Surowce", exchange: "NYSE Arca", currency: "USD", assetClass: "commodity_proxy" },
+  { symbol: "SLV", name: "Silver ETF", category: "Surowce", exchange: "NYSE Arca", currency: "USD", assetClass: "commodity_proxy" },
+  { symbol: "USO", name: "United States Oil Fund", category: "Surowce", exchange: "NYSE Arca", currency: "USD", assetClass: "commodity_proxy" },
+  { symbol: "UNG", name: "United States Natural Gas Fund", category: "Surowce", exchange: "NYSE Arca", currency: "USD", assetClass: "commodity_proxy" },
+  { symbol: "GOLD", name: "Gold futures", category: "Surowce", exchange: "COMEX", currency: "USD", assetClass: "commodity" },
+  { symbol: "SILVER", name: "Silver futures", category: "Surowce", exchange: "COMEX", currency: "USD", assetClass: "commodity" },
+  { symbol: "OIL", name: "WTI crude oil futures", category: "Surowce", exchange: "NYMEX", currency: "USD", assetClass: "commodity" },
+  { symbol: "NATGAS", name: "Natural gas futures", category: "Surowce", exchange: "NYMEX", currency: "USD", assetClass: "commodity" },
+  { symbol: "COPPER", name: "Copper futures", category: "Surowce", exchange: "COMEX", currency: "USD", assetClass: "commodity" }
 ];
 
 function cloneState(value) {
@@ -279,22 +362,22 @@ function bpmProgress(bpm) {
 
 const EAR_TARGET_ACCURACY = 90;
 const EAR_LEVELS = {
-  focus: "Focus",
-  core: "Core",
-  wide: "Wide"
+  focus: "Skupienie",
+  core: "Podstawowy",
+  wide: "Rozszerzony"
 };
 
 const EAR_REGISTERS = {
-  low: "Low",
-  mid: "Mid",
-  high: "High",
-  wide: "Wide"
+  low: "Niski",
+  mid: "Srodkowy",
+  high: "Wysoki",
+  wide: "Szeroki"
 };
 
 const EAR_DIRECTIONS = {
-  up: "Up",
-  down: "Down",
-  both: "Both"
+  up: "W gore",
+  down: "W dol",
+  both: "Losowo"
 };
 
 const EAR_SCALE_STARTS = {
@@ -307,6 +390,110 @@ const EAR_SCALE_STARTS = {
   "7": "7",
   random: "Rnd"
 };
+
+const EAR_SOUND_PROFILES = {
+  tone: {
+    label: "Ton",
+    shortLabel: "Ton",
+    description: "Czysty sygnal referencyjny do precyzyjnego rozpoznawania wysokosci.",
+    visual: "keyboard"
+  },
+  piano: {
+    label: "Fortepian",
+    shortLabel: "Piano",
+    description: "Jasny atak i krotkie wybrzmienie, najbardziej neutralne do codziennego treningu.",
+    visual: "keyboard"
+  },
+  cleanGuitar: {
+    label: "Gitara clean",
+    shortLabel: "Clean",
+    description: "Krotki gitarowy pluck z naturalnym wygasaniem.",
+    visual: "fretboard"
+  },
+  distortedGuitar: {
+    label: "Gitara drive",
+    shortLabel: "Drive",
+    description: "Gestszy atak z lekkim przesterem do rockowego kontekstu.",
+    visual: "fretboard"
+  },
+  keysPad: {
+    label: "Klawisze",
+    shortLabel: "Keys",
+    description: "Miekkie klawisze/pad z dluzszym wybrzmieniem.",
+    visual: "keyboard"
+  }
+};
+
+const GUITAR_TUNER_STRINGS = [
+  { id: "e4", label: "e", note: "E4", midi: 64, frequency: 329.63, pc: 4 },
+  { id: "b3", label: "B", note: "B3", midi: 59, frequency: 246.94, pc: 11 },
+  { id: "g3", label: "G", note: "G3", midi: 55, frequency: 196.00, pc: 7 },
+  { id: "d3", label: "D", note: "D3", midi: 50, frequency: 146.83, pc: 2 },
+  { id: "a2", label: "A", note: "A2", midi: 45, frequency: 110.00, pc: 9 },
+  { id: "e2", label: "E", note: "E2", midi: 40, frequency: 82.41, pc: 4 }
+];
+
+const FRETBOARD_PRACTICE_GROUPS = [
+  { id: "scales", label: "Skale" },
+  { id: "arpeggios", label: "Pasaze" },
+  { id: "intervals", label: "Interwaly" }
+];
+
+const FRETBOARD_PRACTICE_LIBRARY = [
+  { id: "minor-pent", group: "scales", label: "Pentatonika mol", family: "Pentatonika", intervals: [0, 3, 5, 7, 10] },
+  { id: "major-pent", group: "scales", label: "Pentatonika dur", family: "Pentatonika", intervals: [0, 2, 4, 7, 9] },
+  { id: "blues-minor", group: "scales", label: "Blues mol", family: "Pentatonika", intervals: [0, 3, 5, 6, 7, 10] },
+  { id: "blues-major", group: "scales", label: "Blues dur", family: "Pentatonika", intervals: [0, 2, 3, 4, 7, 9] },
+  { id: "ionian", group: "scales", label: "Durowa / Jonska", family: "Modusy dur", intervals: [0, 2, 4, 5, 7, 9, 11] },
+  { id: "dorian", group: "scales", label: "Dorycka", family: "Modusy dur", intervals: [0, 2, 3, 5, 7, 9, 10] },
+  { id: "phrygian", group: "scales", label: "Frygijska", family: "Modusy dur", intervals: [0, 1, 3, 5, 7, 8, 10] },
+  { id: "lydian", group: "scales", label: "Lidyjska", family: "Modusy dur", intervals: [0, 2, 4, 6, 7, 9, 11] },
+  { id: "mixolydian", group: "scales", label: "Miksolidyjska", family: "Modusy dur", intervals: [0, 2, 4, 5, 7, 9, 10] },
+  { id: "aeolian", group: "scales", label: "Mol naturalny", family: "Modusy dur", intervals: [0, 2, 3, 5, 7, 8, 10] },
+  { id: "locrian", group: "scales", label: "Lokrycka", family: "Modusy dur", intervals: [0, 1, 3, 5, 6, 8, 10] },
+  { id: "harmonic-minor", group: "scales", label: "Mol harmoniczny", family: "Moll", intervals: [0, 2, 3, 5, 7, 8, 11] },
+  { id: "phrygian-dominant", group: "scales", label: "Frygijska domin.", family: "Moll harm.", intervals: [0, 1, 4, 5, 7, 8, 10] },
+  { id: "melodic-minor", group: "scales", label: "Mol melodyczny", family: "Moll", intervals: [0, 2, 3, 5, 7, 9, 11] },
+  { id: "lydian-dominant", group: "scales", label: "Lidyjska domin.", family: "Moll melod.", intervals: [0, 2, 4, 6, 7, 9, 10] },
+  { id: "whole-tone", group: "scales", label: "Cala tonowa", family: "Symetryczne", intervals: [0, 2, 4, 6, 8, 10] },
+  { id: "half-whole", group: "scales", label: "Pol-cal", family: "Symetryczne", intervals: [0, 1, 3, 4, 6, 7, 9, 10] },
+  { id: "maj-triad", group: "arpeggios", label: "Dur", family: "Trojdzwięki", intervals: [0, 4, 7] },
+  { id: "min-triad", group: "arpeggios", label: "Mol", family: "Trojdzwięki", intervals: [0, 3, 7] },
+  { id: "dim-triad", group: "arpeggios", label: "Zmniejszony", family: "Trojdzwięki", intervals: [0, 3, 6] },
+  { id: "aug-triad", group: "arpeggios", label: "Zwiekszony", family: "Trojdzwięki", intervals: [0, 4, 8] },
+  { id: "sus2-arp", group: "arpeggios", label: "Sus2", family: "Trojdzwięki", intervals: [0, 2, 7] },
+  { id: "sus4-arp", group: "arpeggios", label: "Sus4", family: "Trojdzwięki", intervals: [0, 5, 7] },
+  { id: "dom7-arp", group: "arpeggios", label: "Dominant 7", family: "Septymowe", intervals: [0, 4, 7, 10] },
+  { id: "maj7-arp", group: "arpeggios", label: "Maj7", family: "Septymowe", intervals: [0, 4, 7, 11] },
+  { id: "min7-arp", group: "arpeggios", label: "m7", family: "Septymowe", intervals: [0, 3, 7, 10] },
+  { id: "m7b5-arp", group: "arpeggios", label: "m7b5", family: "Septymowe", intervals: [0, 3, 6, 10] },
+  { id: "dim7-arp", group: "arpeggios", label: "dim7", family: "Septymowe", intervals: [0, 3, 6, 9] },
+  { id: "minmaj7-arp", group: "arpeggios", label: "mMaj7", family: "Septymowe", intervals: [0, 3, 7, 11] },
+  { id: "add9-arp", group: "arpeggios", label: "add9", family: "Kolory", intervals: [0, 4, 7, 14] },
+  { id: "minor-second", group: "intervals", label: "Sekunda mala", family: "1-b2", intervals: [0, 1] },
+  { id: "major-second", group: "intervals", label: "Sekunda wielka", family: "1-2", intervals: [0, 2] },
+  { id: "minor-third", group: "intervals", label: "Tercja mala", family: "1-b3", intervals: [0, 3] },
+  { id: "major-third", group: "intervals", label: "Tercja wielka", family: "1-3", intervals: [0, 4] },
+  { id: "perfect-fourth", group: "intervals", label: "Kwarta czysta", family: "1-4", intervals: [0, 5] },
+  { id: "tritone", group: "intervals", label: "Tryton", family: "1-b5/#4", intervals: [0, 6] },
+  { id: "perfect-fifth", group: "intervals", label: "Kwinta czysta", family: "1-5", intervals: [0, 7] },
+  { id: "minor-sixth", group: "intervals", label: "Seksta mala", family: "1-b6", intervals: [0, 8] },
+  { id: "major-sixth", group: "intervals", label: "Seksta wielka", family: "1-6", intervals: [0, 9] },
+  { id: "minor-seventh", group: "intervals", label: "Septyma mala", family: "1-b7", intervals: [0, 10] },
+  { id: "major-seventh", group: "intervals", label: "Septyma wielka", family: "1-7", intervals: [0, 11] },
+  { id: "octaves", group: "intervals", label: "Oktawa", family: "1-8", intervals: [0, 12] },
+  { id: "power", group: "intervals", label: "Power chord", family: "1-5-8", intervals: [0, 7] }
+];
+
+const FRETBOARD_POSITIONS = [
+  { id: "all", label: "Caly gryf", start: 0, end: 12 },
+  { id: "open", label: "Otwarte", start: 0, end: 4 },
+  { id: "pos1", label: "Pozycja I", start: 1, end: 5 },
+  { id: "pos2", label: "Pozycja II", start: 3, end: 7 },
+  { id: "pos3", label: "Pozycja III", start: 5, end: 9 },
+  { id: "pos4", label: "Pozycja IV", start: 7, end: 12 },
+  { id: "high", label: "Wysoko", start: 9, end: 15 }
+];
 
 const EAR_ROOT_OPTIONS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const EAR_INVERSION_OPTIONS = ["root", "1st", "2nd", "3rd"];
@@ -376,9 +563,9 @@ const EAR_LIBRARY = {
     supportsInversions: false,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "melodic", label: "Mel" },
-      { value: "harmonic", label: "Harm" },
-      { value: "both", label: "Mix" }
+      { value: "melodic", label: "Melodycznie" },
+      { value: "harmonic", label: "Harmonicznie" },
+      { value: "both", label: "Losowo" }
     ],
     itemsByLevel: {
       focus: ["m2", "M2", "m3", "M3", "P4"],
@@ -400,9 +587,9 @@ const EAR_LIBRARY = {
     supportsInversions: true,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "stack", label: "Stack" },
-      { value: "arp", label: "Arp" },
-      { value: "broken", label: "Spread" }
+      { value: "stack", label: "Razem" },
+      { value: "arp", label: "Arpeggio" },
+      { value: "broken", label: "Rozlozone" }
     ],
     itemsByLevel: {
       focus: ["Major", "Minor", "Sus2", "Sus4"],
@@ -424,9 +611,9 @@ const EAR_LIBRARY = {
     supportsInversions: true,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "block", label: "Block" },
-      { value: "flow", label: "Flow" },
-      { value: "spread", label: "Spread" }
+      { value: "block", label: "Blokowo" },
+      { value: "flow", label: "Plynnie" },
+      { value: "spread", label: "Szeroko" }
     ],
     itemsByLevel: {
       focus: ["ii-V-I", "I-IV-V-I", "I-V-vi-IV", "vi-IV-I-V"],
@@ -449,8 +636,8 @@ const EAR_LIBRARY = {
     supportsScaleStart: true,
     modeOptions: [
       { value: "phrase", label: "Fraza" },
-      { value: "ascending", label: "Asc" },
-      { value: "descending", label: "Desc" }
+      { value: "ascending", label: "W gore" },
+      { value: "descending", label: "W dol" }
     ],
     itemsByLevel: {
       focus: ["Major", "Natural minor", "Dorian", "Mixolydian"],
@@ -472,8 +659,8 @@ const EAR_LIBRARY = {
     supportsInversions: false,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "click", label: "Click" },
-      { value: "accent", label: "Accent" }
+      { value: "click", label: "Klik" },
+      { value: "accent", label: "Akcenty" }
     ],
     itemsByLevel: {
       focus: ["Prosto", "Pauza", "Synkopa", "Triola"],
@@ -495,7 +682,7 @@ const EAR_LIBRARY = {
     supportsInversions: false,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "degrees", label: "Stopnie" }
+      { value: "degrees", label: "Stopnie skali" }
     ],
     itemsByLevel: {
       focus: ["1-2-3", "1-b3-4", "1-4-5", "5-4-2"],
@@ -505,8 +692,8 @@ const EAR_LIBRARY = {
     presets: EAR_PRESET_LIBRARY.melody
   },
   pitch: {
-    title: "Pitch",
-    subtitle: "Pojedynczy dzwiek",
+    title: "Pojedyncze dzwieki",
+    subtitle: "Rozpoznawanie nut",
     accent: "#8b5cf6",
     selectedLabel: "Dzwieki",
     defaultMode: "single",
@@ -517,7 +704,7 @@ const EAR_LIBRARY = {
     supportsInversions: false,
     supportsScaleStart: false,
     modeOptions: [
-      { value: "single", label: "Single" }
+      { value: "single", label: "Pojedynczo" }
     ],
     itemsByLevel: {
       focus: ["C", "D", "E", "G", "A"],
@@ -883,7 +1070,7 @@ function normalizeState(rawState = {}) {
         ...cloneState(defaultState.paperTrading),
         ...state.paperTrading,
         watchlist: Array.isArray(state.paperTrading.watchlist)
-          ? state.paperTrading.watchlist.map((symbol) => String(symbol || "").trim().toUpperCase()).filter(Boolean).slice(0, 16)
+          ? state.paperTrading.watchlist.map((symbol) => String(symbol || "").trim().toUpperCase()).filter(Boolean).slice(0, PAPER_WATCHLIST_LIMIT)
           : defaultState.paperTrading.watchlist.slice(),
         quotes: state.paperTrading.quotes && typeof state.paperTrading.quotes === "object" ? state.paperTrading.quotes : {},
         chart: state.paperTrading.chart && typeof state.paperTrading.chart === "object"
@@ -892,6 +1079,12 @@ function normalizeState(rawState = {}) {
               points: Array.isArray(state.paperTrading.chart.points)
                 ? state.paperTrading.chart.points
                     .map((point) => ({
+                      time: point.time || "",
+                      open: Number(point.open || point.value || 0),
+                      high: Number(point.high || point.value || 0),
+                      low: Number(point.low || point.value || 0),
+                      close: Number(point.close || point.value || 0),
+                      volume: Number(point.volume || 0),
                       label: String(point.label || ""),
                       bottom: String(point.bottom || ""),
                       value: Number(point.value || 0)
@@ -917,13 +1110,42 @@ function normalizeState(rawState = {}) {
                 id: order.id || uid("pord"),
                 symbol: String(order.symbol || "").trim().toUpperCase(),
                 side: order.side === "sell" ? "sell" : "buy",
+                type: ["market", "limit", "stop"].includes(order.type) ? order.type : "market",
+                status: ["open", "filled", "rejected", "cancelled"].includes(order.status) ? order.status : "filled",
                 shares: Math.max(0, Number(order.shares || 0)),
-                price: Math.max(0, Number(order.price || 0)),
-                createdAt: order.createdAt || new Date().toISOString()
+                price: Math.max(0, Number(order.price || order.executionPrice || 0)),
+                executionPrice: Math.max(0, Number(order.executionPrice || order.price || 0)),
+                limitPrice: Math.max(0, Number(order.limitPrice || 0)),
+                stopPrice: Math.max(0, Number(order.stopPrice || 0)),
+                fee: Math.max(0, Number(order.fee || 0)),
+                realizedPnl: Number(order.realizedPnl || 0),
+                reason: String(order.reason || ""),
+                thesis: String(order.thesis || ""),
+                createdAt: order.createdAt || new Date().toISOString(),
+                filledAt: order.filledAt || null
               }))
               .filter((order) => order.symbol && order.shares > 0)
           : [],
-        cash: Math.max(0, Number(state.paperTrading.cash || defaultState.paperTrading.cash)),
+        equityHistory: Array.isArray(state.paperTrading.equityHistory)
+          ? state.paperTrading.equityHistory
+              .map((entry) => ({
+                value: Number(entry.value || 0),
+                createdAt: entry.createdAt || new Date().toISOString()
+              }))
+              .filter((entry) => Number.isFinite(entry.value) && entry.value > 0)
+              .slice(-180)
+          : [],
+        settings: state.paperTrading.settings && typeof state.paperTrading.settings === "object"
+          ? {
+              ...cloneState(PAPER_DEFAULT_SETTINGS),
+              commission: Math.max(0, Number(state.paperTrading.settings.commission ?? PAPER_DEFAULT_SETTINGS.commission)),
+              spreadBps: Math.max(0, Number(state.paperTrading.settings.spreadBps ?? PAPER_DEFAULT_SETTINGS.spreadBps)),
+              slippageBps: Math.max(0, Number(state.paperTrading.settings.slippageBps ?? PAPER_DEFAULT_SETTINGS.slippageBps)),
+              allowAfterHours: Boolean(state.paperTrading.settings.allowAfterHours)
+            }
+          : cloneState(PAPER_DEFAULT_SETTINGS),
+        initialCash: Math.max(1, Number(state.paperTrading.initialCash || PAPER_TRADING_INITIAL_CASH)),
+        cash: Math.max(0, Number(state.paperTrading.cash ?? defaultState.paperTrading.cash)),
         selectedSymbol: String(state.paperTrading.selectedSymbol || state.paperTrading.watchlist?.[0] || defaultState.paperTrading.selectedSymbol).trim().toUpperCase(),
         autoRefresh: Boolean(state.paperTrading.autoRefresh),
         lastSyncAt: state.paperTrading.lastSyncAt || null,
@@ -976,6 +1198,8 @@ function normalizeState(rawState = {}) {
       selectedItems: Array.isArray(entry.config.selectedItems) ? entry.config.selectedItems : [],
       playbackMode: entry.config.playbackMode || EAR_LIBRARY[entry.type || "intervals"]?.defaultMode || "both",
       headphoneMode: entry.config.headphoneMode !== false,
+      soundProfile: EAR_SOUND_PROFILES[entry.config.soundProfile] ? entry.config.soundProfile : "piano",
+      showInstrumentVisual: entry.config.showInstrumentVisual !== false,
       selectedRoots: Array.isArray(entry.config.selectedRoots) ? entry.config.selectedRoots : [],
       register: entry.config.register || "mid",
       direction: entry.config.direction || EAR_LIBRARY[entry.type || "intervals"]?.defaultDirection || "both",
@@ -1010,6 +1234,10 @@ function normalizeState(rawState = {}) {
         selectedItems: selectedItems.length ? selectedItems : fallback.selectedItems.slice(),
         playbackMode,
         headphoneMode: incoming?.headphoneMode !== false,
+        soundProfile: EAR_SOUND_PROFILES[incoming?.soundProfile]
+          ? incoming.soundProfile
+          : (EAR_SOUND_PROFILES[fallback.soundProfile] ? fallback.soundProfile : "piano"),
+        showInstrumentVisual: incoming?.showInstrumentVisual !== false,
         selectedRoots: Array.isArray(incoming?.selectedRoots)
           ? incoming.selectedRoots.filter((root) => EAR_ROOT_OPTIONS.includes(root))
           : fallback.selectedRoots.slice(),
@@ -1072,19 +1300,62 @@ let feedbackHideTimer = null;
 let pendingGuitarSession = null;
 let lockedGuitarCardWidth = null;
 let guitarView = "home";
-const guitarScrollMemory = { home: 0, main: 0, detail: 0, create: 0, "ear-home": 0, "ear-config": 0, "ear-round": 0, "ear-summary": 0, "ear-detail": 0 };
+const guitarScrollMemory = { home: 0, main: 0, detail: 0, create: 0, tuner: 0, "ear-home": 0, "ear-config": 0, "ear-round": 0, "ear-summary": 0, "ear-detail": 0 };
 let financeView = "home";
 const financeScrollMemory = { home: 0, personal: 0, market: 0 };
 let editingGuitarExerciseId = null;
 let guitarSessionsExpanded = false;
 let earConfigType = state.earInspectType || "intervals";
 let earRoundSession = null;
+let tunerAudioContext = null;
+let tunerStream = null;
+let tunerSource = null;
+let tunerAnalyser = null;
+let tunerAnimationFrame = null;
+let tunerRunning = false;
+let tunerTargetStringId = "e2";
+let tunerDetection = { frequency: 0, note: "--", cents: 0, targetId: "e2" };
+let tunerFrequencyHistory = [];
+let fretPracticeRoot = "E";
+let fretPracticePatternId = "minor-pent";
+let fretPracticePositionId = "all";
+let fretPracticeLastResult = null;
+let fretboardFullscreenOpen = false;
 let paperTradingRefreshTimer = null;
 let paperTradingLoading = false;
-let paperChartRange = "1D";
+let paperChartRange = "6M";
+let paperChartMode = "candles";
+let paperOrderSheetOpen = false;
+let paperSymbolSheetOpen = false;
+let paperMarketPanel = "info";
+let paperChartFullscreenOpen = false;
 let paperChartLoading = false;
 let paperChartRequestKey = "";
 const paperChartCache = new Map();
+let paperHistoryError = "";
+let paperHistorySource = "";
+let paperInstrumentCategory = "ALL";
+let marketUniverseLoaded = false;
+const paperChartViews = {
+  main: { chart: null, series: null, volume: null, resizeObserver: null },
+  fullscreen: { chart: null, series: null, volume: null, resizeObserver: null }
+};
+let agentSession = {
+  id: "",
+  lastPayload: null,
+  history: [],
+  totalReward: 0,
+  startEquity: 0,
+  stepCount: 0,
+  runs: [],
+  runsLoaded: false,
+  researchStatus: null,
+  researchLoaded: false,
+  featureSummary: null,
+  signal: null,
+  loading: false,
+  error: ""
+};
 
 const tabPages = [...document.querySelectorAll(".tab-page")];
 const tabButtons = [...document.querySelectorAll("[data-tab-button]")];
@@ -1115,6 +1386,15 @@ function setTab(tab) {
     financeScrollMemory[financeView] = window.scrollY || window.pageYOffset || 0;
   }
   state.activeTab = tab;
+  if (previousTab === "guitar" && tab !== "guitar" && tunerRunning) {
+    stopTuner();
+  }
+  if (previousTab === "guitar" && tab !== "guitar" && fretboardFullscreenOpen) {
+    closeFretboardFullscreen();
+  }
+  if (tab !== "finance") {
+    document.body.classList.remove("market-mode");
+  }
   tabPages.forEach((page) => page.classList.toggle("active", page.dataset.tab === tab));
   tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.tabButton === tab));
   if (tab === "guitar") {
@@ -1140,6 +1420,12 @@ function setTab(tab) {
 function setGuitarView(view, options = {}) {
   const { scrollTop = false } = options;
   guitarScrollMemory[guitarView] = window.scrollY || window.pageYOffset || 0;
+  if (guitarView === "tuner" && view !== "tuner" && tunerRunning) {
+    stopTuner();
+  }
+  if (guitarView === "tuner" && view !== "tuner" && fretboardFullscreenOpen) {
+    closeFretboardFullscreen();
+  }
   guitarView = view;
   renderMusic();
   requestAnimationFrame(() => {
@@ -1248,29 +1534,140 @@ function formatUsd(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
+function formatInstrumentPrice(value, symbol) {
+  const numeric = Number(value || 0);
+  const currency = marketMeta(symbol).currency || "USD";
+  if (currency === "USD") return `$${numeric.toFixed(2)}`;
+  if (currency === "EUR") return `${numeric.toFixed(2)} EUR`;
+  if (currency === "PLN") return `${numeric.toFixed(2)} PLN`;
+  return `${numeric.toFixed(2)} ${currency}`;
+}
+
 function formatPercent(value) {
   const numeric = Number(value || 0);
   return `${numeric >= 0 ? "+" : ""}${numeric.toFixed(2)}%`;
 }
 
+function formatSignedUsd(value) {
+  const numeric = Number(value || 0);
+  return `${numeric >= 0 ? "+" : "-"}$${Math.abs(numeric).toFixed(2)}`;
+}
+
 function paperQuote(symbol) {
-  return state.paperTrading.quotes?.[symbol] || null;
+  const normalized = String(symbol || "").trim().toUpperCase();
+  const liveQuote = state.paperTrading.quotes?.[normalized] || null;
+  if (liveQuote) return liveQuote;
+  if (state.paperTrading.chart.symbol !== normalized) return null;
+  const points = state.paperTrading.chart.points || [];
+  const last = points.at(-1);
+  if (!last) return null;
+  const prev = points.at(-2);
+  const price = Number(last.close || last.value || 0);
+  const prevClose = Number(prev?.close || prev?.value || 0);
+  return {
+    symbol: normalized,
+    price,
+    change: prevClose ? price - prevClose : 0,
+    changePercent: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+    high: Number(last.high || price),
+    low: Number(last.low || price),
+    open: Number(last.open || price),
+    prevClose,
+    updatedAt: state.paperTrading.chart.updatedAt,
+    source: "history"
+  };
+}
+
+function paperSettings() {
+  return {
+    ...PAPER_DEFAULT_SETTINGS,
+    ...(state.paperTrading.settings || {})
+  };
+}
+
+function paperInitialCash() {
+  return Math.max(1, Number(state.paperTrading.initialCash || PAPER_TRADING_INITIAL_CASH));
 }
 
 function paperTradingApiKey() {
   return state.paperTrading.apiKey || PAPER_TRADING_PUBLIC_API_KEY;
 }
 
+async function simApiFetch(path, options = {}) {
+  let lastError = null;
+  for (const baseUrl of MARKET_SIM_API_URLS) {
+    try {
+      const response = await fetch(`${baseUrl}${path}`, options);
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Nieprawidłowa odpowiedź z ${baseUrl}`);
+      }
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.detail || `Błąd lokalnego silnika ${response.status}`);
+      }
+      return { payload, baseUrl };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("Uruchom lokalny silnik symulacji");
+}
+
+function normalizeMarketInstrument(entry) {
+  return {
+    symbol: String(entry.symbol || "").trim().toUpperCase(),
+    name: String(entry.name || entry.symbol || ""),
+    category: String(entry.category || "Rynek"),
+    exchange: String(entry.exchange || ""),
+    currency: String(entry.currency || "USD"),
+    assetClass: String(entry.asset_class || entry.assetClass || "stock"),
+    providerSymbol: String(entry.provider_symbol || entry.providerSymbol || "")
+  };
+}
+
+async function loadMarketUniverse() {
+  if (marketUniverseLoaded) return;
+  marketUniverseLoaded = true;
+  try {
+    const { payload } = await simApiFetch("/market/instruments?limit=1000");
+    if (Array.isArray(payload?.instruments) && payload.instruments.length) {
+      const loaded = payload.instruments
+        .map(normalizeMarketInstrument)
+        .filter((entry) => entry.symbol);
+      const merged = [...loaded, ...MARKET_UNIVERSE.map(normalizeMarketInstrument)];
+      const bySymbol = new Map();
+      merged.forEach((entry) => {
+        if (!bySymbol.has(entry.symbol)) bySymbol.set(entry.symbol, entry);
+      });
+      MARKET_UNIVERSE = [...bySymbol.values()];
+      renderFinance();
+    }
+  } catch (error) {
+    marketUniverseLoaded = false;
+  }
+}
+
 function marketMeta(symbol) {
-  return MARKET_UNIVERSE.find((entry) => entry.symbol === symbol) || {
-    symbol,
-    name: symbol,
-    category: "Market"
+  const normalized = String(symbol || "").trim().toUpperCase();
+  return MARKET_UNIVERSE.find((entry) => entry.symbol === normalized) || {
+    symbol: normalized,
+    name: normalized,
+    category: "Rynek",
+    currency: "USD",
+    exchange: ""
   };
 }
 
 function paperSelectedSymbol() {
   return state.paperTrading.selectedSymbol || state.paperTrading.watchlist[0] || "AAPL";
+}
+
+function setPaperSelectedSymbol(symbol) {
+  const normalized = String(symbol || "").trim().toUpperCase();
+  if (!normalized) return;
+  state.paperTrading.selectedSymbol = normalized;
+  state.paperTrading.chart = { symbol: normalized, points: [], updatedAt: null };
 }
 
 function paperPositionShares(symbol) {
@@ -1287,6 +1684,43 @@ function paperPositionsValue() {
   }, 0);
 }
 
+function paperFilledOrders() {
+  return state.paperTrading.orders.filter((order) => order.status === "filled");
+}
+
+function paperOpenOrders() {
+  return state.paperTrading.orders.filter((order) => order.status === "open");
+}
+
+function paperRealizedPnl() {
+  return state.paperTrading.orders.reduce((sum, order) => sum + Number(order.realizedPnl || 0), 0);
+}
+
+function paperFeesPaid() {
+  return state.paperTrading.orders.reduce((sum, order) => sum + Number(order.fee || 0), 0);
+}
+
+function paperOrderTypeLabel(type) {
+  return {
+    market: "Po rynku",
+    limit: "Limit ceny",
+    stop: "Stop"
+  }[type] || "Po rynku";
+}
+
+function paperOrderStatusLabel(status) {
+  return {
+    open: "oczekuje",
+    filled: "zrealizowane",
+    rejected: "odrzucone",
+    cancelled: "anulowane"
+  }[status] || "zrealizowane";
+}
+
+function paperOrderSideLabel(side) {
+  return side === "sell" ? "Sprzedaż" : "Kupno";
+}
+
 function paperUnrealizedPnl() {
   return state.paperTrading.positions.reduce((sum, position) => {
     const quote = paperQuote(position.symbol);
@@ -1297,6 +1731,60 @@ function paperUnrealizedPnl() {
 
 function paperEquity() {
   return Number(state.paperTrading.cash || 0) + paperPositionsValue();
+}
+
+function paperTotalReturn() {
+  return paperEquity() - paperInitialCash();
+}
+
+function paperReturnPercent() {
+  return (paperTotalReturn() / paperInitialCash()) * 100;
+}
+
+function paperRecordEquitySnapshot(timestamp = new Date()) {
+  const value = paperEquity();
+  if (!Number.isFinite(value) || value <= 0) return;
+  const points = Array.isArray(state.paperTrading.equityHistory) ? state.paperTrading.equityHistory.slice() : [];
+  const label = formatTimeOnly(timestamp);
+  const last = points.at(-1);
+  const next = {
+    value,
+    createdAt: timestamp.toISOString(),
+    label: formatUsd(value),
+    bottom: label
+  };
+  if (last && formatTimeOnly(last.createdAt) === label && todayKey(new Date(last.createdAt)) === todayKey(timestamp)) {
+    points[points.length - 1] = next;
+  } else {
+    points.push(next);
+  }
+  state.paperTrading.equityHistory = points.slice(-180);
+}
+
+function paperMarketClock(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: PAPER_MARKET_TIME_ZONE,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date).reduce((result, part) => {
+    result[part.type] = part.value;
+    return result;
+  }, {});
+  const hour = Number(parts.hour || 0);
+  const minute = Number(parts.minute || 0);
+  const totalMinutes = hour * 60 + minute;
+  const weekday = parts.weekday || "";
+  const weekend = weekday === "Sat" || weekday === "Sun";
+  const openMinutes = 9 * 60 + 30;
+  const closeMinutes = 16 * 60;
+  const isOpen = !weekend && totalMinutes >= openMinutes && totalMinutes < closeMinutes;
+  return {
+    isOpen,
+    label: isOpen ? "Rynek otwarty" : "Rynek zamknięty",
+    detail: `${weekday} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} NY`
+  };
 }
 
 function paperMarketStatus() {
@@ -1311,7 +1799,7 @@ function paperSyncSelectedSymbol() {
     state.paperTrading.selectedSymbol = state.paperTrading.watchlist[0] || "AAPL";
   }
   if (state.paperTrading.chart.symbol !== state.paperTrading.selectedSymbol) {
-    state.paperTrading.chart.symbol = state.paperTrading.selectedSymbol;
+    state.paperTrading.chart = { symbol: state.paperTrading.selectedSymbol, points: [], updatedAt: null };
   }
 }
 
@@ -1476,6 +1964,10 @@ function normalizeEarConfig(type, config = {}) {
     selectedItems: safeSelectedItems,
     playbackMode,
     headphoneMode: config.headphoneMode !== false,
+    soundProfile: EAR_SOUND_PROFILES[config.soundProfile]
+      ? config.soundProfile
+      : (EAR_SOUND_PROFILES[fallback.soundProfile] ? fallback.soundProfile : "piano"),
+    showInstrumentVisual: config.showInstrumentVisual !== false,
     selectedRoots: meta.supportsRoots
       ? (Array.isArray(config.selectedRoots) ? config.selectedRoots.filter((root) => EAR_ROOT_OPTIONS.includes(root)) : fallback.selectedRoots.slice())
       : [],
@@ -1585,6 +2077,63 @@ function earExerciseCards() {
     progress: earProgressPercent(type),
     streak: earStreak(type)
   }));
+}
+
+function earSoundProfileLabel(profile) {
+  return EAR_SOUND_PROFILES[profile]?.label || EAR_SOUND_PROFILES.piano.label;
+}
+
+function earRoundRecommendation() {
+  const typeScores = Object.keys(EAR_LIBRARY).map((type) => ({
+    type,
+    weakSpots: earWeakSpots(type),
+    accuracy: earAccuracyTrend(type),
+    rounds: earRoundsByType(type).length
+  }));
+  const withWeakSpot = typeScores
+    .filter((entry) => entry.weakSpots.length)
+    .sort((a, b) => b.weakSpots[0].count - a.weakSpots[0].count || a.accuracy - b.accuracy)[0];
+  if (withWeakSpot) {
+    const spot = withWeakSpot.weakSpots[0];
+    return {
+      type: withWeakSpot.type,
+      title: EAR_LIBRARY[withWeakSpot.type].title,
+      kind: "Slaby punkt",
+      copy: `Najczesciej mylisz ${spot.from} z ${spot.to}. Runda skupi sie na tym materiale.`,
+      selectedItems: [spot.from, spot.to].filter((item) => getEarItemPool(withWeakSpot.type, currentEarConfig(withWeakSpot.type)).includes(item))
+    };
+  }
+  const undertrained = typeScores.sort((a, b) => a.rounds - b.rounds || a.accuracy - b.accuracy)[0];
+  return {
+    type: undertrained?.type || "intervals",
+    title: EAR_LIBRARY[undertrained?.type || "intervals"].title,
+    kind: undertrained?.rounds ? "Powtorka" : "Start",
+    copy: undertrained?.rounds
+      ? "Ten obszar ma najmniej ostatnich rund. Dobry moment na rowne domkniecie praktyki."
+      : "Zacznij od krotkiej rundy i pozwol statystykom znalezc slabe punkty.",
+    selectedItems: []
+  };
+}
+
+function applyEarRecommendation() {
+  const recommendation = earRoundRecommendation();
+  const current = currentEarConfig(recommendation.type);
+  const pool = getEarItemPool(recommendation.type, current);
+  const selectedItems = recommendation.selectedItems?.length
+    ? Array.from(new Set([...recommendation.selectedItems, ...current.selectedItems])).filter((item) => pool.includes(item)).slice(0, 6)
+    : current.selectedItems;
+  earConfigType = recommendation.type;
+  state.earInspectType = recommendation.type;
+  setEarConfig(recommendation.type, {
+    ...current,
+    selectedItems,
+    questionCount: Math.min(10, current.questionCount || 10),
+    presetId: null
+  });
+  earRoundSession = buildEarRound(currentEarConfig(recommendation.type));
+  setGuitarView("ear-round", { scrollTop: true });
+  renderAll();
+  queueEarQuestionPlayback();
 }
 
 function midiToFrequency(midi) {
@@ -1714,6 +2263,7 @@ function earModeHelp(type, mode) {
 function buildEarQuestion(type, config) {
   const selected = config.selectedItems?.length ? config.selectedItems : currentEarConfig(type).selectedItems;
   const rootMidi = pickEarRootMidi(config);
+  const soundProfile = EAR_SOUND_PROFILES[config.soundProfile] ? config.soundProfile : "piano";
 
   if (type === "intervals") {
     const correctAnswer = selected[Math.floor(Math.random() * selected.length)];
@@ -1730,8 +2280,8 @@ function buildEarQuestion(type, config) {
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: mode === "harmonic" ? "Harmoniczny" : (direction === "down" ? "W dol" : "W gore"),
-      audio: { engine: "interval", rootMidi, semitones, mode }
+      prompt: mode === "harmonic" ? "Interwal harmoniczny" : (direction === "down" ? "Interwal w dol" : "Interwal w gore"),
+      audio: { engine: "interval", rootMidi, semitones, mode, soundProfile }
     };
   }
 
@@ -1744,8 +2294,8 @@ function buildEarQuestion(type, config) {
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: inversion === "root" ? (config.playbackMode === "arp" ? "Arpeggio" : "Stack") : `${inversion}`,
-      audio: { engine: "chord", rootMidi, intervals: applyChordInversion(CHORD_INTERVALS[correctAnswer] || [0, 4, 7], inversion), mode: config.playbackMode }
+      prompt: inversion === "root" ? (config.playbackMode === "arp" ? "Akord jako arpeggio" : "Akord razem") : `Przewrot: ${inversion}`,
+      audio: { engine: "chord", rootMidi, intervals: applyChordInversion(CHORD_INTERVALS[correctAnswer] || [0, 4, 7], inversion), mode: config.playbackMode, soundProfile }
     };
   }
 
@@ -1771,7 +2321,8 @@ function buildEarQuestion(type, config) {
         rootMidi,
         progression,
         inversion,
-        mode: config.playbackMode
+        mode: config.playbackMode,
+        soundProfile
       }
     };
   }
@@ -1784,8 +2335,8 @@ function buildEarQuestion(type, config) {
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: config.scaleStartDegree === "random" ? "Random start" : `Start ${config.scaleStartDegree}`,
-      audio: { engine: "scale", rootMidi, intervals: pattern, mode: config.playbackMode }
+      prompt: config.scaleStartDegree === "random" ? "Losowy start skali" : `Start od stopnia ${config.scaleStartDegree}`,
+      audio: { engine: "scale", rootMidi, intervals: pattern, mode: config.playbackMode, soundProfile }
     };
   }
 
@@ -1796,8 +2347,8 @@ function buildEarQuestion(type, config) {
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: "4 beat",
-      audio: { engine: "rhythm", pattern: RHYTHM_PATTERNS[correctAnswer] || RHYTHM_PATTERNS.Prosto }
+      prompt: "Rytm w takcie",
+      audio: { engine: "rhythm", pattern: RHYTHM_PATTERNS[correctAnswer] || RHYTHM_PATTERNS.Prosto, soundProfile }
     };
   }
 
@@ -1810,8 +2361,8 @@ function buildEarQuestion(type, config) {
       type,
       correctAnswer,
       options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-      prompt: direction === "down" ? "Fraza down" : "Fraza",
-      audio: { engine: "melody", rootMidi, pattern: direction === "down" ? pattern.slice().reverse() : pattern }
+      prompt: direction === "down" ? "Fraza w dol" : "Fraza melodyczna",
+      audio: { engine: "melody", rootMidi, pattern: direction === "down" ? pattern.slice().reverse() : pattern, soundProfile }
     };
   }
 
@@ -1823,8 +2374,8 @@ function buildEarQuestion(type, config) {
     type,
     correctAnswer,
     options: shuffle([correctAnswer, ...sample(selected, 3, [correctAnswer])]),
-    prompt: "Single",
-    audio: { engine: "pitch", midi: noteNameToMidi(correctAnswer, octave) }
+    prompt: "Pojedynczy dzwiek",
+    audio: { engine: "pitch", midi: noteNameToMidi(correctAnswer, octave), soundProfile }
   };
 }
 
@@ -1845,6 +2396,84 @@ function buildEarRound(config) {
     lastFeedback: null,
     autoplayTimer: null
   };
+}
+
+function earAudioMidiNotes(spec = {}) {
+  if (spec.engine === "interval") return [spec.rootMidi, spec.rootMidi + spec.semitones];
+  if (spec.engine === "chord") return (spec.intervals || [0, 4, 7]).map((step) => spec.rootMidi + step);
+  if (spec.engine === "progression") {
+    const firstChord = spec.progression?.chords?.[0] || { rootShift: 0, quality: "Major" };
+    return applyChordInversion(CHORD_INTERVALS[firstChord.quality] || [0, 4, 7], spec.inversion || "root")
+      .map((step) => spec.rootMidi + (firstChord.rootShift || 0) + step);
+  }
+  if (spec.engine === "scale") return (spec.intervals || []).slice(0, 8).map((step) => spec.rootMidi + step);
+  if (spec.engine === "melody") return (spec.pattern || []).map((step) => spec.rootMidi + step);
+  if (spec.engine === "pitch") return [spec.midi];
+  return [];
+}
+
+function renderEarVisualizer(question, config) {
+  const node = document.getElementById("ear-visualizer");
+  if (!node) return;
+  node.hidden = config?.showInstrumentVisual === false;
+  if (node.hidden) {
+    node.innerHTML = "";
+    return;
+  }
+  if (!question) {
+    node.innerHTML = "";
+    return;
+  }
+  if (question.audio.engine === "rhythm") {
+    const activeSteps = new Set((question.audio.pattern || []).map((point) => Math.round(point * 4)));
+    node.className = "ear-visualizer rhythm";
+    node.innerHTML = Array.from({ length: 16 }, (_, index) => `
+      <span class="rhythm-step${activeSteps.has(index) ? " active" : ""}${index % 4 === 0 ? " beat" : ""}"></span>
+    `).join("");
+    return;
+  }
+
+  const profile = EAR_SOUND_PROFILES[config?.soundProfile] || EAR_SOUND_PROFILES.piano;
+  const activePitchClasses = new Set(earAudioMidiNotes(question.audio).map((midi) => ((Math.round(midi) % 12) + 12) % 12));
+  if (profile.visual === "fretboard") {
+    node.className = "ear-visualizer fretboard";
+    node.innerHTML = GUITAR_TUNER_STRINGS.map((stringInfo) => `
+      <div class="fret-string">
+        <span class="string-name">${stringInfo.label}</span>
+        ${Array.from({ length: 7 }, (_, fret) => {
+          const pitchClass = (stringInfo.pc + fret) % 12;
+          return `<span class="fret${activePitchClasses.has(pitchClass) ? " active" : ""}"></span>`;
+        }).join("")}
+      </div>
+    `).join("");
+    return;
+  }
+
+  const whiteKeys = [
+    { label: "C", pc: 0 },
+    { label: "D", pc: 2 },
+    { label: "E", pc: 4 },
+    { label: "F", pc: 5 },
+    { label: "G", pc: 7 },
+    { label: "A", pc: 9 },
+    { label: "B", pc: 11 }
+  ];
+  const blackKeys = [
+    { pc: 1, left: 10 },
+    { pc: 3, left: 24 },
+    { pc: 6, left: 52 },
+    { pc: 8, left: 66 },
+    { pc: 10, left: 80 }
+  ];
+  node.className = "ear-visualizer keyboard";
+  node.innerHTML = `
+    <div class="keyboard-white">
+      ${whiteKeys.map((key) => `<span class="piano-key${activePitchClasses.has(key.pc) ? " active" : ""}">${key.label}</span>`).join("")}
+    </div>
+    <div class="keyboard-black">
+      ${blackKeys.map((key) => `<span class="piano-key black${activePitchClasses.has(key.pc) ? " active" : ""}" style="left:${key.left}%"></span>`).join("")}
+    </div>
+  `;
 }
 
 function renderGuitarDetailChart(exercise, sessions) {
@@ -2016,7 +2645,7 @@ function renderTaskRow(task, options = {}) {
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "list-toggle";
-    toggle.setAttribute("aria-label", task.done ? "Undo" : "Done");
+    toggle.setAttribute("aria-label", task.done ? "Cofnij" : "Zrobione");
     toggle.addEventListener("click", () => toggleTask(task.id));
     row.appendChild(toggle);
   }
@@ -2031,8 +2660,8 @@ function renderTaskRow(task, options = {}) {
   const tools = document.createElement("div");
   tools.className = "list-tools";
   tools.append(
-    makeToolButton("Edit", () => editTask(task.id)),
-    makeToolButton("Del", () => deleteTask(task.id), true)
+    makeToolButton("Edytuj", () => editTask(task.id)),
+    makeToolButton("Usuń", () => deleteTask(task.id), true)
   );
 
   row.append(copy, tools);
@@ -2048,7 +2677,7 @@ function renderHabitRow(habit, options = {}) {
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "list-toggle";
-    toggle.setAttribute("aria-label", habit.done ? "Undo" : "Done");
+    toggle.setAttribute("aria-label", habit.done ? "Cofnij" : "Zrobione");
     toggle.addEventListener("click", () => toggleHabit(habit.id));
     row.appendChild(toggle);
   }
@@ -2063,8 +2692,8 @@ function renderHabitRow(habit, options = {}) {
   const tools = document.createElement("div");
   tools.className = "list-tools";
   tools.append(
-    makeToolButton("Edit", () => editHabit(habit.id)),
-    makeToolButton("Del", () => deleteHabit(habit.id), true)
+    makeToolButton("Edytuj", () => editHabit(habit.id)),
+    makeToolButton("Usuń", () => deleteHabit(habit.id), true)
   );
 
   row.append(copy, tools);
@@ -2096,9 +2725,9 @@ function renderPriorityList() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     if (item.type === "task") {
-      tools.appendChild(makeToolButton("Done", () => toggleTask(item.id, true)));
+      tools.appendChild(makeToolButton("Zrobione", () => toggleTask(item.id, true)));
     } else {
-      tools.appendChild(makeToolButton("Open", () => {
+      tools.appendChild(makeToolButton("Otwórz", () => {
         setTab(item.tab);
         focusField(item.focus);
       }));
@@ -2227,7 +2856,7 @@ function renderGuitarExercises() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton(exercise.id === state.guitarActiveId ? "Off" : "Uzyj", () => {
+      makeToolButton(exercise.id === state.guitarActiveId ? "Wyłącz" : "Użyj", () => {
         if (exercise.id === state.guitarActiveId) {
           clearActiveGuitarExercise();
           return;
@@ -2276,7 +2905,7 @@ function renderGuitarSessions() {
 
     const tools = document.createElement("div");
     tools.className = "list-tools";
-    tools.append(makeToolButton("Del", () => deleteGuitarSession(session.id), true));
+    tools.append(makeToolButton("Usuń", () => deleteGuitarSession(session.id), true));
     row.appendChild(tools);
     node.appendChild(row);
   });
@@ -2303,7 +2932,7 @@ function renderGuitarExerciseDetail() {
   document.getElementById("guitar-detail-progress-bar").style.width = `${bpmProgress.percent}%`;
   if (useButton) {
     useButton.disabled = !exercise;
-    useButton.textContent = exercise && exercise.id === state.guitarActiveId ? "Off" : "Uzyj";
+    useButton.textContent = exercise && exercise.id === state.guitarActiveId ? "Wyłącz" : "Użyj";
   }
 
   renderGuitarDetailChart(exercise, sessions.sessions);
@@ -2384,7 +3013,12 @@ function renderSimpleLineChart(nodeId, points, options = {}) {
   }
 
   const values = points.map((point) => Number(point.value || 0));
-  const maxValue = Math.max(options.max ?? 0, ...values, 1);
+  const rawMaxValue = Math.max(options.max ?? Number.NEGATIVE_INFINITY, ...values);
+  const rawMinValue = Math.min(options.min ?? Number.POSITIVE_INFINITY, ...values);
+  const baselineZero = options.baselineZero !== false;
+  const padding = baselineZero ? 0 : Math.max(0.01, (rawMaxValue - rawMinValue) * 0.12);
+  const minValue = baselineZero ? 0 : rawMinValue - padding;
+  const maxValue = baselineZero ? Math.max(rawMaxValue, 1) : rawMaxValue + padding;
   const left = 24;
   const right = 296;
   const top = 18;
@@ -2392,7 +3026,8 @@ function renderSimpleLineChart(nodeId, points, options = {}) {
   const stepX = points.length === 1 ? 0 : (right - left) / (points.length - 1);
   const path = points.map((point, index) => {
     const x = points.length === 1 ? (left + right) / 2 : left + stepX * index;
-    const ratio = maxValue <= 0 ? 0 : Number(point.value || 0) / maxValue;
+    const range = maxValue - minValue;
+    const ratio = range <= 0 ? 0.5 : (Number(point.value || 0) - minValue) / range;
     const y = bottom - ratio * (bottom - top);
     return { x, y, point };
   });
@@ -2403,10 +3038,12 @@ function renderSimpleLineChart(nodeId, points, options = {}) {
     <line x1="${left}" y1="${top}" x2="${right}" y2="${top}" class="chart-grid-line"></line>
     <text x="${left}" y="${top - 4}" class="chart-axis-label">${options.topLabel || maxValue}</text>
     <path d="${lineD}" class="chart-line"></path>
-    ${path.map((entry) => `
+    ${path.map((entry, index) => `
       <circle cx="${entry.x.toFixed(2)}" cy="${entry.y.toFixed(2)}" r="5" class="chart-point"></circle>
-      <text x="${entry.x.toFixed(2)}" y="${(entry.y - 10).toFixed(2)}" text-anchor="middle" class="chart-point-label">${entry.point.label || entry.point.value}</text>
-      <text x="${entry.x.toFixed(2)}" y="${(bottom + 18).toFixed(2)}" text-anchor="middle" class="chart-axis-label">${entry.point.bottom || ""}</text>
+      ${options.compactLabels && index % Math.ceil(path.length / 6) !== 0 && index !== path.length - 1 ? "" : `
+        <text x="${entry.x.toFixed(2)}" y="${(entry.y - 10).toFixed(2)}" text-anchor="middle" class="chart-point-label">${entry.point.label || entry.point.value}</text>
+        <text x="${entry.x.toFixed(2)}" y="${(bottom + 18).toFixed(2)}" text-anchor="middle" class="chart-axis-label">${entry.point.bottom || ""}</text>
+      `}
     `).join("")}
   `;
 }
@@ -2447,6 +3084,8 @@ function renderMusicHome() {
   document.getElementById("music-ear-card-copy").textContent = state.earRounds.length
     ? `${state.earRounds.length} rund, ostatnio ${EAR_LIBRARY[lastEarType()].title}`
     : "0 rund, gotowe do startu";
+  const tunerCopy = document.getElementById("music-tuner-card-copy");
+  if (tunerCopy) tunerCopy.textContent = tunerRunning ? "Mikrofon aktywny" : "Mikrofon i gryf";
   return;
 
   const combined = [
@@ -2487,7 +3126,8 @@ function renderEarHome() {
   const listNode = document.getElementById("ear-exercise-list");
   const recentNode = document.getElementById("ear-recent-list");
   const lastRoundEntry = lastEarRound();
-  document.getElementById("ear-home-summary").textContent = `${cards.length} typow`;
+  const recommendation = earRoundRecommendation();
+  document.getElementById("ear-home-summary").textContent = `${cards.length} lekcji`;
   document.getElementById("ear-type-count").textContent = `${cards.length}`;
   document.getElementById("ear-recent-summary").textContent = `${Math.min(state.earRounds.length, 6)}`;
   document.getElementById("ear-home-last-title").textContent = lastRoundEntry ? (EAR_LIBRARY[lastRoundEntry.type]?.title || "Runda") : "Ostatnia runda";
@@ -2495,6 +3135,9 @@ function renderEarHome() {
   document.getElementById("ear-home-last-accuracy").textContent = `${lastRoundEntry?.accuracy || 0}%`;
   document.getElementById("ear-home-last-meta").textContent = formatResponseMs(lastRoundEntry?.averageResponseTimeMs || 0);
   document.getElementById("ear-home-last-progress").style.width = `${lastRoundEntry ? clamp(Math.round((lastRoundEntry.accuracy / EAR_TARGET_ACCURACY) * 100), 0, 100) : 0}%`;
+  document.getElementById("ear-recommendation-kind").textContent = recommendation.kind;
+  document.getElementById("ear-recommendation-title").textContent = recommendation.title;
+  document.getElementById("ear-recommendation-copy").textContent = recommendation.copy;
 
   listNode.innerHTML = "";
   cards.forEach((card) => {
@@ -2512,7 +3155,7 @@ function renderEarHome() {
     meta.className = "ear-type-meta";
     meta.innerHTML = `
       <span class="ear-type-badge">${card.rounds} rund</span>
-      <span class="ear-type-badge">${card.accuracy}% acc</span>
+      <span class="ear-type-badge">${card.accuracy}% dokl.</span>
       <span class="ear-type-badge">${formatResponseMs(card.responseMs)}</span>
     `;
 
@@ -2531,8 +3174,8 @@ function renderEarHome() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Start", () => openEarConfigView(card.type)),
-      makeToolButton("Stats", () => openEarDetailView(card.type))
+      makeToolButton("Cwicz", () => openEarConfigView(card.type)),
+      makeToolButton("Statystyki", () => openEarDetailView(card.type))
     );
 
     row.append(meta, progress, tools);
@@ -2551,12 +3194,12 @@ function renderEarHome() {
     row.innerHTML = `
       <div class="list-copy">
         <strong>${escapeHtml(EAR_LIBRARY[round.type]?.title || round.type)}</strong>
-        <span>${round.accuracy}% - ${formatResponseMs(round.averageResponseTimeMs)} - ${formatShortDateLabel(round.endedAt || round.startedAt)}</span>
+        <span>${round.accuracy}% dokladnosci - ${formatResponseMs(round.averageResponseTimeMs)} - ${formatShortDateLabel(round.endedAt || round.startedAt)}</span>
       </div>
     `;
     const tools = document.createElement("div");
     tools.className = "list-tools";
-    tools.append(makeToolButton("Stats", () => openEarDetailView(round.type)));
+    tools.append(makeToolButton("Statystyki", () => openEarDetailView(round.type)));
     row.appendChild(tools);
     recentNode.appendChild(row);
   });
@@ -2575,22 +3218,26 @@ function renderEarConfig() {
   const supportsInversions = Boolean(meta.supportsInversions);
   document.getElementById("ear-config-title").textContent = meta.title;
   document.getElementById("ear-config-subtitle").textContent = meta.subtitle;
-  document.getElementById("ear-preset-copy").textContent = preset?.label || "Custom";
+  document.getElementById("ear-preset-copy").textContent = preset?.label || "Wlasne";
   document.getElementById("ear-config-level-copy").textContent = EAR_LEVELS[config.level];
   document.getElementById("ear-count-copy").textContent = `${config.questionCount}`;
   document.getElementById("ear-items-title").textContent = earItemsTitle(earConfigType, config);
   document.getElementById("ear-items-copy").textContent = `${config.selectedItems.filter((item) => itemPool.includes(item)).length}`;
   document.getElementById("ear-mode-copy").textContent = meta.modeOptions.find((item) => item.value === config.playbackMode)?.label || meta.modeOptions[0].label;
+  document.getElementById("ear-sound-copy").textContent = earSoundProfileLabel(config.soundProfile);
+  document.getElementById("ear-visual-copy").textContent = config.showInstrumentVisual ? "Pokaz" : "Ukryj";
+  document.getElementById("ear-start-profile-copy").textContent = `${earSoundProfileLabel(config.soundProfile)} · ${config.questionCount} pyt.`;
   document.getElementById("ear-roots-copy").textContent = config.selectedRoots?.length ? `${config.selectedRoots.length}` : "Wszystkie";
-  document.getElementById("ear-register-copy").textContent = EAR_REGISTERS[config.register] || "Mid";
-  document.getElementById("ear-direction-copy").textContent = EAR_DIRECTIONS[config.direction] || "Both";
+  document.getElementById("ear-register-copy").textContent = EAR_REGISTERS[config.register] || "Srodkowy";
+  document.getElementById("ear-direction-copy").textContent = EAR_DIRECTIONS[config.direction] || "Losowo";
   document.getElementById("ear-scale-start-copy").textContent = EAR_SCALE_STARTS[config.scaleStartDegree] || "1";
-  document.getElementById("ear-inversions-copy").textContent = config.selectedInversions?.length ? config.selectedInversions.join(", ") : "Root";
+  document.getElementById("ear-inversions-copy").textContent = config.selectedInversions?.length ? config.selectedInversions.join(", ") : "Pozycja zasadnicza";
   document.getElementById("ear-preset-help").textContent = earPresetHelp(earConfigType, preset);
-  document.getElementById("ear-level-help").textContent = `Focus: ${EAR_LEVEL_HELP.focus} Core: ${EAR_LEVEL_HELP.core} Wide: ${EAR_LEVEL_HELP.wide}`;
+  document.getElementById("ear-level-help").textContent = `Skupienie: ${EAR_LEVEL_HELP.focus} Podstawowy: ${EAR_LEVEL_HELP.core} Rozszerzony: ${EAR_LEVEL_HELP.wide}`;
   document.getElementById("ear-count-help").textContent = "5 to szybki sprint, 10 to standard, 20 to dluzsza runda.";
   document.getElementById("ear-items-help").textContent = earItemsHelp(earConfigType, config);
   document.getElementById("ear-mode-help").textContent = earModeHelp(earConfigType, config.playbackMode);
+  document.getElementById("ear-sound-help").textContent = EAR_SOUND_PROFILES[config.soundProfile]?.description || EAR_SOUND_PROFILES.piano.description;
   document.getElementById("ear-roots-help").textContent = "Wybierasz, z jakich tonacji losowany jest material. Puste oznacza wszystkie.";
   document.getElementById("ear-register-help").textContent = Object.entries(EAR_REGISTER_HELP).map(([key, value]) => `${EAR_REGISTERS[key]}: ${value}`).join(" ");
   document.getElementById("ear-direction-help").textContent = Object.entries(EAR_DIRECTION_HELP).map(([key, value]) => `${EAR_DIRECTIONS[key]}: ${value}`).join(" ");
@@ -2673,6 +3320,37 @@ function renderEarConfig() {
       renderEarConfig();
     });
     modeGrid.appendChild(button);
+  });
+
+  const soundGrid = document.getElementById("ear-sound-grid");
+  soundGrid.innerHTML = "";
+  Object.entries(EAR_SOUND_PROFILES).forEach(([value, profile]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button sound-chip${config.soundProfile === value ? " active" : ""}`;
+    button.innerHTML = `<strong>${escapeHtml(profile.label)}</strong><span>${escapeHtml(profile.shortLabel)}</span>`;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { soundProfile: value });
+      renderEarConfig();
+    });
+    soundGrid.appendChild(button);
+  });
+
+  const visualGrid = document.getElementById("ear-visual-grid");
+  visualGrid.innerHTML = "";
+  [
+    { value: true, label: "Pokaz" },
+    { value: false, label: "Ukryj" }
+  ].forEach((option) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${config.showInstrumentVisual === option.value ? " active" : ""}`;
+    button.textContent = option.label;
+    button.addEventListener("click", () => {
+      setEarConfig(earConfigType, { showInstrumentVisual: option.value });
+      renderEarConfig();
+    });
+    visualGrid.appendChild(button);
   });
 
   const rootBlock = document.getElementById("ear-root-grid").closest(".advanced-config-block");
@@ -2769,12 +3447,33 @@ function renderEarRound() {
   const session = earRoundSession;
   const question = session?.questions?.[session.questionIndex] || null;
   const answerGrid = document.getElementById("ear-answer-grid");
+  const feedbackNode = document.getElementById("ear-round-feedback");
+  const progressNode = document.getElementById("ear-round-progress-bar");
   document.getElementById("ear-round-title").textContent = session ? EAR_LIBRARY[session.type].title : "Trening sluchu";
   document.getElementById("ear-round-summary").textContent = session ? `${session.questionIndex + 1} / ${session.questions.length}` : "0 / 0";
-  document.getElementById("ear-round-prompt").textContent = question?.prompt || "Play";
+  document.getElementById("ear-round-prompt").textContent = question?.prompt || "Odsłuchaj pytanie";
   document.getElementById("ear-round-live-score").textContent = session?.answers?.length
     ? `${Math.round((session.answers.filter((answer) => answer.isCorrect).length / session.answers.length) * 100)}%`
     : "0%";
+  if (progressNode) {
+    const progress = session ? ((session.questionIndex + 1) / Math.max(session.questions.length, 1)) * 100 : 0;
+    progressNode.style.width = `${clamp(progress, 0, 100)}%`;
+  }
+  if (feedbackNode) {
+    if (session?.lastFeedback) {
+      const ok = session.lastFeedback.selected === session.lastFeedback.correct;
+      feedbackNode.hidden = false;
+      feedbackNode.className = `ear-feedback ${ok ? "correct" : "wrong"}`;
+      feedbackNode.textContent = ok
+        ? "Dobrze. Ucho zlapalo kierunek."
+        : `Poprawna odpowiedz: ${session.lastFeedback.correct}`;
+    } else {
+      feedbackNode.hidden = true;
+      feedbackNode.textContent = "";
+      feedbackNode.className = "ear-feedback";
+    }
+  }
+  renderEarVisualizer(question, session?.config);
   answerGrid.innerHTML = "";
   if (!question) {
     answerGrid.appendChild(emptyNode("Brak pytania."));
@@ -2877,7 +3576,7 @@ function renderEarDetail() {
       row.className = "list-item";
       row.innerHTML = `
         <div class="list-copy">
-          <strong>${round.accuracy}% accuracy</strong>
+          <strong>${round.accuracy}% dokladnosci</strong>
           <span>${formatResponseMs(round.averageResponseTimeMs)} - ${round.correct}/${round.totalQuestions}</span>
         </div>
       `;
@@ -2886,13 +3585,304 @@ function renderEarDetail() {
   }
 }
 
+function tunerTargetString() {
+  return GUITAR_TUNER_STRINGS.find((entry) => entry.id === tunerTargetStringId) || GUITAR_TUNER_STRINGS.at(-1);
+}
+
+function fretPracticePattern() {
+  return FRETBOARD_PRACTICE_LIBRARY.find((entry) => entry.id === fretPracticePatternId) || FRETBOARD_PRACTICE_LIBRARY[0];
+}
+
+function fretPracticePosition() {
+  return FRETBOARD_POSITIONS.find((entry) => entry.id === fretPracticePositionId) || FRETBOARD_POSITIONS[0];
+}
+
+function noteNameToPitchClass(noteName) {
+  return NOTE_TO_SEMITONE[noteName] ?? 0;
+}
+
+function fretPracticePitchClasses() {
+  const rootPc = noteNameToPitchClass(fretPracticeRoot);
+  return new Set(fretPracticePattern().intervals.map((step) => (rootPc + step) % 12));
+}
+
+function fretMidiAllowedByPattern(midi) {
+  const rootPc = noteNameToPitchClass(fretPracticeRoot);
+  const relative = (((midi % 12) + 12) % 12 - rootPc + 12) % 12;
+  return fretPracticePattern().intervals.some((step) => step % 12 === relative);
+}
+
+function median(values) {
+  const sorted = values.filter((value) => Number.isFinite(value)).slice().sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function midiToNoteLabel(midi) {
+  const names = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+  const rounded = Math.round(midi);
+  return `${names[((rounded % 12) + 12) % 12]}${Math.floor(rounded / 12) - 1}`;
+}
+
+function frequencyToMidiValue(frequency) {
+  return 69 + 12 * Math.log2(frequency / 440);
+}
+
+function centsFromTarget(frequency, targetFrequency) {
+  if (!frequency || !targetFrequency) return 0;
+  return clamp(Math.round(1200 * Math.log2(frequency / targetFrequency)), -50, 50);
+}
+
+function fretNumbersForPosition(position = fretPracticePosition(), compact = false, forceFull = false) {
+  const source = forceFull ? FRETBOARD_POSITIONS[0] : position;
+  const start = compact && source.id === "all" ? 0 : source.start;
+  const end = compact && source.id === "all" ? 7 : source.end;
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function maxNotesPerStringForPattern(pattern = fretPracticePattern()) {
+  if (pattern.group === "intervals") return 2;
+  if (pattern.group === "arpeggios") return Math.min(3, pattern.intervals.length);
+  if (pattern.family === "Pentatonika" && pattern.intervals.length <= 5) return 2;
+  return 3;
+}
+
+function highlightedFretsForString(stringInfo, frets, position = fretPracticePosition()) {
+  const visibleFrets = new Set(fretNumbersForPosition(position, false));
+  const candidates = frets
+    .filter((fret) => visibleFrets.has(fret) && fretMidiAllowedByPattern(stringInfo.midi + fret));
+  if (position.id === "all") return new Set(candidates);
+  const maxNotes = maxNotesPerStringForPattern();
+  const center = (position.start + position.end) / 2;
+  return new Set(
+    candidates
+      .slice()
+      .sort((a, b) => Math.abs(a - center) - Math.abs(b - center) || a - b)
+      .slice(0, maxNotes)
+  );
+}
+
+function renderTunerFretboard(targetId = "tuner-fretboard", options = {}) {
+  const node = document.getElementById(targetId);
+  if (!node) return;
+  const position = fretPracticePosition();
+  const frets = fretNumbersForPosition(position, !options.fullscreen, options.fullscreen);
+  const detectedMidi = tunerDetection.frequency ? Math.round(frequencyToMidiValue(tunerDetection.frequency)) : null;
+  const rootPc = noteNameToPitchClass(fretPracticeRoot);
+  node.style.setProperty("--fret-count", String(frets.length));
+  const fretHeader = options.fullscreen ? `
+    <div class="tuner-fret-string tuner-fret-header">
+      <span></span>
+      ${frets.map((fret) => `<span>${fret}</span>`).join("")}
+    </div>
+  ` : "";
+  node.innerHTML = GUITAR_TUNER_STRINGS.map((stringInfo) => `
+    <div class="tuner-fret-string${stringInfo.id === tunerTargetStringId ? " target" : ""}">
+      <span class="string-name">${stringInfo.label}</span>
+      ${frets.map((fret) => {
+        const highlightedFrets = highlightedFretsForString(stringInfo, frets, position);
+        const midi = stringInfo.midi + fret;
+        const pitchClass = ((midi % 12) + 12) % 12;
+        const isInPattern = highlightedFrets.has(fret);
+        const isDetected = detectedMidi === midi;
+        const isCorrect = isDetected && isInPattern;
+        const label = isInPattern ? EAR_ROOT_OPTIONS[pitchClass] : (options.fullscreen ? "" : (fret || ""));
+        return `<span class="tuner-fret${isInPattern ? " in-pattern" : ""}${pitchClass === rootPc ? " root" : ""}${isDetected ? " detected" : ""}${isCorrect ? " correct" : ""}${isDetected && !isInPattern ? " wrong" : ""}${fret === 0 ? " open" : ""}" title="${stringInfo.label}${fret}: ${EAR_ROOT_OPTIONS[pitchClass]}">${label}</span>`;
+      }).join("")}
+    </div>
+  `).join("");
+  node.innerHTML = fretHeader + node.innerHTML;
+}
+
+function renderTuner() {
+  const status = document.getElementById("tuner-status");
+  if (!status) return;
+  const target = tunerTargetString();
+  const cents = tunerDetection.cents || 0;
+  status.textContent = tunerRunning ? "Slucham mikrofonu" : "Mikrofon wylaczony";
+  document.getElementById("tuner-toggle").textContent = tunerRunning ? "Stop" : "Start";
+  document.getElementById("tuner-note").textContent = tunerDetection.note || "--";
+  document.getElementById("tuner-frequency").textContent = tunerDetection.frequency ? `${tunerDetection.frequency.toFixed(1)} Hz` : "0.0 Hz";
+  document.getElementById("tuner-cents").textContent = tunerDetection.frequency ? `${cents > 0 ? "+" : ""}${cents} c` : "0 c";
+  document.getElementById("tuner-target-copy").textContent = `${target.note} · ${target.frequency.toFixed(2)} Hz`;
+  const needle = document.getElementById("tuner-needle");
+  if (needle) {
+    needle.style.left = `${50 + clamp(cents, -50, 50)}%`;
+    needle.style.transform = "translateX(-50%)";
+    needle.classList.toggle("in-tune", tunerDetection.frequency > 0 && Math.abs(cents) <= 5);
+  }
+  const grid = document.getElementById("tuner-string-grid");
+  grid.innerHTML = "";
+  GUITAR_TUNER_STRINGS.forEach((stringInfo) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `tuner-string-button${stringInfo.id === tunerTargetStringId ? " active" : ""}`;
+    button.innerHTML = `<strong>${stringInfo.label}</strong><span>${stringInfo.note}</span>`;
+    button.addEventListener("click", () => {
+      tunerTargetStringId = stringInfo.id;
+      tunerDetection.targetId = stringInfo.id;
+      renderTuner();
+    });
+    grid.appendChild(button);
+  });
+  renderTunerFretboard();
+  renderFretPracticeControls();
+  renderFretboardFullscreen();
+}
+
+function renderFretPracticeControls() {
+  const pattern = fretPracticePattern();
+  const position = fretPracticePosition();
+  const detectedMidi = tunerDetection.frequency ? Math.round(frequencyToMidiValue(tunerDetection.frequency)) : null;
+  const isCorrect = detectedMidi != null && fretMidiAllowedByPattern(detectedMidi);
+  const status = document.getElementById("fret-practice-status");
+  if (!status) return;
+  const visibleFrets = new Set(fretNumbersForPosition(position, false));
+  const detectedInPosition = detectedMidi == null
+    ? false
+    : GUITAR_TUNER_STRINGS.some((stringInfo) => {
+      const fret = detectedMidi - stringInfo.midi;
+      return fret >= 0 && fret <= 24 && visibleFrets.has(fret);
+    });
+  status.textContent = tunerDetection.frequency ? (isCorrect ? "Trafione" : "Poza materialem") : "Czeka";
+  status.className = isCorrect ? "practice-ok" : tunerDetection.frequency ? "practice-wrong" : "";
+  document.getElementById("fret-practice-pattern-copy").textContent = pattern.label;
+  document.getElementById("fret-practice-root-copy").textContent = fretPracticeRoot;
+  document.getElementById("fret-practice-position-copy").textContent = position.label;
+  document.getElementById("fret-practice-note").textContent = tunerDetection.note || "--";
+  const result = document.getElementById("fret-practice-result");
+  result.textContent = tunerDetection.frequency
+    ? (isCorrect
+      ? `${tunerDetection.note} pasuje do: ${fretPracticeRoot} ${pattern.label}${detectedInPosition ? " w tej pozycji" : ", ale poza wybrana pozycja"}.`
+      : `${tunerDetection.note} jest poza: ${fretPracticeRoot} ${pattern.label}.`)
+    : "Wlacz mikrofon i zagraj dzwiek ze skali.";
+  result.className = isCorrect ? "practice-ok" : tunerDetection.frequency ? "practice-wrong" : "";
+
+  const patternGrid = document.getElementById("fret-practice-pattern-grid");
+  patternGrid.innerHTML = "";
+  FRETBOARD_PRACTICE_GROUPS.forEach((group) => {
+    const details = document.createElement("details");
+    details.className = "fret-practice-group";
+    details.open = group.id === pattern.group;
+    details.innerHTML = `<summary>${escapeHtml(group.label)}</summary><div class="ear-chip-grid"></div>`;
+    const groupGrid = details.querySelector(".ear-chip-grid");
+    FRETBOARD_PRACTICE_LIBRARY
+      .filter((entry) => entry.group === group.id)
+      .forEach((entry) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `ear-chip-button fret-practice-chip${entry.id === fretPracticePatternId ? " active" : ""}`;
+        button.innerHTML = `<strong>${escapeHtml(entry.label)}</strong><span>${escapeHtml(entry.family)}</span>`;
+        button.addEventListener("click", () => {
+          fretPracticePatternId = entry.id;
+          renderTuner();
+        });
+        groupGrid.appendChild(button);
+      });
+    patternGrid.appendChild(details);
+  });
+
+  const positionGrid = document.getElementById("fret-practice-position-grid");
+  positionGrid.innerHTML = "";
+  FRETBOARD_POSITIONS.forEach((entry) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${entry.id === fretPracticePositionId ? " active" : ""}`;
+    button.textContent = entry.label;
+    button.dataset.fretboardPosition = entry.id;
+    bindFretPositionButton(button, entry.id);
+    positionGrid.appendChild(button);
+  });
+
+  const rootGrid = document.getElementById("fret-practice-root-grid");
+  rootGrid.innerHTML = "";
+  EAR_ROOT_OPTIONS.forEach((root) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ear-chip-button${root === fretPracticeRoot ? " active" : ""}`;
+    button.textContent = root;
+    button.addEventListener("click", () => {
+      fretPracticeRoot = root;
+      renderTuner();
+    });
+    rootGrid.appendChild(button);
+  });
+}
+
+function selectFretPracticePosition(positionId) {
+  if (!FRETBOARD_POSITIONS.some((entry) => entry.id === positionId)) return;
+  fretPracticePositionId = positionId;
+  renderTuner();
+}
+
+function bindFretPositionButton(button, positionId) {
+  const select = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    selectFretPracticePosition(positionId);
+  };
+  button.addEventListener("pointerdown", select);
+  button.addEventListener("click", select);
+}
+
+function openFretboardFullscreen() {
+  fretboardFullscreenOpen = true;
+  renderFretboardFullscreen();
+}
+
+function closeFretboardFullscreen() {
+  fretboardFullscreenOpen = false;
+  renderFretboardFullscreen();
+}
+
+function renderFretboardFullscreen() {
+  const shell = document.getElementById("fretboard-fullscreen");
+  if (!shell) return;
+  shell.hidden = !fretboardFullscreenOpen;
+  if (!fretboardFullscreenOpen) return;
+  const pattern = fretPracticePattern();
+  const position = fretPracticePosition();
+  const detectedMidi = tunerDetection.frequency ? Math.round(frequencyToMidiValue(tunerDetection.frequency)) : null;
+  const isCorrect = detectedMidi != null && fretMidiAllowedByPattern(detectedMidi);
+  const visibleFrets = new Set(fretNumbersForPosition(position, false));
+  const detectedInPosition = detectedMidi == null
+    ? false
+    : GUITAR_TUNER_STRINGS.some((stringInfo) => {
+      const fret = detectedMidi - stringInfo.midi;
+      return fret >= 0 && fret <= 24 && visibleFrets.has(fret);
+    });
+  document.getElementById("fretboard-fullscreen-title").textContent = `${fretPracticeRoot} ${pattern.label}`;
+  document.getElementById("fretboard-fullscreen-subtitle").textContent = position.label;
+  document.getElementById("fretboard-fullscreen-note").textContent = tunerDetection.note || "--";
+  const result = document.getElementById("fretboard-fullscreen-result");
+  result.textContent = tunerDetection.frequency
+    ? (isCorrect
+      ? (detectedInPosition ? "Grany dzwiek jest w materiale i w tej pozycji." : "Grany dzwiek jest w materiale, ale poza wybrana pozycja.")
+      : "Grany dzwiek jest poza podswietlonym materialem.")
+    : "Wlacz mikrofon i graj po podswietlonych dzwiekach.";
+  result.className = isCorrect ? "practice-ok" : tunerDetection.frequency ? "practice-wrong" : "";
+  const grid = document.getElementById("fretboard-fullscreen-position-grid");
+  grid.innerHTML = "";
+  FRETBOARD_POSITIONS.forEach((entry) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `metronome-option-button${entry.id === fretPracticePositionId ? " active" : ""}`;
+    button.textContent = entry.label;
+    button.dataset.fretboardPosition = entry.id;
+    bindFretPositionButton(button, entry.id);
+    grid.appendChild(button);
+  });
+  renderTunerFretboard("fretboard-fullscreen-board", { fullscreen: true });
+}
+
 function renderMusic() {
-  const viewIds = ["music-home-view", "guitar-main-view", "guitar-detail-view", "guitar-create-view", "ear-home-view", "ear-config-view", "ear-round-view", "ear-summary-view", "ear-detail-view"];
+  const viewIds = ["music-home-view", "guitar-main-view", "guitar-detail-view", "guitar-create-view", "guitar-tuner-view", "ear-home-view", "ear-config-view", "ear-round-view", "ear-summary-view", "ear-detail-view"];
   const visible = {
     home: "music-home-view",
     main: "guitar-main-view",
     detail: "guitar-detail-view",
     create: "guitar-create-view",
+    tuner: "guitar-tuner-view",
     "ear-home": "ear-home-view",
     "ear-config": "ear-config-view",
     "ear-round": "ear-round-view",
@@ -2907,6 +3897,7 @@ function renderMusic() {
 
   renderMusicHome();
   renderGuitar();
+  renderTuner();
   renderEarHome();
   renderEarConfig();
   renderEarRound();
@@ -2937,8 +3928,8 @@ function renderWorkoutTemplates() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Uzyj", () => applyWorkoutTemplate(template.id)),
-      makeToolButton("Edit", () => editWorkoutTemplate(template.id))
+      makeToolButton("Użyj", () => applyWorkoutTemplate(template.id)),
+      makeToolButton("Edytuj", () => editWorkoutTemplate(template.id))
     );
     item.appendChild(tools);
     node.appendChild(item);
@@ -2967,8 +3958,8 @@ function renderGymWorkouts() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editWorkout(workout.id)),
-      makeToolButton("Del", () => deleteWorkout(workout.id), true)
+      makeToolButton("Edytuj", () => editWorkout(workout.id)),
+      makeToolButton("Usuń", () => deleteWorkout(workout.id), true)
     );
     row.appendChild(tools);
     node.appendChild(row);
@@ -2997,8 +3988,8 @@ function renderGymSets() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editSet(set.id)),
-      makeToolButton("Del", () => deleteSet(set.id), true)
+      makeToolButton("Edytuj", () => editSet(set.id)),
+      makeToolButton("Usuń", () => deleteSet(set.id), true)
     );
     row.appendChild(tools);
     node.appendChild(row);
@@ -3029,8 +4020,8 @@ function renderGymMeals() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editMeal(meal.id)),
-      makeToolButton("Del", () => deleteMeal(meal.id), true)
+      makeToolButton("Edytuj", () => editMeal(meal.id)),
+      makeToolButton("Usuń", () => deleteMeal(meal.id), true)
     );
     row.appendChild(tools);
     node.appendChild(row);
@@ -3073,38 +4064,39 @@ async function fetchPaperQuote(symbol, apiKey) {
 }
 
 async function fetchPaperHistory(symbol, range) {
-  const params = {
-    "1D": { range: "1d", interval: "5m" },
-    "1W": { range: "5d", interval: "30m" },
-    "1M": { range: "1mo", interval: "1d" },
-    ALL: { range: "6mo", interval: "1wk" }
-  }[range] || { range: "1d", interval: "5m" };
-  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${params.range}&interval=${params.interval}`);
-  const data = await response.json();
-  const result = data?.chart?.result?.[0];
-  if (!response.ok || !result?.timestamp?.length) {
-    throw new Error("Brak historii");
+  const { payload: data, baseUrl } = await simApiFetch(`/market/history?symbol=${encodeURIComponent(symbol)}`);
+  if (!Array.isArray(data?.candles) || !data.candles.length) {
+    throw new Error("Uruchom lokalny silnik symulacji");
   }
-  const closes = result.indicators?.quote?.[0]?.close || [];
-  const points = result.timestamp
-    .map((timestamp, index) => {
-      const value = Number(closes[index]);
-      if (!Number.isFinite(value) || value <= 0) return null;
-      const date = new Date(timestamp * 1000);
+  const points = data.candles
+    .map((candle) => {
+      const open = Number(candle.open);
+      const high = Number(candle.high);
+      const low = Number(candle.low);
+      const close = Number(candle.close);
+      const volume = Number(candle.volume || 0);
+      if (![open, high, low, close].every((value) => Number.isFinite(value) && value > 0)) return null;
+      const date = new Date(candle.date);
       return {
-        value,
-        label: `$${value.toFixed(0)}`,
-        bottom: range === "1D" || range === "1W"
-          ? formatTimeOnly(date)
-          : `${date.getDate()}/${date.getMonth() + 1}`
+        time: candle.date,
+        open,
+        high,
+        low,
+        close,
+        volume,
+        value: close,
+        label: formatInstrumentPrice(close, symbol),
+        bottom: `${date.getDate()}/${date.getMonth() + 1}/${String(date.getFullYear()).slice(-2)}`
       };
     })
     .filter(Boolean);
   if (!points.length) {
     throw new Error("Pusty wykres");
   }
+  paperHistoryError = "";
+  paperHistorySource = `Lokalny silnik symulacji (${baseUrl.split(":").at(-1)})`;
   return {
-    symbol,
+    symbol: data.symbol || symbol,
     range,
     points,
     updatedAt: new Date().toISOString()
@@ -3118,7 +4110,7 @@ async function ensurePaperHistory(symbol, range) {
     const cached = paperChartCache.get(cacheKey);
     state.paperTrading.chart = {
       symbol,
-      points: cached.points.slice(-120),
+      points: cached.points.slice(),
       updatedAt: cached.updatedAt
     };
     return;
@@ -3131,13 +4123,15 @@ async function ensurePaperHistory(symbol, range) {
     if (paperSelectedSymbol() === symbol && paperChartRange === range) {
       state.paperTrading.chart = {
         symbol,
-        points: payload.points.slice(-120),
+        points: payload.points.slice(),
         updatedAt: payload.updatedAt
       };
       saveState();
       renderFinance();
     }
   } catch (error) {
+    paperHistoryError = String(error?.message || "Uruchom lokalny silnik symulacji");
+    paperHistorySource = "";
     if (!state.paperTrading.chart.points.length) {
       renderFinance();
     }
@@ -3151,6 +4145,12 @@ function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
   const currentSymbol = state.paperTrading.chart.symbol || symbol;
   const points = currentSymbol === symbol ? state.paperTrading.chart.points.slice() : [];
   const nextPoint = {
+    time: timestamp.toISOString().slice(0, 10),
+    open: Number(price || 0),
+    high: Number(price || 0),
+    low: Number(price || 0),
+    close: Number(price || 0),
+    volume: 0,
     value: Number(price || 0),
     label: `$${Number(price || 0).toFixed(0)}`,
     bottom: formatTimeOnly(timestamp)
@@ -3163,9 +4163,121 @@ function updatePaperChartSnapshot(symbol, price, timestamp = new Date()) {
   }
   state.paperTrading.chart = {
     symbol,
-    points: points.slice(-120),
+    points: points.slice(-260),
     updatedAt: timestamp.toISOString()
   };
+}
+
+function paperExecutionPrice(order, quote) {
+  const settings = paperSettings();
+  const mid = Number(quote?.price || 0);
+  if (!Number.isFinite(mid) || mid <= 0) return 0;
+  const spread = mid * (Number(settings.spreadBps || 0) / 10000);
+  const slippage = mid * (Number(settings.slippageBps || 0) / 10000);
+  let price = order.side === "buy"
+    ? mid + (spread / 2) + slippage
+    : mid - (spread / 2) - slippage;
+  if (order.type === "limit" && Number(order.limitPrice || 0) > 0) {
+    price = order.side === "buy"
+      ? Math.min(price, Number(order.limitPrice))
+      : Math.max(price, Number(order.limitPrice));
+  }
+  return Math.max(0, price);
+}
+
+function paperOrderShouldFill(order, quote) {
+  const price = Number(quote?.price || 0);
+  if (!Number.isFinite(price) || price <= 0) return false;
+  if (order.type === "market") return true;
+  if (order.type === "limit") {
+    const limit = Number(order.limitPrice || 0);
+    if (!limit) return false;
+    return order.side === "buy" ? price <= limit : price >= limit;
+  }
+  if (order.type === "stop") {
+    const stop = Number(order.stopPrice || 0);
+    if (!stop) return false;
+    return order.side === "buy" ? price >= stop : price <= stop;
+  }
+  return false;
+}
+
+function rejectPaperOrder(order, reason) {
+  order.status = "rejected";
+  order.reason = reason;
+  order.filledAt = new Date().toISOString();
+}
+
+function fillPaperOrder(order, quote, timestamp = new Date()) {
+  const quantity = Number(order.shares || 0);
+  const price = paperExecutionPrice(order, quote);
+  const fee = Number(paperSettings().commission || 0);
+  if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0) {
+    rejectPaperOrder(order, "Nieprawidłowe zlecenie");
+    return false;
+  }
+
+  if (order.side === "buy") {
+    const gross = price * quantity;
+    const totalCost = gross + fee;
+    if (totalCost > Number(state.paperTrading.cash || 0)) {
+      rejectPaperOrder(order, "Za mało gotówki");
+      return false;
+    }
+    const existing = state.paperTrading.positions.find((position) => position.symbol === order.symbol);
+    if (existing) {
+      const totalShares = Number(existing.shares || 0) + quantity;
+      existing.avgCost = (((Number(existing.avgCost || 0) * Number(existing.shares || 0)) + totalCost) / totalShares);
+      existing.shares = totalShares;
+    } else {
+      state.paperTrading.positions.push({ symbol: order.symbol, shares: quantity, avgCost: totalCost / quantity });
+    }
+    state.paperTrading.cash -= totalCost;
+    order.realizedPnl = 0;
+  } else {
+    const existing = state.paperTrading.positions.find((position) => position.symbol === order.symbol);
+    if (!existing || Number(existing.shares || 0) < quantity) {
+      rejectPaperOrder(order, "Za mało akcji");
+      return false;
+    }
+    const gross = price * quantity;
+    const costBasis = Number(existing.avgCost || 0) * quantity;
+    const proceeds = gross - fee;
+    existing.shares -= quantity;
+    state.paperTrading.cash += proceeds;
+    order.realizedPnl = proceeds - costBasis;
+    if (existing.shares <= 0.000001) {
+      state.paperTrading.positions = state.paperTrading.positions.filter((position) => position.symbol !== order.symbol);
+    }
+  }
+
+  order.status = "filled";
+  order.price = price;
+  order.executionPrice = price;
+  order.fee = fee;
+  order.filledAt = timestamp.toISOString();
+  order.reason = "";
+  paperRecordEquitySnapshot(timestamp);
+  return true;
+}
+
+function processPaperOpenOrders(timestamp = new Date()) {
+  const settings = paperSettings();
+  const clock = paperMarketClock(timestamp);
+  if (!clock.isOpen && !settings.allowAfterHours) return 0;
+  let filled = 0;
+  paperOpenOrders().forEach((order) => {
+    const quote = paperQuote(order.symbol);
+    if (!paperOrderShouldFill(order, quote)) return;
+    if (fillPaperOrder(order, quote, timestamp)) {
+      filled += 1;
+    }
+  });
+  if (filled) {
+    state.paperTrading.orders = state.paperTrading.orders.slice(0, 120);
+    paperRecordEquitySnapshot(timestamp);
+  }
+  return filled;
 }
 
 async function refreshPaperTrading(options = {}) {
@@ -3183,28 +4295,42 @@ async function refreshPaperTrading(options = {}) {
   renderFinance();
   try {
     paperSyncSelectedSymbol();
-    const symbols = [...new Set(state.paperTrading.watchlist.slice(0, 16))];
-    const quotes = await Promise.all(symbols.map((symbol) => fetchPaperQuote(symbol, apiKey)));
+    const symbols = [...new Set([
+      paperSelectedSymbol(),
+      ...state.paperTrading.watchlist,
+      ...state.paperTrading.positions.map((position) => position.symbol),
+      ...paperOpenOrders().map((order) => order.symbol)
+    ].filter(Boolean))].slice(0, 24);
+    const quoteResults = await Promise.allSettled(symbols.map((symbol) => fetchPaperQuote(symbol, apiKey)));
+    const quotes = quoteResults
+      .filter((result) => result.status === "fulfilled")
+      .map((result) => result.value);
+    if (!quotes.length) {
+      const firstError = quoteResults.find((result) => result.status === "rejected")?.reason;
+      throw new Error(firstError?.message || "Brak danych rynku");
+    }
     quotes.forEach((quote) => {
       state.paperTrading.quotes[quote.symbol] = quote;
     });
     const selected = paperSelectedSymbol();
     const selectedQuote = quotes.find((quote) => quote.symbol === selected) || state.paperTrading.quotes[selected];
-    if (selectedQuote) {
+    if (selectedQuote && paperChartRange === "1D") {
       updatePaperChartSnapshot(selected, selectedQuote.price, new Date());
     }
+    const filledCount = processPaperOpenOrders(new Date());
+    paperRecordEquitySnapshot(new Date());
     state.paperTrading.lastSyncAt = new Date().toISOString();
     state.paperTrading.error = "";
     saveState();
     renderFinance();
     if (!silent) {
-      setFeedback(`Odswiezono rynek: ${selected}.`);
+      setFeedback(filledCount ? `Odświeżono rynek i zrealizowano ${filledCount} zleceń.` : `Odświeżono rynek: ${selected}.`);
     }
   } catch (error) {
     state.paperTrading.error = String(error?.message || "Blad danych");
     renderFinance();
     if (!silent) {
-      setFeedback("Nie udalo sie pobrac rynku.");
+      setFeedback("Nie udało się pobrać danych rynku.");
     }
   } finally {
     paperTradingLoading = false;
@@ -3225,61 +4351,103 @@ function syncPaperTradingAutoRefresh() {
   }, 180000);
 }
 
-function executePaperOrder(side, symbol, shares) {
-  const quote = paperQuote(symbol);
-  const price = Number(quote?.price || 0);
-  if (!price || !Number.isFinite(price)) {
-    setFeedback("Najpierw odswiez kurs.");
-    return false;
-  }
-
+function executePaperOrder(side, symbol, shares, options = {}) {
+  const normalizedSymbol = String(symbol || "").trim().toUpperCase();
+  const type = ["market", "limit", "stop"].includes(options.type) ? options.type : "market";
   const quantity = Number(shares || 0);
   if (!Number.isFinite(quantity) || quantity <= 0) {
-    setFeedback("Podaj liczbe akcji.");
+    setFeedback("Podaj liczbę akcji.");
     return false;
   }
 
-  if (side === "buy") {
-    const cost = price * quantity;
-    if (cost > Number(state.paperTrading.cash || 0)) {
-      setFeedback("Za malo gotowki.");
+  const quote = paperQuote(normalizedSymbol);
+  const price = Number(quote?.price || 0);
+  if (!price || !Number.isFinite(price)) {
+    setFeedback("Najpierw odśwież kurs.");
+    return false;
+  }
+
+  const limitPrice = Number(options.limitPrice || 0);
+  const stopPrice = Number(options.stopPrice || 0);
+  if (type === "limit" && (!Number.isFinite(limitPrice) || limitPrice <= 0)) {
+    setFeedback("Podaj limit ceny.");
+    return false;
+  }
+  if (type === "stop" && (!Number.isFinite(stopPrice) || stopPrice <= 0)) {
+    setFeedback("Podaj stop ceny.");
+    return false;
+  }
+
+  const timestamp = new Date();
+  const clock = paperMarketClock(timestamp);
+  const order = {
+    id: uid("pord"),
+    symbol: normalizedSymbol,
+    side: side === "sell" ? "sell" : "buy",
+    type,
+    status: "open",
+    shares: quantity,
+    price: 0,
+    executionPrice: 0,
+    limitPrice: type === "limit" ? limitPrice : 0,
+    stopPrice: type === "stop" ? stopPrice : 0,
+    fee: 0,
+    realizedPnl: 0,
+    reason: "",
+    thesis: String(options.thesis || "").trim(),
+    createdAt: timestamp.toISOString(),
+    filledAt: null
+  };
+
+  if (type === "market" && !clock.isOpen && !paperSettings().allowAfterHours) {
+    rejectPaperOrder(order, "Rynek zamknięty");
+    state.paperTrading.orders.unshift(order);
+    state.paperTrading.orders = state.paperTrading.orders.slice(0, 120);
+    saveState();
+    renderFinance();
+    setFeedback("Rynek zamknięty. Zlecenie po rynku zostało odrzucone.");
+    return false;
+  }
+
+  state.paperTrading.orders.unshift(order);
+  if ((clock.isOpen || paperSettings().allowAfterHours) && paperOrderShouldFill(order, quote)) {
+    if (!fillPaperOrder(order, quote, timestamp)) {
+      state.paperTrading.orders = state.paperTrading.orders.slice(0, 120);
+      saveState();
+      renderFinance();
+      setFeedback(order.reason || "Zlecenie odrzucone.");
       return false;
-    }
-    const existing = state.paperTrading.positions.find((position) => position.symbol === symbol);
-    if (existing) {
-      const totalShares = existing.shares + quantity;
-      existing.avgCost = ((existing.avgCost * existing.shares) + cost) / totalShares;
-      existing.shares = totalShares;
-    } else {
-      state.paperTrading.positions.push({ symbol, shares: quantity, avgCost: price });
-    }
-    state.paperTrading.cash -= cost;
-  } else {
-    const existing = state.paperTrading.positions.find((position) => position.symbol === symbol);
-    if (!existing || existing.shares < quantity) {
-      setFeedback("Za malo akcji.");
-      return false;
-    }
-    existing.shares -= quantity;
-    state.paperTrading.cash += price * quantity;
-    if (existing.shares <= 0) {
-      state.paperTrading.positions = state.paperTrading.positions.filter((position) => position.symbol !== symbol);
     }
   }
 
-  state.paperTrading.orders.unshift({
-    id: uid("pord"),
-    symbol,
-    side,
-    shares: quantity,
-    price,
-    createdAt: new Date().toISOString()
-  });
-  state.paperTrading.orders = state.paperTrading.orders.slice(0, 24);
+  state.paperTrading.orders = state.paperTrading.orders.slice(0, 120);
   saveState();
   renderFinance();
-  setFeedback(`${side === "buy" ? "Kupiono" : "Sprzedano"} ${symbol}.`);
+  setFeedback(order.status === "filled"
+    ? `${side === "buy" ? "Kupiono" : "Sprzedano"} ${normalizedSymbol} po ${formatUsd(order.executionPrice)}.`
+    : `Dodano zlecenie: ${paperOrderTypeLabel(type)} dla ${normalizedSymbol}.`);
   return true;
+}
+
+function cancelPaperOrder(orderId) {
+  const order = state.paperTrading.orders.find((entry) => entry.id === orderId);
+  if (!order || order.status !== "open") return;
+  order.status = "cancelled";
+  order.reason = "Anulowane";
+  saveState();
+  renderFinance();
+  setFeedback(`Anulowano zlecenie ${order.symbol}.`);
+}
+
+function resetPaperTradingAccount() {
+  state.paperTrading.cash = paperInitialCash();
+  state.paperTrading.positions = [];
+  state.paperTrading.orders = [];
+  state.paperTrading.equityHistory = [];
+  paperRecordEquitySnapshot(new Date());
+  saveState();
+  renderFinance();
+  setFeedback("Wyczyszczono konto symulatora.");
 }
 
 function renderFinanceEntries() {
@@ -3304,8 +4472,8 @@ function renderFinanceEntries() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editFinanceEntry(entry.id)),
-      makeToolButton("Del", () => deleteFinanceEntry(entry.id), true)
+      makeToolButton("Edytuj", () => editFinanceEntry(entry.id)),
+      makeToolButton("Usuń", () => deleteFinanceEntry(entry.id), true)
     );
     row.appendChild(tools);
     node.appendChild(row);
@@ -3333,8 +4501,8 @@ function renderPlannedExpenses() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Edit", () => editPlannedExpense(entry.id)),
-      makeToolButton("Del", () => deletePlannedExpense(entry.id), true)
+      makeToolButton("Edytuj", () => editPlannedExpense(entry.id)),
+      makeToolButton("Usuń", () => deletePlannedExpense(entry.id), true)
     );
     row.appendChild(tools);
     node.appendChild(row);
@@ -3347,6 +4515,7 @@ function renderPaperWatchlist() {
   node.innerHTML = "";
   state.paperTrading.watchlist.forEach((symbol) => {
     const quote = paperQuote(symbol);
+    const meta = marketMeta(symbol);
     const row = document.createElement("div");
     row.className = `list-item finance-watchlist-row${paperSelectedSymbol() === symbol ? " active" : ""}`;
     row.setAttribute("role", "button");
@@ -3355,17 +4524,16 @@ function renderPaperWatchlist() {
       <div class="finance-watchlist-main">
         <div class="list-copy">
           <strong>${escapeHtml(symbol)}</strong>
-          <span>${quote ? "US stock" : "Brak kursu"}</span>
+          <span>${escapeHtml(meta.name)} · ${escapeHtml(meta.category)}</span>
         </div>
         <div class="finance-watchlist-quote">
-          <strong>${quote ? formatUsd(quote.price) : "--"}</strong>
-          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : "--"}</span>
+          <strong>${quote ? formatInstrumentPrice(quote.price, symbol) : "--"}</strong>
+          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : meta.exchange || meta.category}</span>
         </div>
       </div>
     `;
     const openSymbol = () => {
-      state.paperTrading.selectedSymbol = symbol;
-      state.paperTrading.chart.symbol = symbol;
+      setPaperSelectedSymbol(symbol);
       saveState();
       renderFinance();
       if (paperTradingApiKey()) {
@@ -3385,8 +4553,8 @@ function renderPaperWatchlist() {
     const tools = document.createElement("div");
     tools.className = "list-tools";
     tools.append(
-      makeToolButton("Open", openSymbol),
-      makeToolButton("Del", () => {
+      makeToolButton("Otwórz", openSymbol),
+      makeToolButton("Usuń", () => {
         state.paperTrading.watchlist = state.paperTrading.watchlist.filter((entry) => entry !== symbol);
         delete state.paperTrading.quotes[symbol];
         paperSyncSelectedSymbol();
@@ -3446,24 +4614,42 @@ function renderPaperOrders() {
   if (!node) return;
   node.innerHTML = "";
   if (!state.paperTrading.orders.length) {
-    node.appendChild(emptyNode("Brak zlecen."));
+    node.appendChild(emptyNode("Brak zleceń."));
     return;
   }
-  state.paperTrading.orders.slice(0, 8).forEach((order) => {
+  state.paperTrading.orders.slice(0, 12).forEach((order) => {
+    const priceLabel = order.status === "filled"
+      ? formatUsd(order.executionPrice || order.price)
+      : order.type === "limit"
+        ? `Limit ${formatUsd(order.limitPrice)}`
+        : order.type === "stop"
+          ? `Stop ${formatUsd(order.stopPrice)}`
+        : "Po rynku";
+    const valueLabel = order.status === "filled"
+      ? formatUsd((Number(order.executionPrice || order.price || 0) * Number(order.shares || 0)) + Number(order.fee || 0))
+      : escapeHtml(paperOrderStatusLabel(order.status || "open"));
     const row = document.createElement("div");
     row.className = "list-item finance-order-row";
     row.innerHTML = `
       <div class="finance-order-main">
         <div class="list-copy">
-          <strong>${escapeHtml(order.symbol)} · ${order.side === "buy" ? "Buy" : "Sell"}</strong>
-          <span>${order.shares} szt. · ${formatShortDateLabel(order.createdAt)}</span>
+          <strong>${escapeHtml(order.symbol)} - ${paperOrderSideLabel(order.side)} - ${paperOrderTypeLabel(order.type)}</strong>
+          <span>${order.shares} szt. - ${paperOrderStatusLabel(order.status || "filled")} - ${formatShortDateLabel(order.filledAt || order.createdAt)}</span>
+          ${order.thesis ? `<span>${escapeHtml(order.thesis)}</span>` : ""}
+          ${order.reason ? `<span>${escapeHtml(order.reason)}</span>` : ""}
         </div>
         <div class="finance-order-meta">
-          <strong>${formatUsd(order.price)}</strong>
-          <span>${formatUsd(order.price * order.shares)}</span>
+          <strong>${priceLabel}</strong>
+          <span>${valueLabel}</span>
         </div>
       </div>
     `;
+    if (order.status === "open") {
+      const tools = document.createElement("div");
+      tools.className = "list-tools";
+      tools.append(makeToolButton("Anuluj", () => cancelPaperOrder(order.id), true));
+      row.appendChild(tools);
+    }
     node.appendChild(row);
   });
 }
@@ -3472,10 +4658,19 @@ function renderPaperSuggestions() {
   const node = document.getElementById("paper-market-suggestions");
   if (!node) return;
   const query = (document.getElementById("paper-market-search")?.value || "").trim().toLowerCase();
+  const selectedCategory = String(paperInstrumentCategory || "ALL").toUpperCase();
   const results = MARKET_UNIVERSE
-    .filter((entry) => !query || entry.symbol.toLowerCase().includes(query) || entry.name.toLowerCase().includes(query))
-    .slice(0, 8);
+    .filter((entry) => selectedCategory === "ALL" || String(entry.category || "").toUpperCase() === selectedCategory)
+    .filter((entry) => {
+      const haystack = `${entry.symbol} ${entry.name} ${entry.category} ${entry.exchange || ""}`.toLowerCase();
+      return !query || haystack.includes(query);
+    })
+    .slice(0, 40);
   node.innerHTML = "";
+  if (!results.length) {
+    node.appendChild(emptyNode("Brak instrumentów dla tego filtra."));
+    return;
+  }
   results.forEach((entry) => {
     const quote = paperQuote(entry.symbol);
     const row = document.createElement("div");
@@ -3484,23 +4679,24 @@ function renderPaperSuggestions() {
       <div class="finance-watchlist-main">
         <div class="list-copy">
           <strong>${escapeHtml(entry.symbol)}</strong>
-          <span>${escapeHtml(entry.name)} · ${escapeHtml(entry.category)}</span>
+          <span>${escapeHtml(entry.name)} · ${escapeHtml(entry.category)}${entry.exchange ? ` · ${escapeHtml(entry.exchange)}` : ""}</span>
         </div>
         <div class="finance-watchlist-quote">
-          <strong>${quote ? formatUsd(quote.price) : "--"}</strong>
-          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : entry.category}</span>
+          <strong>${quote ? formatInstrumentPrice(quote.price, entry.symbol) : "--"}</strong>
+          <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : entry.currency || entry.category}</span>
         </div>
       </div>
     `;
     const tools = document.createElement("div");
     tools.className = "list-tools";
-    tools.append(makeToolButton(state.paperTrading.watchlist.includes(entry.symbol) ? "Open" : "Add", () => {
+    tools.append(makeToolButton(state.paperTrading.watchlist.includes(entry.symbol) ? "Otwórz" : "Dodaj", () => {
       if (!state.paperTrading.watchlist.includes(entry.symbol)) {
         state.paperTrading.watchlist.unshift(entry.symbol);
-        state.paperTrading.watchlist = [...new Set(state.paperTrading.watchlist)].slice(0, 16);
+        state.paperTrading.watchlist = [...new Set(state.paperTrading.watchlist)].slice(0, PAPER_WATCHLIST_LIMIT);
       }
-      state.paperTrading.selectedSymbol = entry.symbol;
-      state.paperTrading.chart.symbol = entry.symbol;
+      setPaperSelectedSymbol(entry.symbol);
+      document.getElementById("paper-order-symbol").value = entry.symbol;
+      paperSymbolSheetOpen = false;
       saveState();
       renderFinance();
       refreshPaperTrading({ silent: true });
@@ -3510,13 +4706,193 @@ function renderPaperSuggestions() {
   });
 }
 
+function renderPaperCategories() {
+  const node = document.getElementById("paper-market-categories");
+  if (!node) return;
+  const categories = ["ALL", ...new Set(MARKET_UNIVERSE.map((entry) => entry.category).filter(Boolean))];
+  node.innerHTML = "";
+  categories.forEach((category) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `market-category-chip${paperInstrumentCategory === category ? " active" : ""}`;
+    button.dataset.paperMarketCategory = category;
+    button.textContent = category === "ALL" ? "Wszystkie" : category;
+    node.appendChild(button);
+  });
+}
+
+function renderPaperSymbolRail() {
+  const node = document.getElementById("paper-symbol-rail");
+  if (!node) return;
+  node.innerHTML = "";
+  const selected = paperSelectedSymbol();
+  state.paperTrading.watchlist.slice(0, 12).forEach((symbol) => {
+    const quote = paperQuote(symbol);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `symbol-rail-chip${symbol === selected ? " active" : ""}`;
+    button.dataset.paperRailSymbol = symbol;
+    button.innerHTML = `
+      <strong>${escapeHtml(symbol)}</strong>
+      <span class="${quote && quote.changePercent < 0 ? "negative" : "positive"}">${quote ? formatPercent(quote.changePercent) : marketMeta(symbol).category}</span>
+    `;
+    node.appendChild(button);
+  });
+}
+
 function paperChartPointsForRange(points) {
   if (!points.length) return [];
   const normalized = points.slice();
-  if (paperChartRange === "1D") return normalized.slice(-32);
-  if (paperChartRange === "1W") return normalized.slice(-40);
-  if (paperChartRange === "1M") return normalized.slice(-40);
-  return normalized;
+  let selected = normalized;
+  if (paperChartRange === "1M") selected = normalized.slice(-22);
+  if (paperChartRange === "3M") selected = normalized.slice(-66);
+  if (paperChartRange === "6M") selected = normalized.slice(-126);
+  if (paperChartRange === "1Y") selected = normalized.slice(-252);
+  return downsampleChartPoints(selected, 1200);
+}
+
+function downsampleChartPoints(points, maxPoints) {
+  if (points.length <= maxPoints) return points;
+  const step = (points.length - 1) / (maxPoints - 1);
+  const sampled = [];
+  for (let index = 0; index < maxPoints; index += 1) {
+    sampled.push(points[Math.round(index * step)]);
+  }
+  return sampled;
+}
+
+function clearTradingViewChart(viewKey) {
+  const view = paperChartViews[viewKey];
+  if (!view) return;
+  if (view.resizeObserver) {
+    view.resizeObserver.disconnect();
+  }
+  if (view.chart) {
+    view.chart.remove();
+  }
+  paperChartViews[viewKey] = { chart: null, series: null, volume: null, resizeObserver: null };
+}
+
+function makeChartSeries(chart, type, options) {
+  const library = window.LightweightCharts;
+  if (!library) return null;
+  if (chart.addSeries && type === "candles" && library.CandlestickSeries) {
+    return chart.addSeries(library.CandlestickSeries, options);
+  }
+  if (chart.addSeries && type === "line" && library.LineSeries) {
+    return chart.addSeries(library.LineSeries, options);
+  }
+  if (chart.addSeries && type === "histogram" && library.HistogramSeries) {
+    return chart.addSeries(library.HistogramSeries, options);
+  }
+  if (type === "candles" && chart.addCandlestickSeries) return chart.addCandlestickSeries(options);
+  if (type === "line" && chart.addLineSeries) return chart.addLineSeries(options);
+  if (type === "histogram" && chart.addHistogramSeries) return chart.addHistogramSeries(options);
+  return null;
+}
+
+function renderChartEmptyState(container, message) {
+  container.innerHTML = `
+    <div class="chart-empty-state">
+      <strong>${escapeHtml(message)}</strong>
+      <code>cd sim-server; python -m uvicorn app.main:app --host 127.0.0.1 --port 8766</code>
+    </div>
+  `;
+}
+
+function renderTradingViewChart(containerId, points, viewKey) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  clearTradingViewChart(viewKey);
+  const chartPoints = points.filter((point) => Number(point.close || point.value || 0) > 0);
+  if (!window.LightweightCharts) {
+    renderChartEmptyState(container, "Brak biblioteki wykresow.");
+    return;
+  }
+  if (!chartPoints.length) {
+    renderChartEmptyState(container, paperHistoryError || "Brak danych OHLCV.");
+    return;
+  }
+  container.innerHTML = "";
+  const library = window.LightweightCharts;
+  const chart = library.createChart(container, {
+    width: Math.max(320, container.clientWidth || 320),
+    height: Math.max(320, container.clientHeight || 360),
+    autoSize: true,
+    layout: {
+      background: { type: "solid", color: "#07090d" },
+      textColor: "#9da7b8"
+    },
+    grid: {
+      vertLines: { color: "#121923" },
+      horzLines: { color: "#121923" }
+    },
+    rightPriceScale: {
+      borderColor: "#202838",
+      scaleMargins: { top: 0.08, bottom: 0.22 }
+    },
+    timeScale: {
+      borderColor: "#202838",
+      timeVisible: false,
+      secondsVisible: false
+    },
+    crosshair: {
+      mode: 1
+    }
+  });
+  const series = paperChartMode === "line"
+    ? makeChartSeries(chart, "line", {
+        color: "#00c087",
+        lineWidth: 2,
+        priceLineVisible: true
+      })
+    : makeChartSeries(chart, "candles", {
+        upColor: "#00c087",
+        downColor: "#e53935",
+        borderUpColor: "#00c087",
+        borderDownColor: "#e53935",
+        wickUpColor: "#74f2c8",
+        wickDownColor: "#ff706b"
+      });
+  const volume = makeChartSeries(chart, "histogram", {
+    priceFormat: { type: "volume" },
+    priceScaleId: "",
+    color: "rgba(141, 150, 168, 0.26)"
+  });
+  if (volume) {
+    if (volume.priceScale) {
+      volume.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+    }
+    volume.setData(chartPoints.map((point) => ({
+      time: point.time,
+      value: Number(point.volume || 0),
+      color: Number(point.close || 0) >= Number(point.open || 0)
+        ? "rgba(0, 192, 135, 0.28)"
+        : "rgba(229, 57, 53, 0.28)"
+    })));
+  }
+  if (series) {
+    if (paperChartMode === "line") {
+      series.setData(chartPoints.map((point) => ({ time: point.time, value: Number(point.close || point.value || 0) })));
+    } else {
+      series.setData(chartPoints.map((point) => ({
+        time: point.time,
+        open: Number(point.open),
+        high: Number(point.high),
+        low: Number(point.low),
+        close: Number(point.close)
+      })));
+    }
+  }
+  chart.timeScale().fitContent();
+  const resizeObserver = new ResizeObserver(() => {
+    chart.applyOptions({
+      width: Math.max(320, container.clientWidth || 320),
+      height: Math.max(320, container.clientHeight || 360)
+    });
+  });
+  resizeObserver.observe(container);
+  paperChartViews[viewKey] = { chart, series, volume, resizeObserver };
 }
 
 function renderPaperChart() {
@@ -3524,25 +4900,494 @@ function renderPaperChart() {
   const quote = paperQuote(symbol);
   const fallbackPoints = quote
     ? [
-        { value: Number(quote.prevClose || quote.open || quote.price || 0), label: "Prev", bottom: "prev" },
-        { value: Number(quote.open || quote.prevClose || quote.price || 0), label: "Open", bottom: "open" },
-        { value: Number(quote.price || quote.open || quote.prevClose || 0), label: "Now", bottom: formatTimeOnly(quote.updatedAt || new Date()) }
+        { time: new Date(Date.now() - 86400000).toISOString().slice(0, 10), open: Number(quote.prevClose || quote.price || 0), high: Number(quote.prevClose || quote.price || 0), low: Number(quote.prevClose || quote.price || 0), close: Number(quote.prevClose || quote.price || 0), value: Number(quote.prevClose || quote.price || 0), volume: 0 },
+        { time: new Date().toISOString().slice(0, 10), open: Number(quote.open || quote.price || 0), high: Number(quote.high || quote.price || 0), low: Number(quote.low || quote.price || 0), close: Number(quote.price || 0), value: Number(quote.price || 0), volume: 0 }
       ].filter((point) => Number.isFinite(point.value) && point.value > 0)
     : [];
   const basePoints = state.paperTrading.chart.points.length ? state.paperTrading.chart.points : fallbackPoints;
   const chartPoints = paperChartPointsForRange(basePoints);
   document.getElementById("paper-chart-symbol").textContent = symbol;
-  document.getElementById("paper-chart-updated").textContent = state.paperTrading.chart.updatedAt || quote?.updatedAt
-    ? formatTimeOnly(state.paperTrading.chart.updatedAt || quote?.updatedAt)
-    : "-";
+  document.getElementById("paper-chart-updated").textContent = paperHistoryError
+    ? paperHistoryError
+    : paperHistorySource || (state.paperTrading.chart.updatedAt || quote?.updatedAt
+      ? formatTimeOnly(state.paperTrading.chart.updatedAt || quote?.updatedAt)
+      : "-");
   document.querySelectorAll("[data-paper-range]").forEach((button) => {
     button.classList.toggle("active", button.dataset.paperRange === paperChartRange);
   });
-  renderSimpleLineChart("paper-chart", chartPoints, {
-    topLabel: chartPoints.length
-      ? `$${Math.max(...chartPoints.map((point) => Number(point.value || 0))).toFixed(0)}`
-      : "$0"
+  document.querySelectorAll("[data-paper-chart-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.paperChartMode === paperChartMode);
   });
+  renderTradingViewChart("paper-chart", chartPoints, "main");
+  if (paperChartFullscreenOpen) {
+    setText("paper-chart-fullscreen-symbol", symbol);
+    setText("paper-chart-fullscreen-status", paperHistorySource || "Historia OHLCV");
+    renderTradingViewChart("paper-chart-fullscreen-canvas", chartPoints, "fullscreen");
+  }
+}
+
+function renderPaperEquityChart() {
+  const node = document.getElementById("paper-equity-chart");
+  if (!node) return;
+  const points = (state.paperTrading.equityHistory || []).slice(-60).map((entry) => ({
+    value: Number(entry.value || 0),
+    label: formatUsd(entry.value),
+    bottom: formatTimeOnly(entry.createdAt)
+  }));
+  document.getElementById("paper-equity-chart-summary").textContent = `${formatSignedUsd(paperTotalReturn())}`;
+  renderSimpleLineChart("paper-equity-chart", points.length ? points : [{
+    value: paperEquity(),
+    label: formatUsd(paperEquity()),
+    bottom: "now"
+  }], {
+    baselineZero: false,
+    compactLabels: true
+  });
+}
+
+function agentSymbolsInput() {
+  const value = document.getElementById("agent-symbols-input")?.value || "AAPL";
+  return value.split(",").map((symbol) => symbol.trim().toUpperCase()).filter(Boolean);
+}
+
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
+function agentRewardConfig() {
+  return {
+    return_weight: Number(document.getElementById("agent-return-weight-input")?.value || 1),
+    drawdown_weight: Number(document.getElementById("agent-drawdown-weight-input")?.value || 0),
+    volatility_weight: Number(document.getElementById("agent-volatility-weight-input")?.value || 0),
+    cost_weight: Number(document.getElementById("agent-cost-weight-input")?.value || 0)
+  };
+}
+
+function applyAgentRewardPreset(presetKey) {
+  const preset = AGENT_REWARD_PRESETS[presetKey];
+  if (!preset) return;
+  document.getElementById("agent-return-weight-input").value = preset.return_weight;
+  document.getElementById("agent-drawdown-weight-input").value = preset.drawdown_weight;
+  document.getElementById("agent-volatility-weight-input").value = preset.volatility_weight;
+  document.getElementById("agent-cost-weight-input").value = preset.cost_weight;
+}
+
+function currentAgentAction(options = {}) {
+  const mode = document.getElementById("agent-mode-input").value;
+  const action = options.random
+    ? ["hold", "buy", "sell"][Math.floor(Math.random() * 3)]
+    : document.getElementById("agent-action-input").value;
+  const fraction = options.random
+    ? Number((Math.random() * 0.35).toFixed(2))
+    : Number(document.getElementById("agent-fraction-input").value || 0);
+  return mode === "portfolio"
+    ? { orders: Object.fromEntries(agentSymbolsInput().map((symbol) => [symbol, { action, fraction }])) }
+    : { action, fraction };
+}
+
+function rememberAgentPayload(payload) {
+  agentSession.lastPayload = payload;
+  agentSession.history.push(payload);
+  agentSession.history = agentSession.history.slice(-24);
+  agentSession.totalReward += Number(payload.reward || 0);
+  agentSession.stepCount = Number(payload?.observation?.account?.step || agentSession.stepCount);
+}
+
+function renderAgentLog() {
+  const node = document.getElementById("agent-log-list");
+  if (!node) return;
+  if (!agentSession.history.length) {
+    node.innerHTML = `<div class="empty-state">Reset srodowiska pokaze tu przebieg epizodu.</div>`;
+    return;
+  }
+  node.innerHTML = "";
+  agentSession.history.slice(-6).reverse().forEach((payload) => {
+    const row = document.createElement("div");
+    row.className = "list-item agent-log-row";
+    const account = payload.observation?.account || {};
+    row.innerHTML = `
+      <div class="finance-watchlist-main">
+        <strong>${escapeHtml(payload.info?.date || "-")}</strong>
+        <span>krok ${Number(account.step || 0)} / ${Number(account.episode_length || 0)}</span>
+      </div>
+      <div class="finance-watchlist-quote">
+        <strong>${formatUsd(Number(payload.info?.equity || 0))}</strong>
+        <span>${Number(payload.reward || 0).toFixed(5)}</span>
+      </div>
+    `;
+    node.appendChild(row);
+  });
+}
+
+function agentStatusLabel(status) {
+  return {
+    candidate: "Dobry kandydat",
+    research: "W badaniu",
+    paper: "Paper trading",
+    shadow: "Live shadow",
+    blocked: "Odrzucony",
+    done: "Zakończony",
+    online: "Aktywny",
+    offline: "Nieaktywny"
+  }[status] || status || "W badaniu";
+}
+
+function renderAgentRuns() {
+  const node = document.getElementById("agent-runs-list");
+  if (!node) return;
+  if (!agentSession.runsLoaded) {
+    node.innerHTML = `<div class="empty-state">Kliknij „Testuj boty”, żeby zobaczyć ranking.</div>`;
+    return;
+  }
+  if (!agentSession.runs.length) {
+    node.innerHTML = `<div class="empty-state">Brak wyników. Zbuduj test albo uruchom selekcję botów.</div>`;
+    return;
+  }
+  node.innerHTML = "";
+  agentSession.runs.slice(0, 5).forEach((run) => {
+    const finalEquity = Number(run.final_equity ?? run.best?.final_equity ?? 0);
+    const totalReturn = Number(run.total_return ?? run.best?.total_return ?? 0);
+    const drawdown = Number(run.max_drawdown ?? run.best?.max_drawdown ?? 0);
+    const status = run.agent_status || "research";
+    const label = agentStatusLabel(status);
+    const name = run.case || run.name || run.run_name || run.run_id;
+    const row = document.createElement("div");
+    row.className = `list-item agent-log-row agent-ranking-row ${status}`;
+    row.innerHTML = `
+      <div class="finance-watchlist-main">
+        <strong>${escapeHtml(run.strategy || run.best?.strategy || "bot")}</strong>
+        <span>${escapeHtml(label)} · ryzyko ${formatPercent(drawdown * 100)} · score ${Number(run.robust_score || 0).toFixed(3)}</span>
+      </div>
+      <div class="finance-watchlist-quote">
+        <strong>${formatPercent(totalReturn * 100)}</strong>
+        <span>${formatUsd(finalEquity)}</span>
+      </div>
+      <small>${escapeHtml(name)}</small>
+    `;
+    node.appendChild(row);
+  });
+}
+
+function renderAgentSimpleSummary() {
+  const best = agentSession.runs?.[0];
+  const payload = agentSession.lastPayload;
+  setText("agent-simple-name", best?.strategy ? `${best.strategy} · ${agentStatusLabel(best.agent_status)}` : "Research Core");
+  setText("agent-simple-copy", best
+    ? `Zwrot ${formatPercent(Number(best.total_return || 0) * 100)}, drawdown ${formatPercent(Number(best.max_drawdown || 0) * 100)}.`
+    : payload
+      ? `Epizod: ${formatUsd(Number(payload.info?.equity || 0))}, drawdown ${formatPercent(Number(payload.info?.drawdown || 0) * 100)}.`
+      : "Najpierw testy i paper trading. Bez realnych zleceń.");
+}
+
+function renderAgentResearchPanel() {
+  setText("agent-research-status", agentSession.researchStatus?.status || (agentSession.researchLoaded ? "offline" : "-"));
+  setText("agent-sec-cache", `${Number(agentSession.researchStatus?.sec_cached_files || 0)}`);
+  setText("agent-news-cache", `${Number(agentSession.researchStatus?.news_cached_symbols || 0)}`);
+  const node = document.getElementById("agent-research-list");
+  if (!node) return;
+  const rows = [];
+  if (agentSession.featureSummary) {
+    rows.push({
+      title: `Dataset ${agentSession.featureSummary.dataset_id}`,
+      meta: `${agentSession.featureSummary.row_count} wierszy - ${agentSession.featureSummary.symbols?.join(", ") || ""}`,
+      value: "features"
+    });
+  }
+  (agentSession.researchStatus?.investors || []).slice(0, 3).forEach((investor) => {
+    rows.push({
+      title: investor.name,
+      meta: `13F - ${investor.style}`,
+      value: investor.status
+    });
+  });
+  if (!rows.length) {
+    node.innerHTML = `<div class="empty-state">Sync danych pokaże cache SEC, newsy i 13F.</div>`;
+    return;
+  }
+  node.innerHTML = "";
+  rows.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "list-item agent-log-row";
+    row.innerHTML = `
+      <div class="finance-watchlist-main">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <span>${escapeHtml(entry.meta)}</span>
+      </div>
+      <div class="finance-watchlist-quote">
+        <span>${escapeHtml(entry.value)}</span>
+      </div>
+    `;
+    node.appendChild(row);
+  });
+}
+
+function renderAgentSignal() {
+  const node = document.getElementById("agent-signal-card");
+  if (!node) return;
+  if (!agentSession.signal) {
+    node.innerHTML = `
+      <div class="agent-signal-head">
+        <strong>${escapeHtml(paperSelectedSymbol())}: czeka na sygnał</strong>
+        <span>research</span>
+      </div>
+      <p class="field-help">Kliknij „Pokaż sygnał”, żeby zobaczyć prostą decyzję bota dla aktualnego instrumentu.</p>
+    `;
+    return;
+  }
+  const signal = agentSession.signal;
+  const actionLabel = {
+    buy: "KUP",
+    reduce: "ZMNIEJSZ",
+    sell: "SPRZEDAJ",
+    hold: "TRZYMAJ"
+  }[signal.action] || String(signal.action || "TRZYMAJ").toUpperCase();
+  node.innerHTML = `
+    <div class="agent-signal-head">
+      <strong>${escapeHtml(signal.symbol || paperSelectedSymbol())}: ${escapeHtml(actionLabel)}</strong>
+      <span>${formatPercent(Number(signal.confidence || 0) * 100)} pewności</span>
+    </div>
+    <div class="agent-simple-metrics">
+      <span>Waga: <strong>${Number(signal.target_weight || 0).toFixed(2)}</strong></span>
+      <span>Ryzyko: <strong>${escapeHtml(signal.risk || "-")}</strong></span>
+      <span>Status: <strong>${escapeHtml(agentStatusLabel(signal.status))}</strong></span>
+    </div>
+    <p class="field-help">${escapeHtml((signal.why || []).join(" · "))}</p>
+  `;
+}
+
+async function loadAgentRuns() {
+  try {
+    const { payload } = await simApiFetch("/agents/rankings");
+    agentSession.runs = Array.isArray(payload?.agents) ? payload.agents : [];
+    agentSession.runsLoaded = true;
+  } catch (error) {
+    try {
+      const { payload } = await simApiFetch("/experiments/runs");
+      agentSession.runs = Array.isArray(payload?.runs) ? payload.runs : [];
+      agentSession.runsLoaded = true;
+    } catch (fallbackError) {
+      agentSession.runs = [];
+      agentSession.runsLoaded = true;
+    }
+  }
+  renderAgentRuns();
+  renderAgentSimpleSummary();
+}
+
+async function loadResearchStatus() {
+  try {
+    const { payload } = await simApiFetch("/research/status");
+    agentSession.researchStatus = payload;
+    agentSession.researchLoaded = true;
+  } catch (error) {
+    agentSession.researchStatus = null;
+    agentSession.researchLoaded = true;
+  }
+  renderAgentResearchPanel();
+}
+
+async function syncAgentResearch() {
+  agentSession.loading = true;
+  renderAgentPanel();
+  try {
+    const { payload } = await simApiFetch("/research/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbols: agentSymbolsInput(), refresh: false })
+    });
+    agentSession.researchStatus = payload.status;
+    agentSession.researchLoaded = true;
+    setFeedback("Zsynchronizowano research cache.");
+  } catch (error) {
+    agentSession.error = String(error?.message || "Błąd research sync");
+  } finally {
+    agentSession.loading = false;
+    renderAgentPanel();
+  }
+}
+
+async function buildAgentFeatureDataset() {
+  agentSession.loading = true;
+  renderAgentPanel();
+  try {
+    const { payload } = await simApiFetch("/features/build-dataset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "features_ui_core",
+        symbols: agentSymbolsInput(),
+        start: document.getElementById("agent-start-input")?.value || "2018-01-01",
+        end: document.getElementById("agent-end-input")?.value || null,
+        lookback: Number(document.getElementById("agent-lookback-input")?.value || 60)
+      })
+    });
+    agentSession.featureSummary = payload;
+    setFeedback(`Zbudowano dataset: ${payload.row_count || 0} wierszy.`);
+  } catch (error) {
+    agentSession.error = String(error?.message || "Błąd datasetu");
+  } finally {
+    agentSession.loading = false;
+    renderAgentPanel();
+  }
+}
+
+async function loadAgentSignal() {
+  try {
+    const { payload } = await simApiFetch(`/agents/research-core/signals?symbol=${encodeURIComponent(paperSelectedSymbol())}`);
+    agentSession.signal = payload;
+  } catch (error) {
+    agentSession.signal = null;
+  }
+  renderAgentSignal();
+}
+
+async function runSimpleAgentTest() {
+  const selected = paperSelectedSymbol();
+  const input = document.getElementById("agent-symbols-input");
+  if (input && !agentSymbolsInput().includes(selected)) {
+    input.value = `${selected},SPY`;
+  }
+  await syncAgentResearch();
+  await buildAgentFeatureDataset();
+  try {
+    await simApiFetch("/agents/run-matrix", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        symbols: agentSymbolsInput(),
+        mode: document.getElementById("agent-mode-input")?.value || "portfolio",
+        note: "UI simple mode research-first selection"
+      })
+    });
+  } catch (error) {
+    agentSession.error = String(error?.message || "Nie udało się odświeżyć rankingu botów");
+  }
+  await loadAgentRuns();
+  await loadAgentSignal();
+}
+
+function renderAgentPanel() {
+  const status = document.getElementById("agent-status");
+  if (!status) return;
+  const payload = agentSession.lastPayload;
+  status.textContent = agentSession.loading
+    ? "Liczy"
+    : agentSession.error
+      ? agentSession.error
+      : agentSession.id
+        ? `Sesja ${agentSession.id.slice(0, 8)}`
+        : "Silnik lokalny";
+  const chip = document.getElementById("agent-session-chip");
+  if (chip) {
+    chip.textContent = payload?.done ? "done" : agentSession.id ? "online" : "offline";
+    chip.classList.toggle("active", Boolean(agentSession.id) && !payload?.done);
+  }
+  const equity = Number(payload?.info?.equity || 0);
+  const episodeReturn = agentSession.startEquity > 0 ? ((equity - agentSession.startEquity) / agentSession.startEquity) * 100 : 0;
+  const breakdown = payload?.info?.reward_breakdown || {};
+  setText("agent-date", payload?.info?.date || "-");
+  setText("agent-equity", payload?.info?.equity ? formatUsd(payload.info.equity) : "-");
+  setText("agent-return", payload ? formatPercent(episodeReturn) : "-");
+  setText("agent-total-reward", payload ? agentSession.totalReward.toFixed(5) : "-");
+  setText("agent-reward", payload ? Number(payload.reward || 0).toFixed(5) : "-");
+  setText("agent-drawdown", payload?.info?.drawdown != null
+    ? formatPercent(Number(payload.info.drawdown || 0) * 100)
+    : "-");
+  setText("agent-breakdown-return", `return ${Number(breakdown.equity_return || 0).toFixed(5)}`);
+  setText("agent-breakdown-drawdown", `drawdown ${Number(breakdown.drawdown_penalty || 0).toFixed(5)}`);
+  setText("agent-breakdown-volatility", `volatility ${Number(breakdown.volatility_penalty || 0).toFixed(5)}`);
+  setText("agent-breakdown-cost", `cost ${Number(breakdown.transaction_cost_penalty || 0).toFixed(5)}`);
+  const disabled = !agentSession.id || agentSession.loading || Boolean(payload?.done);
+  document.getElementById("agent-step-button").disabled = disabled;
+  document.getElementById("agent-random-step-button").disabled = disabled;
+  document.getElementById("agent-ten-steps-button").disabled = disabled;
+  document.getElementById("agent-reset-button").disabled = agentSession.loading;
+  renderAgentLog();
+  renderAgentRuns();
+  renderAgentResearchPanel();
+  renderAgentSignal();
+  renderAgentSimpleSummary();
+}
+
+async function resetAgentEnvironment() {
+  const symbols = agentSymbolsInput();
+  const mode = document.getElementById("agent-mode-input").value;
+  const episodeLength = Number(document.getElementById("agent-episode-input").value || 120);
+  const lookback = Number(document.getElementById("agent-lookback-input").value || 30);
+  const cash = Number(document.getElementById("agent-cash-input")?.value || 100000);
+  const seedValue = document.getElementById("agent-seed-input").value;
+  const startValue = document.getElementById("agent-start-input")?.value || null;
+  const endValue = document.getElementById("agent-end-input")?.value || null;
+  agentSession.loading = true;
+  agentSession.error = "";
+  agentSession.history = [];
+  agentSession.totalReward = 0;
+  agentSession.startEquity = 0;
+  agentSession.stepCount = 0;
+  renderAgentPanel();
+  try {
+    const { payload, baseUrl } = await simApiFetch("/env/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        symbols,
+        mode,
+        episode_length: episodeLength,
+        lookback,
+        seed: seedValue === "" ? null : Number(seedValue),
+        cash,
+        start: startValue,
+        end: endValue,
+        costs: {
+          commission: Number(paperSettings().commission || 0),
+          slippage_bps: Number(paperSettings().slippageBps || 0)
+        },
+        reward: agentRewardConfig()
+      })
+    });
+    agentSession.id = payload.session_id;
+    agentSession.startEquity = Number(payload.info?.equity || cash);
+    rememberAgentPayload(payload);
+    setFeedback(`Zresetowano srodowisko agenta (${baseUrl.split(":").at(-1)}).`);
+  } catch (error) {
+    agentSession.id = "";
+    agentSession.lastPayload = null;
+    agentSession.error = String(error?.message || "Uruchom lokalny silnik symulacji");
+    setFeedback("Uruchom lokalny silnik symulacji.");
+  } finally {
+    agentSession.loading = false;
+    renderAgentPanel();
+  }
+}
+
+async function stepAgentEnvironment(options = {}) {
+  if (!agentSession.id) return;
+  const body = currentAgentAction(options);
+  agentSession.loading = true;
+  agentSession.error = "";
+  renderAgentPanel();
+  try {
+    const { payload } = await simApiFetch(`/env/${agentSession.id}/step`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    rememberAgentPayload(payload);
+    setFeedback(payload.done ? "Epizod agenta zakonczony." : "Wykonano krok agenta.");
+  } catch (error) {
+    agentSession.error = String(error?.message || "Blad kroku agenta");
+  } finally {
+    agentSession.loading = false;
+    renderAgentPanel();
+  }
+}
+
+async function runAgentSteps(count, options = {}) {
+  for (let index = 0; index < count; index += 1) {
+    if (!agentSession.id || agentSession.loading || agentSession.lastPayload?.done) break;
+    await stepAgentEnvironment(options);
+  }
 }
 
 function renderFinanceHome() {
@@ -3552,8 +5397,8 @@ function renderFinanceHome() {
   document.getElementById("finance-home-personal-copy").textContent = `${formatZl(finance.income)} przychodu, ${formatZl(finance.expense)} wydatkow, ${formatZl(plannedTotal())} planowanych.`;
   document.getElementById("finance-home-market-summary").textContent = paperSelectedSymbol();
   document.getElementById("finance-home-market-copy").textContent = quote
-    ? `${formatUsd(quote.price)} ${formatPercent(quote.changePercent)} · ${state.paperTrading.positions.length} pozycji`
-    : `${state.paperTrading.watchlist.length} walorow, equity ${formatUsd(paperEquity())}`;
+    ? `${formatInstrumentPrice(quote.price, paperSelectedSymbol())} ${formatPercent(quote.changePercent)} - konto ${formatUsd(paperEquity())}, ${formatPercent(paperReturnPercent())}`
+    : `${state.paperTrading.watchlist.length} walorów, konto ${formatUsd(paperEquity())}, ${paperOpenOrders().length} oczekuje`;
 }
 
 function renderFinance() {
@@ -3566,14 +5411,32 @@ function renderFinance() {
     const node = document.getElementById(id);
     if (node) node.hidden = id !== visible;
   });
+  document.body.classList.toggle("market-mode", financeView === "market");
+  if (financeView === "market") {
+    loadMarketUniverse();
+  }
 
   const finance = financeSummary();
   const positionsValue = paperPositionsValue();
   const equity = paperEquity();
   const pnl = paperUnrealizedPnl();
+  const realizedPnl = paperRealizedPnl();
+  const totalReturn = paperTotalReturn();
+  const clock = paperMarketClock();
   const selectedSymbol = paperSelectedSymbol();
   const selectedQuote = paperQuote(selectedSymbol);
   const selectedMeta = marketMeta(selectedSymbol);
+  const selectedChartPoints = state.paperTrading.chart.symbol === selectedSymbol ? state.paperTrading.chart.points : [];
+  const selectedChartLast = selectedChartPoints.at(-1) || null;
+  const selectedChartPrev = selectedChartPoints.at(-2) || null;
+  const selectedPrice = Number(selectedQuote?.price || selectedChartLast?.close || selectedChartLast?.value || 0);
+  const selectedOpen = Number(selectedQuote?.open || selectedChartLast?.open || 0);
+  const selectedHigh = Number(selectedQuote?.high || selectedChartLast?.high || 0);
+  const selectedLow = Number(selectedQuote?.low || selectedChartLast?.low || 0);
+  const selectedPrevClose = Number(selectedQuote?.prevClose || selectedChartPrev?.close || selectedChartPrev?.value || 0);
+  const selectedChangePercent = selectedQuote
+    ? Number(selectedQuote.changePercent || 0)
+    : (selectedPrice && selectedPrevClose ? ((selectedPrice - selectedPrevClose) / selectedPrevClose) * 100 : 0);
   document.getElementById("finance-balance").textContent = formatZl(finance.income - finance.expense);
   document.getElementById("finance-income").textContent = formatZl(finance.income);
   document.getElementById("finance-expense").textContent = formatZl(finance.expense);
@@ -3585,27 +5448,43 @@ function renderFinance() {
   document.getElementById("paper-portfolio").textContent = formatUsd(positionsValue);
   document.getElementById("paper-equity").textContent = formatUsd(equity);
   document.getElementById("paper-pnl").textContent = formatUsd(pnl);
-  document.getElementById("paper-feed-status").textContent = paperTradingLoading ? "Laduje" : paperMarketStatus();
+  document.getElementById("paper-realized-pnl").textContent = formatSignedUsd(realizedPnl);
+  document.getElementById("paper-return").textContent = formatPercent(paperReturnPercent());
+  document.getElementById("paper-fees").textContent = formatUsd(paperFeesPaid());
+  document.getElementById("paper-open-orders").textContent = `${paperOpenOrders().length}`;
+  document.getElementById("paper-account-position-count").textContent = `${state.paperTrading.positions.length}`;
+  document.getElementById("paper-market-clock").textContent = `${clock.label} - ${clock.detail}`;
+  document.getElementById("paper-feed-status").textContent = paperTradingLoading ? "Ładuje" : paperMarketStatus();
   document.getElementById("paper-feed-provider").textContent = state.paperTrading.provider.toUpperCase();
   document.getElementById("paper-selected-symbol").textContent = selectedSymbol;
-  document.getElementById("paper-selected-company").textContent = `${selectedMeta.name} · ${selectedMeta.category}`;
-  document.getElementById("paper-selected-price").textContent = selectedQuote ? formatUsd(selectedQuote.price) : "$0.00";
-  document.getElementById("paper-selected-change").textContent = selectedQuote ? formatPercent(selectedQuote.changePercent) : "+0.00%";
-  document.getElementById("paper-selected-change").classList.toggle("negative", Boolean(selectedQuote && selectedQuote.changePercent < 0));
+  document.getElementById("paper-info-symbol").textContent = selectedSymbol;
+  document.getElementById("paper-selected-company").textContent = `${selectedMeta.name} - ${selectedMeta.category}${selectedMeta.exchange ? ` - ${selectedMeta.exchange}` : ""}`;
+  document.getElementById("paper-selected-price").textContent = selectedPrice ? formatInstrumentPrice(selectedPrice, selectedSymbol) : "--";
+  document.getElementById("paper-selected-change").textContent = formatPercent(selectedChangePercent);
+  document.getElementById("paper-selected-change").classList.toggle("negative", selectedChangePercent < 0);
   document.getElementById("paper-pnl").classList.toggle("negative", pnl < 0);
-  document.getElementById("paper-selected-open").textContent = selectedQuote ? formatUsd(selectedQuote.open) : "$0.00";
-  document.getElementById("paper-selected-high").textContent = selectedQuote ? formatUsd(selectedQuote.high) : "$0.00";
-  document.getElementById("paper-selected-low").textContent = selectedQuote ? formatUsd(selectedQuote.low) : "$0.00";
-  document.getElementById("paper-selected-prev").textContent = selectedQuote ? formatUsd(selectedQuote.prevClose) : "$0.00";
+  document.getElementById("paper-realized-pnl").classList.toggle("negative", realizedPnl < 0);
+  document.getElementById("paper-return").classList.toggle("negative", totalReturn < 0);
+  document.getElementById("paper-selected-open").textContent = selectedOpen ? formatInstrumentPrice(selectedOpen, selectedSymbol) : "--";
+  document.getElementById("paper-selected-high").textContent = selectedHigh ? formatInstrumentPrice(selectedHigh, selectedSymbol) : "--";
+  document.getElementById("paper-selected-low").textContent = selectedLow ? formatInstrumentPrice(selectedLow, selectedSymbol) : "--";
+  document.getElementById("paper-selected-prev").textContent = selectedPrevClose ? formatInstrumentPrice(selectedPrevClose, selectedSymbol) : "--";
+  document.getElementById("paper-info-commission").textContent = formatUsd(paperSettings().commission);
+  document.getElementById("paper-info-spread").textContent = `${paperSettings().spreadBps} bps`;
+  document.getElementById("paper-info-slippage").textContent = `${paperSettings().slippageBps} bps`;
   document.getElementById("paper-api-input").value = state.paperTrading.apiKey || "";
   document.getElementById("paper-api-input").placeholder = state.paperTrading.apiKey ? "Klucz Finnhub" : "Wbudowany klucz aktywny";
-  document.getElementById("paper-auto-button").textContent = state.paperTrading.autoRefresh ? "Auto 3m: On" : "Auto 3m: Off";
+  document.getElementById("paper-auto-button").textContent = state.paperTrading.autoRefresh ? "Auto 3 min: wł." : "Auto 3 min: wył.";
+  document.getElementById("paper-commission-input").value = paperSettings().commission;
+  document.getElementById("paper-spread-input").value = paperSettings().spreadBps;
+  document.getElementById("paper-slippage-input").value = paperSettings().slippageBps;
+  document.getElementById("paper-after-hours-input").checked = Boolean(paperSettings().allowAfterHours);
   document.getElementById("paper-watchlist-count").textContent = `${state.paperTrading.watchlist.length}`;
   document.getElementById("paper-position-count").textContent = `${state.paperTrading.positions.length}`;
   document.getElementById("paper-order-count").textContent = `${state.paperTrading.orders.length}`;
   const orderSymbolSelect = document.getElementById("paper-order-symbol");
   orderSymbolSelect.innerHTML = "";
-  state.paperTrading.watchlist.forEach((symbol) => {
+  [...new Set([...state.paperTrading.watchlist, ...state.paperTrading.positions.map((position) => position.symbol)])].forEach((symbol) => {
     const option = document.createElement("option");
     option.value = symbol;
     option.textContent = symbol;
@@ -3616,21 +5495,56 @@ function renderFinance() {
   const orderSymbol = orderSymbolSelect.value || selectedSymbol;
   const orderQuote = paperQuote(orderSymbol) || selectedQuote;
   const shares = Number(document.getElementById("paper-order-shares").value || 0);
+  const orderType = document.getElementById("paper-order-type").value || "market";
+  document.getElementById("paper-limit-price").hidden = orderType !== "limit";
+  document.getElementById("paper-stop-price").hidden = orderType !== "stop";
   document.getElementById("paper-buy-button").classList.toggle("active", side === "buy");
   document.getElementById("paper-sell-button").classList.toggle("active", side === "sell");
-  document.getElementById("paper-order-estimate").textContent = formatUsd((orderQuote?.price || 0) * Math.max(0, shares));
+  document.getElementById("paper-trade-bar-buy").classList.toggle("active", side === "buy");
+  document.getElementById("paper-trade-bar-sell").classList.toggle("active", side === "sell");
+  document.getElementById("paper-trade-bar-shares").textContent = `${Math.max(1, shares || 1)}`;
+  document.getElementById("paper-order-backdrop").hidden = !paperOrderSheetOpen;
+  document.getElementById("paper-symbol-backdrop").hidden = !paperSymbolSheetOpen;
+  document.querySelector(".terminal-ticket-card")?.classList.toggle("sheet-open", paperOrderSheetOpen);
+  document.querySelector(".terminal-search-card")?.classList.toggle("sheet-open", paperSymbolSheetOpen);
+  document.getElementById("paper-chart-fullscreen").hidden = !paperChartFullscreenOpen;
+  document.querySelectorAll("[data-market-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.marketPanel !== paperMarketPanel;
+  });
+  document.querySelectorAll("[data-market-panel-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.marketPanelTab === paperMarketPanel);
+  });
+  const estimateOrder = {
+    side,
+    type: orderType,
+    limitPrice: Number(document.getElementById("paper-limit-price").value || 0),
+    stopPrice: Number(document.getElementById("paper-stop-price").value || 0)
+  };
+  const estimatedPrice = orderQuote ? paperExecutionPrice(estimateOrder, orderQuote) : 0;
+  const estimatedFee = Number(paperSettings().commission || 0);
+  document.getElementById("paper-order-estimate").textContent = formatUsd((estimatedPrice * Math.max(0, shares)) + (shares > 0 ? estimatedFee : 0));
   document.getElementById("paper-order-available").textContent = `${paperPositionShares(orderSymbol)}`;
-  document.getElementById("paper-order-submit").textContent = side === "buy" ? "Kup wirtualnie" : "Sprzedaj wirtualnie";
+  document.getElementById("paper-order-submit").textContent = side === "buy" ? `Kup - ${paperOrderTypeLabel(orderType)}` : `Sprzedaj - ${paperOrderTypeLabel(orderType)}`;
   renderFinanceHome();
   renderFinanceEntries();
   renderPlannedExpenses();
+  renderPaperCategories();
   renderPaperSuggestions();
   renderPaperWatchlist();
+  renderPaperSymbolRail();
   renderPaperPositions();
   renderPaperOrders();
   renderPaperChart();
+  renderPaperEquityChart();
+  renderAgentPanel();
   if (financeView === "market") {
     ensurePaperHistory(selectedSymbol, paperChartRange);
+    if (!agentSession.runsLoaded) {
+      loadAgentRuns();
+    }
+    if (!agentSession.researchLoaded) {
+      loadResearchStatus();
+    }
   }
 }
 
@@ -3766,18 +5680,153 @@ function playMetronomeClick() {
   }
 }
 
-function scheduleTone(context, frequency, startAt, duration, { type = "triangle", gainValue = 0.06 } = {}) {
-  const oscillator = context.createOscillator();
+function distortionCurve(amount = 18) {
+  const samples = 256;
+  const curve = new Float32Array(samples);
+  const deg = Math.PI / 180;
+  for (let index = 0; index < samples; index += 1) {
+    const x = (index * 2) / samples - 1;
+    curve[index] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+  }
+  return curve;
+}
+
+function schedulePickTransient(context, destination, startAt, level = 0.018) {
+  const length = Math.max(1, Math.floor(context.sampleRate * 0.018));
+  const buffer = context.createBuffer(1, length, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let index = 0; index < length; index += 1) {
+    data[index] = (Math.random() * 2 - 1) * (1 - index / length);
+  }
+  const source = context.createBufferSource();
   const gain = context.createGain();
-  oscillator.type = type;
-  oscillator.frequency.value = frequency;
+  const filter = context.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(1200, startAt);
+  gain.gain.setValueAtTime(level, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.018);
+  source.buffer = buffer;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(destination);
+  source.start(startAt);
+  source.stop(startAt + 0.02);
+}
+
+function scheduleTone(context, frequency, startAt, duration, { type = "triangle", gainValue = 0.06, profile = "piano" } = {}) {
+  const safeProfile = EAR_SOUND_PROFILES[profile] ? profile : "piano";
+  const gain = context.createGain();
   gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.linearRampToValueAtTime(gainValue, startAt + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
+
+  const connectToDestination = (node) => {
+    node.connect(gain);
+    gain.connect(context.destination);
+  };
+
+  if (safeProfile === "keysPad") {
+    const filter = context.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(Math.min(2600, frequency * 7), startAt);
+    filter.Q.setValueAtTime(0.8, startAt);
+    const oscA = context.createOscillator();
+    const oscB = context.createOscillator();
+    oscA.type = "sine";
+    oscB.type = "triangle";
+    oscA.frequency.value = frequency;
+    oscB.frequency.value = frequency;
+    oscB.detune.value = 7;
+    oscA.connect(filter);
+    oscB.connect(filter);
+    connectToDestination(filter);
+    gain.gain.linearRampToValueAtTime(gainValue * 0.78, startAt + 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration + 0.28);
+    oscA.start(startAt);
+    oscB.start(startAt);
+    oscA.stop(startAt + duration + 0.34);
+    oscB.stop(startAt + duration + 0.34);
+    return;
+  }
+
+  const oscillator = context.createOscillator();
+  oscillator.frequency.value = frequency;
+
+  if (safeProfile === "tone") {
+    oscillator.type = type || "sine";
+    connectToDestination(oscillator);
+    gain.gain.linearRampToValueAtTime(gainValue, startAt + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  } else if (safeProfile === "cleanGuitar") {
+    const filter = context.createBiquadFilter();
+    const overtone = context.createOscillator();
+    const overtoneGain = context.createGain();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(Math.min(5200, frequency * 8), startAt);
+    filter.frequency.exponentialRampToValueAtTime(Math.min(2400, frequency * 5), startAt + duration * 0.72);
+    filter.Q.setValueAtTime(1.2, startAt);
+    oscillator.type = "sawtooth";
+    overtone.type = "triangle";
+    overtone.frequency.value = frequency * 2.01;
+    overtoneGain.gain.setValueAtTime(gainValue * 0.22, startAt);
+    overtoneGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.45);
+    oscillator.connect(filter);
+    overtone.connect(overtoneGain);
+    overtoneGain.connect(filter);
+    schedulePickTransient(context, filter, startAt, gainValue * 0.16);
+    connectToDestination(filter);
+    gain.gain.linearRampToValueAtTime(gainValue * 1.05, startAt + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.68);
+    overtone.start(startAt);
+    overtone.stop(startAt + duration + 0.04);
+  } else if (safeProfile === "distortedGuitar") {
+    const shaper = context.createWaveShaper();
+    const filter = context.createBiquadFilter();
+    const sub = context.createOscillator();
+    const subGain = context.createGain();
+    shaper.curve = distortionCurve(42);
+    shaper.oversample = "4x";
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(Math.min(2600, frequency * 5), startAt);
+    filter.Q.setValueAtTime(0.9, startAt);
+    oscillator.type = "sawtooth";
+    sub.type = "square";
+    sub.frequency.value = frequency / 2;
+    subGain.gain.setValueAtTime(gainValue * 0.18, startAt);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.78);
+    oscillator.connect(shaper);
+    sub.connect(subGain);
+    subGain.connect(shaper);
+    schedulePickTransient(context, shaper, startAt, gainValue * 0.12);
+    shaper.connect(filter);
+    connectToDestination(filter);
+    gain.gain.linearRampToValueAtTime(gainValue * 0.74, startAt + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.82);
+    sub.start(startAt);
+    sub.stop(startAt + duration + 0.04);
+  } else {
+    const filter = context.createBiquadFilter();
+    const high = context.createOscillator();
+    const highGain = context.createGain();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(Math.min(5200, frequency * 9), startAt);
+    filter.frequency.exponentialRampToValueAtTime(Math.min(2800, frequency * 6), startAt + duration);
+    filter.Q.setValueAtTime(0.85, startAt);
+    oscillator.type = "triangle";
+    high.type = "sine";
+    high.frequency.value = frequency * 2;
+    highGain.gain.setValueAtTime(gainValue * 0.16, startAt);
+    highGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.52);
+    oscillator.connect(filter);
+    high.connect(highGain);
+    highGain.connect(filter);
+    connectToDestination(filter);
+    gain.gain.linearRampToValueAtTime(gainValue * 0.95, startAt + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.95);
+    high.start(startAt);
+    high.stop(startAt + duration + 0.04);
+  }
+
   oscillator.start(startAt);
-  oscillator.stop(startAt + duration + 0.02);
+  oscillator.stop(startAt + duration + 0.08);
 }
 
 function playEarAudio(spec) {
@@ -3785,16 +5834,20 @@ function playEarAudio(spec) {
     ensureMetronomeAudio();
     const ctx = metronomeAudioContext;
     const start = ctx.currentTime + 0.02;
+    const profile = EAR_SOUND_PROFILES[spec.soundProfile] ? spec.soundProfile : "piano";
+    const playNote = (frequency, noteStart, duration, options = {}) => {
+      scheduleTone(ctx, frequency, noteStart, duration, { profile, ...options });
+    };
 
     if (spec.engine === "interval") {
       const root = midiToFrequency(spec.rootMidi);
       const top = midiToFrequency(spec.rootMidi + spec.semitones);
       if (spec.mode === "harmonic") {
-        scheduleTone(ctx, root, start, 0.42, { type: "triangle", gainValue: 0.05 });
-        scheduleTone(ctx, top, start, 0.42, { type: "triangle", gainValue: 0.05 });
+        playNote(root, start, 0.42, { type: "triangle", gainValue: 0.05 });
+        playNote(top, start, 0.42, { type: "triangle", gainValue: 0.05 });
       } else {
-        scheduleTone(ctx, root, start, 0.24, { type: "triangle", gainValue: 0.06 });
-        scheduleTone(ctx, top, start + 0.34, 0.24, { type: "triangle", gainValue: 0.06 });
+        playNote(root, start, 0.24, { type: "triangle", gainValue: 0.06 });
+        playNote(top, start + 0.34, 0.24, { type: "triangle", gainValue: 0.06 });
       }
       return;
     }
@@ -3803,15 +5856,15 @@ function playEarAudio(spec) {
       const notes = (spec.intervals || [0, 4, 7]).map((step) => midiToFrequency(spec.rootMidi + step));
       if (spec.mode === "arp") {
         notes.forEach((frequency, index) => {
-          scheduleTone(ctx, frequency, start + index * 0.16, 0.28, { type: "triangle", gainValue: 0.055 });
+          playNote(frequency, start + index * 0.16, 0.28, { type: "triangle", gainValue: 0.055 });
         });
       } else if (spec.mode === "broken") {
         notes.forEach((frequency, index) => {
-          scheduleTone(ctx, frequency, start + index * 0.11, 0.42, { type: "triangle", gainValue: 0.045 });
+          playNote(frequency, start + index * 0.11, 0.42, { type: "triangle", gainValue: 0.045 });
         });
       } else {
         notes.forEach((frequency) => {
-          scheduleTone(ctx, frequency, start, 0.56, { type: "triangle", gainValue: 0.045 });
+          playNote(frequency, start, 0.56, { type: "triangle", gainValue: 0.045 });
         });
       }
       return;
@@ -3824,20 +5877,20 @@ function playEarAudio(spec) {
         const intervals = applyChordInversion(CHORD_INTERVALS[entry.quality] || [0, 4, 7], spec.inversion || "root");
         if (spec.mode === "flow") {
           intervals.forEach((step, noteIndex) => {
-            scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + noteIndex * 0.08, 0.28, { type: "triangle", gainValue: 0.045 });
+            playNote(midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + noteIndex * 0.08, 0.28, { type: "triangle", gainValue: 0.045 });
           });
           return;
         }
         if (spec.mode === "spread") {
           const bass = intervals[0] ?? 0;
-          scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + bass - 12), chordStart, 0.3, { type: "triangle", gainValue: 0.04 });
+          playNote(midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + bass - 12), chordStart, 0.3, { type: "triangle", gainValue: 0.04 });
           intervals.slice(1).forEach((step, noteIndex) => {
-            scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + 0.12 + noteIndex * 0.05, 0.36, { type: "triangle", gainValue: 0.04 });
+            playNote(midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart + 0.12 + noteIndex * 0.05, 0.36, { type: "triangle", gainValue: 0.04 });
           });
           return;
         }
         intervals.forEach((step) => {
-          scheduleTone(ctx, midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart, 0.42, { type: "triangle", gainValue: 0.043 });
+          playNote(midiToFrequency(spec.rootMidi + (entry.rootShift || 0) + step), chordStart, 0.42, { type: "triangle", gainValue: 0.043 });
         });
       });
       return;
@@ -3846,20 +5899,20 @@ function playEarAudio(spec) {
     if (spec.engine === "scale") {
       const phrase = spec.intervals || [0, 2, 4, 5, 7];
       phrase.forEach((step, index) => {
-        scheduleTone(ctx, midiToFrequency(spec.rootMidi + step), start + index * 0.16, 0.22, { type: "triangle", gainValue: 0.05 });
+        playNote(midiToFrequency(spec.rootMidi + step), start + index * 0.16, 0.22, { type: "triangle", gainValue: 0.05 });
       });
       return;
     }
 
     if (spec.engine === "melody") {
       (spec.pattern || [0, 2, 4]).forEach((step, index) => {
-        scheduleTone(ctx, midiToFrequency(spec.rootMidi + step), start + index * 0.22, 0.24, { type: "triangle", gainValue: 0.055 });
+        playNote(midiToFrequency(spec.rootMidi + step), start + index * 0.22, 0.24, { type: "triangle", gainValue: 0.055 });
       });
       return;
     }
 
     if (spec.engine === "pitch") {
-      scheduleTone(ctx, midiToFrequency(spec.midi), start, 0.52, { type: "triangle", gainValue: 0.06 });
+      playNote(midiToFrequency(spec.midi), start, 0.52, { type: "triangle", gainValue: 0.06 });
       return;
     }
 
@@ -3867,12 +5920,142 @@ function playEarAudio(spec) {
       const beatLength = 0.42;
       (spec.pattern || []).forEach((point, index) => {
         const clickAt = start + point * beatLength;
-        scheduleTone(ctx, 1120 + index * 20, clickAt, 0.06, { type: "square", gainValue: 0.045 });
+        scheduleTone(ctx, 1120 + index * 20, clickAt, 0.06, { type: "square", gainValue: 0.045, profile: "tone" });
       });
     }
   } catch {
     // Silent fallback.
   }
+}
+
+function autoCorrelatePitch(buffer, sampleRate) {
+  let rms = 0;
+  for (let index = 0; index < buffer.length; index += 1) {
+    rms += buffer[index] * buffer[index];
+  }
+  rms = Math.sqrt(rms / buffer.length);
+  if (rms < 0.008) return -1;
+
+  let bestOffset = -1;
+  let bestCorrelation = 0;
+  const minOffset = Math.floor(sampleRate / 1800);
+  const maxOffset = Math.floor(sampleRate / 60);
+  for (let offset = minOffset; offset <= maxOffset; offset += 1) {
+    let correlation = 0;
+    for (let index = 0; index < buffer.length - offset; index += 1) {
+      correlation += 1 - Math.abs(buffer[index] - buffer[index + offset]);
+    }
+    correlation /= buffer.length - offset;
+    if (correlation > bestCorrelation) {
+      bestCorrelation = correlation;
+      bestOffset = offset;
+    }
+  }
+  return bestCorrelation > 0.86 && bestOffset > 0 ? sampleRate / bestOffset : -1;
+}
+
+function nearestGuitarString(frequency) {
+  return GUITAR_TUNER_STRINGS
+    .map((stringInfo) => ({
+      ...stringInfo,
+      cents: Math.abs(centsFromTarget(frequency, stringInfo.frequency))
+    }))
+    .sort((a, b) => a.cents - b.cents)[0] || tunerTargetString();
+}
+
+function tickTuner() {
+  if (!tunerRunning || !tunerAnalyser || !tunerAudioContext) return;
+  const buffer = new Float32Array(tunerAnalyser.fftSize);
+  tunerAnalyser.getFloatTimeDomainData(buffer);
+  let frequency = autoCorrelatePitch(buffer, tunerAudioContext.sampleRate);
+  if (frequency > 55 && frequency < 1800) {
+    const previousStable = median(tunerFrequencyHistory);
+    if (previousStable > 0 && frequency > previousStable * 1.88 && frequency < previousStable * 2.12) {
+      frequency /= 2;
+    } else if (previousStable > 0 && frequency * 2 > previousStable * 0.88 && frequency * 2 < previousStable * 1.12) {
+      frequency *= 2;
+    }
+    tunerFrequencyHistory.push(frequency);
+    tunerFrequencyHistory = tunerFrequencyHistory.slice(-7);
+    const stableFrequency = median(tunerFrequencyHistory);
+    const nearest = nearestGuitarString(stableFrequency);
+    const target = tunerTargetString();
+    const effectiveTarget = Math.abs(centsFromTarget(stableFrequency, target.frequency)) <= 55 ? target : nearest;
+    tunerTargetStringId = effectiveTarget.id;
+    tunerDetection = {
+      frequency: stableFrequency,
+      note: midiToNoteLabel(frequencyToMidiValue(stableFrequency)),
+      cents: centsFromTarget(stableFrequency, effectiveTarget.frequency),
+      targetId: effectiveTarget.id
+    };
+    const detectedMidi = Math.round(frequencyToMidiValue(stableFrequency));
+    fretPracticeLastResult = {
+      midi: detectedMidi,
+      isCorrect: fretMidiAllowedByPattern(detectedMidi),
+      at: Date.now()
+    };
+    renderTuner();
+  }
+  tunerAnimationFrame = requestAnimationFrame(tickTuner);
+}
+
+async function startTuner() {
+  if (tunerRunning) return;
+  try {
+    tunerAudioContext = tunerAudioContext || new (window.AudioContext || window.webkitAudioContext)();
+    if (tunerAudioContext.state === "suspended") {
+      await tunerAudioContext.resume();
+    }
+    tunerStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      }
+    });
+    tunerSource = tunerAudioContext.createMediaStreamSource(tunerStream);
+    tunerAnalyser = tunerAudioContext.createAnalyser();
+    tunerAnalyser.fftSize = 4096;
+    tunerSource.connect(tunerAnalyser);
+    tunerRunning = true;
+    setFeedback("Tuner slucha mikrofonu.");
+    renderTuner();
+    tickTuner();
+  } catch (error) {
+    tunerRunning = false;
+    setFeedback("Nie udalo sie wlaczyc mikrofonu.");
+    renderTuner();
+  }
+}
+
+function stopTuner() {
+  tunerRunning = false;
+  if (tunerAnimationFrame) {
+    cancelAnimationFrame(tunerAnimationFrame);
+    tunerAnimationFrame = null;
+  }
+  if (tunerStream) {
+    tunerStream.getTracks().forEach((track) => track.stop());
+    tunerStream = null;
+  }
+  if (tunerSource) {
+    try {
+      tunerSource.disconnect();
+    } catch {
+      // Silent disconnect fallback.
+    }
+    tunerSource = null;
+  }
+  tunerAnalyser = null;
+  tunerFrequencyHistory = [];
+  fretPracticeLastResult = null;
+  tunerDetection = { frequency: 0, note: "--", cents: 0, targetId: tunerTargetStringId };
+  renderTuner();
+}
+
+function toggleTuner() {
+  if (tunerRunning) stopTuner();
+  else startTuner();
 }
 
 function renderMetronome() {
@@ -3991,6 +6174,10 @@ function openGuitarCreateView() {
   if (minutesInput) minutesInput.value = "";
   setGuitarView("create", { scrollTop: true });
   focusField("guitar-exercise-name-input");
+}
+
+function openGuitarTuner() {
+  setGuitarView("tuner", { scrollTop: true });
 }
 
 function openGuitarEditView(id) {
@@ -4479,7 +6666,7 @@ function editWorkout(id) {
   if (title === null) return;
   const duration = prompt("Minuty", String(workout.duration));
   if (duration === null) return;
-  const focus = prompt("Focus", workout.focus || "");
+  const focus = prompt("Cel", workout.focus || "");
   if (focus === null) return;
   state.workouts = state.workouts.map((entry) => entry.id === id ? {
     ...entry,
@@ -4502,7 +6689,7 @@ function editWorkoutTemplate(id) {
   if (!template) return;
   const title = prompt("Szablon", template.title);
   if (title === null) return;
-  const focus = prompt("Focus", template.focus);
+  const focus = prompt("Cel", template.focus);
   if (focus === null) return;
   const rest = prompt("Rest s", String(template.rest));
   if (rest === null) return;
@@ -4697,7 +6884,7 @@ function importState(file) {
       renderAll();
       setFeedback("Zaimportowano JSON.");
     } catch {
-      setFeedback("Nie udalo sie wczytac JSON.");
+      setFeedback("Nie udało się wczytać JSON.");
     }
   };
   reader.readAsText(file);
@@ -4941,12 +7128,82 @@ function bindForms() {
     setFeedback("Zapisano klucz rynku.");
   });
 
+  document.getElementById("paper-settings-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.paperTrading.settings = {
+      commission: Math.max(0, Number(document.getElementById("paper-commission-input").value || 0)),
+      spreadBps: Math.max(0, Number(document.getElementById("paper-spread-input").value || 0)),
+      slippageBps: Math.max(0, Number(document.getElementById("paper-slippage-input").value || 0)),
+      allowAfterHours: Boolean(document.getElementById("paper-after-hours-input").checked)
+    };
+    saveState();
+    renderFinance();
+    setFeedback("Zapisano warunki symulacji.");
+  });
+
+  document.getElementById("agent-reset-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    resetAgentEnvironment();
+  });
+
+  document.getElementById("agent-step-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    stepAgentEnvironment();
+  });
+
+  document.getElementById("agent-random-step-button").addEventListener("click", () => {
+    stepAgentEnvironment({ random: true });
+  });
+
+  document.getElementById("agent-ten-steps-button").addEventListener("click", () => {
+    runAgentSteps(10, { random: true });
+  });
+
+  document.getElementById("agent-reward-preset-input").addEventListener("change", (event) => {
+    applyAgentRewardPreset(event.target.value);
+  });
+
+  document.getElementById("agent-runs-refresh").addEventListener("click", () => {
+    loadAgentRuns();
+  });
+
+  document.getElementById("agent-simple-run").addEventListener("click", () => {
+    runSimpleAgentTest();
+  });
+
+  document.getElementById("agent-research-sync").addEventListener("click", () => {
+    syncAgentResearch();
+  });
+
+  document.getElementById("agent-feature-build").addEventListener("click", () => {
+    buildAgentFeatureDataset();
+  });
+
+  document.getElementById("agent-signal-refresh").addEventListener("click", () => {
+    loadAgentSignal();
+  });
+
+  ["agent-return-weight-input", "agent-drawdown-weight-input", "agent-volatility-weight-input", "agent-cost-weight-input"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", () => {
+      document.getElementById("agent-reward-preset-input").value = "custom";
+    });
+  });
+
+  document.getElementById("paper-account-reset").addEventListener("click", () => {
+    resetPaperTradingAccount();
+  });
+
   document.getElementById("paper-refresh-button").addEventListener("click", () => {
     refreshPaperTrading();
   });
 
   document.getElementById("paper-market-refresh").addEventListener("click", () => {
     refreshPaperTrading();
+  });
+
+  document.getElementById("paper-open-data-panel").addEventListener("click", () => {
+    paperMarketPanel = "data";
+    renderFinance();
   });
 
   document.getElementById("paper-auto-button").addEventListener("click", () => {
@@ -4965,19 +7222,18 @@ function bindForms() {
     const symbol = input.value.trim().toUpperCase();
     if (!symbol) return;
     if (state.paperTrading.watchlist.includes(symbol)) {
-      state.paperTrading.selectedSymbol = symbol;
+      setPaperSelectedSymbol(symbol);
       saveState();
       renderFinance();
       input.value = "";
       return;
     }
-    if (state.paperTrading.watchlist.length >= 16) {
-      setFeedback("Limit watchlist to 16.");
+    if (state.paperTrading.watchlist.length >= PAPER_WATCHLIST_LIMIT) {
+      setFeedback(`Limit obserwowanych instrumentów to ${PAPER_WATCHLIST_LIMIT}.`);
       return;
     }
     state.paperTrading.watchlist.push(symbol);
-    state.paperTrading.selectedSymbol = symbol;
-    state.paperTrading.chart.symbol = symbol;
+    setPaperSelectedSymbol(symbol);
     input.value = "";
     saveState();
     renderFinance();
@@ -4986,14 +7242,63 @@ function bindForms() {
     }
   });
 
+  document.getElementById("paper-open-symbol-sheet").addEventListener("click", () => {
+    paperSymbolSheetOpen = true;
+    paperMarketPanel = "info";
+    renderFinance();
+    requestAnimationFrame(() => document.getElementById("paper-market-search")?.focus());
+  });
+
+  document.getElementById("paper-symbol-rail-search").addEventListener("click", () => {
+    paperSymbolSheetOpen = true;
+    renderFinance();
+    requestAnimationFrame(() => document.getElementById("paper-market-search")?.focus());
+  });
+
+  document.getElementById("paper-symbol-sheet-close").addEventListener("click", () => {
+    paperSymbolSheetOpen = false;
+    renderFinance();
+  });
+
+  document.getElementById("paper-symbol-backdrop").addEventListener("click", () => {
+    paperSymbolSheetOpen = false;
+    renderFinance();
+  });
+
+  document.getElementById("paper-symbol-rail").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-paper-rail-symbol]");
+    if (!button) return;
+    const symbol = button.dataset.paperRailSymbol;
+    setPaperSelectedSymbol(symbol);
+    document.getElementById("paper-order-symbol").value = symbol;
+    paperMarketPanel = "info";
+    saveState();
+    renderFinance();
+    refreshPaperTrading({ silent: true });
+  });
+
   document.getElementById("paper-order-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const side = document.getElementById("paper-order-side").value;
     const symbol = document.getElementById("paper-order-symbol").value;
+    const type = document.getElementById("paper-order-type").value;
     const sharesInput = document.getElementById("paper-order-shares");
     const shares = Number(sharesInput.value);
-    if (executePaperOrder(side, symbol, shares)) {
+    const limitPrice = Number(document.getElementById("paper-limit-price").value || 0);
+    const stopPrice = Number(document.getElementById("paper-stop-price").value || 0);
+    const thesisInput = document.getElementById("paper-order-thesis");
+    if (executePaperOrder(side, symbol, shares, {
+      type,
+      limitPrice,
+      stopPrice,
+      thesis: thesisInput.value
+    })) {
       sharesInput.value = "";
+      thesisInput.value = "";
+      document.getElementById("paper-limit-price").value = "";
+      document.getElementById("paper-stop-price").value = "";
+      paperOrderSheetOpen = false;
+      paperMarketPanel = "portfolio";
     }
   });
 
@@ -5025,6 +7330,33 @@ function bindForms() {
     renderFinance();
   });
 
+  document.getElementById("paper-trade-bar-buy").addEventListener("click", () => {
+    document.getElementById("paper-order-side").value = "buy";
+    paperOrderSheetOpen = true;
+    renderFinance();
+  });
+
+  document.getElementById("paper-trade-bar-sell").addEventListener("click", () => {
+    document.getElementById("paper-order-side").value = "sell";
+    paperOrderSheetOpen = true;
+    renderFinance();
+  });
+
+  document.getElementById("paper-open-order-sheet").addEventListener("click", () => {
+    paperOrderSheetOpen = true;
+    renderFinance();
+  });
+
+  document.getElementById("paper-order-sheet-close").addEventListener("click", () => {
+    paperOrderSheetOpen = false;
+    renderFinance();
+  });
+
+  document.getElementById("paper-order-backdrop").addEventListener("click", () => {
+    paperOrderSheetOpen = false;
+    renderFinance();
+  });
+
   document.getElementById("paper-order-symbol").addEventListener("change", () => {
     renderFinance();
   });
@@ -5033,7 +7365,27 @@ function bindForms() {
     renderFinance();
   });
 
+  document.getElementById("paper-order-type").addEventListener("change", () => {
+    renderFinance();
+  });
+
+  document.getElementById("paper-limit-price").addEventListener("input", () => {
+    renderFinance();
+  });
+
+  document.getElementById("paper-stop-price").addEventListener("input", () => {
+    renderFinance();
+  });
+
   document.getElementById("paper-market-search").addEventListener("input", () => {
+    renderPaperSuggestions();
+  });
+
+  document.getElementById("paper-market-categories").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-paper-market-category]");
+    if (!button) return;
+    paperInstrumentCategory = button.dataset.paperMarketCategory || "ALL";
+    renderPaperCategories();
     renderPaperSuggestions();
   });
 
@@ -5051,10 +7403,47 @@ function bindForms() {
     renderFinance();
   });
 
+  document.getElementById("paper-trade-bar-minus").addEventListener("click", () => {
+    const input = document.getElementById("paper-order-shares");
+    input.value = `${Math.max(1, Number(input.value || 1) - 1)}`;
+    renderFinance();
+  });
+
+  document.getElementById("paper-trade-bar-plus").addEventListener("click", () => {
+    const input = document.getElementById("paper-order-shares");
+    input.value = `${Math.max(1, Number(input.value || 0) + 1)}`;
+    renderFinance();
+  });
+
   document.querySelectorAll("[data-paper-range]").forEach((button) => {
     button.addEventListener("click", () => {
-      paperChartRange = button.dataset.paperRange || "1D";
+      paperChartRange = button.dataset.paperRange || "6M";
       ensurePaperHistory(paperSelectedSymbol(), paperChartRange);
+      renderFinance();
+    });
+  });
+
+  document.querySelectorAll("[data-paper-chart-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      paperChartMode = button.dataset.paperChartMode || "candles";
+      renderFinance();
+    });
+  });
+
+  document.getElementById("paper-chart-fullscreen-button").addEventListener("click", () => {
+    paperChartFullscreenOpen = true;
+    renderFinance();
+  });
+
+  document.getElementById("paper-chart-fullscreen-close").addEventListener("click", () => {
+    paperChartFullscreenOpen = false;
+    clearTradingViewChart("fullscreen");
+    renderFinance();
+  });
+
+  document.querySelectorAll("[data-market-panel-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      paperMarketPanel = button.dataset.marketPanelTab || "portfolio";
       renderFinance();
     });
   });
@@ -5229,6 +7618,11 @@ function bindTools() {
   bindPressAction(document.getElementById("guitar-active-clear"), clearActiveGuitarExercise);
   bindPressAction(document.getElementById("open-guitar-home"), () => setGuitarView("main", { scrollTop: true }));
   bindPressAction(document.getElementById("open-ear-home"), () => setGuitarView("ear-home", { scrollTop: true }));
+  bindPressAction(document.getElementById("open-tuner-home"), openGuitarTuner);
+  bindPressAction(document.getElementById("tuner-back"), openMusicHome);
+  bindPressAction(document.getElementById("tuner-toggle"), toggleTuner);
+  bindPressAction(document.getElementById("fretboard-fullscreen-open"), openFretboardFullscreen);
+  bindPressAction(document.getElementById("fretboard-fullscreen-close"), closeFretboardFullscreen);
   bindPressAction(document.getElementById("guitar-open-create"), openGuitarCreateView);
   bindPressAction(document.getElementById("guitar-session-toggle"), () => {
     guitarSessionsExpanded = !guitarSessionsExpanded;
@@ -5252,6 +7646,7 @@ function bindTools() {
   bindPressAction(document.getElementById("guitar-result-cancel"), cancelPendingGuitarSession);
   bindPressAction(document.getElementById("ear-home-back"), openMusicHome);
   bindPressAction(document.getElementById("ear-home-last"), () => openEarConfigView(lastEarType()));
+  bindPressAction(document.getElementById("ear-recommendation-start"), applyEarRecommendation);
   bindPressAction(document.getElementById("ear-config-back"), openEarHome);
   bindPressAction(document.getElementById("ear-start-round"), startEarRoundFromCurrentConfig);
   bindPressAction(document.getElementById("ear-round-back"), cancelEarRound);
