@@ -1,9 +1,10 @@
-const CACHE_NAME = "lifeos-preview-v41";
+const CACHE_NAME = "lifeos-preview-v43";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./vendor/lightweight-charts.standalone.production.js",
   "./manifest.webmanifest",
   "./icons/icon-180.png",
   "./icons/icon-192.png",
@@ -35,16 +36,24 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
+  const url = new URL(event.request.url);
+  const isAppShellAsset = APP_SHELL.some((asset) => {
+    const assetUrl = new URL(asset, self.location.href);
+    return assetUrl.pathname === url.pathname;
+  });
 
-      return fetch(event.request).then((response) => {
+  event.respondWith(
+    fetch(event.request).then((response) => {
+      if (isAppShellAsset || response.ok) {
         const cloned = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
-        return response;
+      }
+      return response;
+    }).catch(() => {
+      return caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        if (event.request.mode === "navigate") return caches.match("./index.html");
+        return Response.error();
       });
     })
   );

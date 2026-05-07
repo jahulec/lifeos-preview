@@ -492,7 +492,7 @@ const FRETBOARD_POSITIONS = [
   { id: "pos2", label: "Pozycja II", start: 3, end: 7 },
   { id: "pos3", label: "Pozycja III", start: 5, end: 9 },
   { id: "pos4", label: "Pozycja IV", start: 7, end: 12 },
-  { id: "high", label: "Wysoko", start: 9, end: 15 }
+  { id: "pos5", label: "Pozycja V", start: 9, end: 15 }
 ];
 
 const EAR_ROOT_OPTIONS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -3594,6 +3594,7 @@ function fretPracticePattern() {
 }
 
 function fretPracticePosition() {
+  if (fretPracticePositionId === "high") fretPracticePositionId = "pos5";
   return FRETBOARD_POSITIONS.find((entry) => entry.id === fretPracticePositionId) || FRETBOARD_POSITIONS[0];
 }
 
@@ -3647,11 +3648,37 @@ function maxNotesPerStringForPattern(pattern = fretPracticePattern()) {
   return 3;
 }
 
+function isSevenNoteScalePattern(pattern = fretPracticePattern()) {
+  return pattern.group === "scales" && pattern.intervals.length === 7;
+}
+
+function rootAnchorMidiForPosition(position = fretPracticePosition()) {
+  const visibleFrets = new Set(fretNumbersForPosition(position, false));
+  const rootPc = noteNameToPitchClass(fretPracticeRoot);
+  const roots = [];
+  GUITAR_TUNER_STRINGS.forEach((stringInfo) => {
+    visibleFrets.forEach((fret) => {
+      const midi = stringInfo.midi + fret;
+      if (((midi % 12) + 12) % 12 === rootPc) {
+        roots.push(midi);
+      }
+    });
+  });
+  return roots.length ? Math.min(...roots) : null;
+}
+
 function highlightedFretsForString(stringInfo, frets, position = fretPracticePosition()) {
   const visibleFrets = new Set(fretNumbersForPosition(position, false));
   const candidates = frets
     .filter((fret) => visibleFrets.has(fret) && fretMidiAllowedByPattern(stringInfo.midi + fret));
   if (position.id === "all") return new Set(candidates);
+  if (isSevenNoteScalePattern()) {
+    const anchorMidi = rootAnchorMidiForPosition(position);
+    const scaleCandidates = anchorMidi == null
+      ? candidates
+      : candidates.filter((fret) => stringInfo.midi + fret >= anchorMidi);
+    return new Set(scaleCandidates.slice(0, 3));
+  }
   const maxNotes = maxNotesPerStringForPattern();
   const center = (position.start + position.end) / 2;
   return new Set(
